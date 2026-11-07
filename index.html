@@ -10,28 +10,32 @@
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100dvh; background: radial-gradient(circle at top, #fff9eb, #f1dfbd); }
     button { font: inherit; cursor: pointer; }
-    .app { width: min(100%, 520px); min-height: 100dvh; margin: auto; padding: max(18px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; }
+    .app { width: min(100%, 520px); min-height: 100dvh; margin: auto; padding: max(14px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; }
     header { text-align: center; width: 100%; }
     .eyebrow { color: #78854b; font-size: .72rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
-    h1 { font-size: clamp(2rem, 9vw, 3rem); line-height: 1; margin: 6px 0; color: #73421f; letter-spacing: -.05em; }
-    .level { display: inline-block; background: #fff9ed; border: 1px solid #e7cda4; border-radius: 999px; padding: 6px 17px; font-weight: 800; font-size: .85rem; }
+    h1 { display: inline-block; font-size: clamp(2rem, 9vw, 3rem); line-height: 1; margin: 8px 0 10px; padding: 12px 28px; color: #73421f; letter-spacing: -.05em; background: #fff2d4; border: 4px solid #bb783d; border-radius: 20px; box-shadow: inset 0 0 0 3px #f5d39d, 0 4px 0 #8c512a; }
+    .level { display: block; width: max-content; margin: auto; background: #fff9ed; border: 1px solid #e7cda4; border-radius: 999px; padding: 6px 17px; font-weight: 800; font-size: .85rem; }
     .instructions { margin: 14px auto 10px; max-width: 310px; font-size: .91rem; line-height: 1.4; color: #775b3c; }
-    .board { position: relative; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 15px; border: 7px solid #a95e29; border-radius: 14px; background: #c27b3b; box-shadow: inset 0 3px 0 #e3aa6d, 0 10px 0 #8c4c24, 0 18px 28px #77532930; touch-action: none; }
-    .shelf { position: relative; min-width: 0; height: clamp(105px, 29vw, 150px); display: flex; align-items: end; border: 4px solid #8e4d25; border-bottom: 10px solid #d69654; border-radius: 5px; background: linear-gradient(#895332, #a96939 73%, #b77b45 74%); box-shadow: inset 0 6px 12px #5a2f1c50; }
+    .board { position: relative; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 12px; border: 7px solid #a95e29; border-radius: 14px; background: linear-gradient(100deg,#c27b3b,#e6a65f 50%,#c27b3b); box-shadow: inset 0 3px 0 #f4c688, 0 8px 0 #8c4c24, 0 18px 28px #77532930; touch-action: none; user-select: none; }
+    .shelf { position: relative; min-width: 0; height: clamp(105px, 29vw, 150px); display: flex; align-items: end; border: 4px solid #8e4d25; border-bottom: 10px solid #d69654; border-radius: 5px; background: linear-gradient(#865033, #a96939 73%, #c18a53 74%); box-shadow: inset 0 6px 12px #5a2f1c50; }
     .back-row, .front-row { position: absolute; inset: 0 3px 2px; display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; }
-    .back-row { transform: translateY(-14%); opacity: .32; filter: brightness(.55); pointer-events: none; }
+    .back-row { transform: translateY(-14%); opacity: .48; filter: brightness(.62); pointer-events: none; }
+    .back-row > span { display: flex; justify-content: center; align-items: end; height: 84%; }
     .front-row { z-index: 1; }
     .slot { position: relative; min-width: 0; height: 84%; display: flex; align-items: end; justify-content: center; border: 0; padding: 2px; background: transparent; border-radius: 8px; touch-action: none; }
     .slot:focus-visible { outline: 3px solid #ffdf72; outline-offset: -2px; }
     .slot.empty::after { content: ''; width: 70%; height: 8px; margin-bottom: 2px; background: #633e2866; border-radius: 50%; }
     .slot.selected { background: #ffdf7255; box-shadow: inset 0 0 0 2px #ffdf72; }
-    .item { width: min(100%, 58px); height: 75%; min-height: 62px; max-height: 95px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 3px solid #ffffff88; border-radius: 10px 10px 7px 7px; box-shadow: inset 0 -8px 0 #00000012, 0 3px 3px #43291644; color: #fff; user-select: none; pointer-events: none; }
-    .item .icon { font-size: clamp(22px, 6vw, 31px); line-height: 1.15; }
-    .item .name { font-size: clamp(8px, 2vw, 11px); font-weight: 900; text-transform: uppercase; letter-spacing: .02em; text-shadow: 0 1px 2px #0006; }
-    .milk { background: linear-gradient(#8ac2ea 25%, #f1f9ff 25% 70%, #65a4d5 70%); color: #275a85; }
-    .coffee { background: linear-gradient(#974422, #c87337); }
-    .jam { background: linear-gradient(#e69494 17%, #b7314a 17% 83%, #8b2334 83%); }
-    .ghost { position: fixed; z-index: 20; width: 50px; height: 80px; pointer-events: none; transform: translate(-50%, -65%) scale(1.08); opacity: .92; }
+    .slot.drop-target { background: #c9ec8055; box-shadow: inset 0 0 0 3px #d8f795, 0 0 12px #e4ffb8; }
+    .slot.drag-origin .item { opacity: .25; }
+    .item { width: min(100%, 58px); height: 78%; min-height: 62px; max-height: 95px; display: flex; align-items: center; justify-content: center; user-select: none; pointer-events: none; transform-origin: bottom center; }
+    .item svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 2px #43291666); }
+    .ghost { position: fixed; z-index: 20; pointer-events: none; opacity: .96; filter: drop-shadow(0 7px 5px #39210d55); }
+    .ghost .item { width: 100%; height: 100%; min-height: 0; max-height: none; }
+    .matching .front-row .item { animation: match-pop .32s ease-in forwards; }
+    .revealed .front-row .item { animation: reveal-row .28s ease-out both; }
+    @keyframes match-pop { 35% { transform: translateY(-5px) scale(1.12); filter: brightness(1.25); } 100% { transform: translateY(-15px) scale(.15); opacity: 0; } }
+    @keyframes reveal-row { from { transform: translateY(-12px) scale(.8); opacity: .35; filter: brightness(.7); } to { transform: none; opacity: 1; filter: none; } }
     .controls { width: 100%; margin-top: 27px; display: flex; gap: 10px; }
     .control { flex: 1; min-height: 50px; border: 0; border-radius: 12px; padding: 10px; font-weight: 800; background: #78984b; color: white; box-shadow: 0 4px #537135; }
     .control.secondary { background: #fff8eb; color: #795634; box-shadow: 0 4px #d6bc94; }
@@ -41,7 +45,8 @@
     .win h2 { margin: 0 0 4px; font-size: 1.3rem; }
     .win p { margin: 0; }
     [hidden] { display: none !important; }
-    @media (max-height: 650px) { .instructions { margin: 8px auto; } .shelf { height: min(25vw, 110px); } .controls { margin-top: 18px; } }
+    @media (max-height: 650px) { h1 { padding: 6px 20px; margin: 4px 0 6px; } .instructions { margin: 8px auto; } .shelf { height: min(25vw, 110px); } .controls { margin-top: 18px; } }
+    @media (prefers-reduced-motion: reduce) { .matching .front-row .item, .revealed .front-row .item { animation-duration: .01ms; } }
   </style>
 </head>
 <body>
@@ -63,9 +68,18 @@
   <script>
     (() => {
       const products = {
-        milk: { name: 'Leite', icon: '🥛' },
-        coffee: { name: 'Café', icon: '☕' },
-        jam: { name: 'Geleia', icon: '🍓' }
+        milk: {
+          name: 'Leite',
+          art: '<path d="M12 24 L19 11 H39 L48 24 V80 Q48 84 44 84 H12 Q8 84 8 80 V27 Z" fill="#edf9ff" stroke="#82b8d6" stroke-width="2"/><path d="M12 24 L19 11 H39 L48 24 Z" fill="#9acbe7"/><path d="M10 28 H47 V40 H10 Z M10 70 H47 V82 H10 Z" fill="#72add4"/><rect x="24" y="7" width="11" height="5" rx="2" fill="#558fb5"/><circle cx="28" cy="54" r="10" fill="#b9dbed"/><text x="28" y="58" text-anchor="middle" fill="#326d99" font-size="11">♥</text><text x="28" y="68" text-anchor="middle" fill="#326d99" font-size="7" font-weight="bold">LEITE</text>'
+        },
+        coffee: {
+          name: 'Café',
+          art: '<path d="M12 12 Q28 15 44 12 L48 23 L46 81 Q28 87 10 81 L8 23 Z" fill="#aa5429" stroke="#81401f" stroke-width="2"/><path d="M10 24 Q28 28 46 24 L46 31 Q28 35 10 31 Z" fill="#db8d4f"/><path d="M11 41 Q28 34 45 41 L45 68 Q28 75 11 68 Z" fill="#f9d899"/><ellipse cx="28" cy="51" rx="6" ry="9" transform="rotate(35 28 51)" fill="#88441f"/><path d="M24 56 Q29 52 32 46" fill="none" stroke="#f4c77c" stroke-width="1.5"/><text x="28" y="67" text-anchor="middle" fill="#704020" font-size="8" font-weight="bold">CAFÉ</text>'
+        },
+        jam: {
+          name: 'Geleia',
+          art: '<rect x="10" y="19" width="36" height="65" rx="9" fill="#ae3041" stroke="#812536" stroke-width="2"/><rect x="8" y="13" width="40" height="13" rx="3" fill="#f0a29a" stroke="#bd6d67" stroke-width="2"/><path d="M9 18 H47" stroke="#f9d3c6" stroke-width="3" stroke-dasharray="5 3"/><rect x="13" y="37" width="30" height="30" rx="5" fill="#fff1d0"/><path d="M28 59 C15 53 21 44 28 48 C35 44 41 53 28 59 Z" fill="#d44853"/><path d="M28 48 L25 44 M28 48 L32 44" stroke="#689347" stroke-width="2"/><text x="28" y="75" text-anchor="middle" fill="#fff1d0" font-size="7" font-weight="bold">GELEIA</text>'
+        }
       };
       const initial = [
         { front: ['milk', 'milk', null], back: [['coffee', 'jam', null]] },
@@ -84,14 +98,16 @@
       let selected = null;
       let pointer = null;
       let completed = false;
+      let animating = false;
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
       function itemMarkup(id) {
         if (!id) return '';
         const product = products[id];
-        return `<span class="item ${id}"><span class="icon">${product.icon}</span><span class="name">${product.name}</span></span>`;
+        return `<span class="item ${id}"><svg viewBox="0 0 56 90" aria-hidden="true">${product.art}</svg></span>`;
       }
 
-      function render() {
+      function render(matching = [], revealed = []) {
         board.innerHTML = shelves.map((shelf, shelfIndex) => {
           const behind = shelf.back[0] || [null, null, null];
           const backRow = behind.map(item => `<span>${itemMarkup(item)}</span>`).join('');
@@ -100,32 +116,51 @@
             const label = item ? products[item].name : 'Vaga livre';
             return `<button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="${slotIndex}" aria-label="Prateleira ${shelfIndex + 1}, posição ${slotIndex + 1}: ${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button>`;
           }).join('');
-          return `<div class="shelf"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div></div>`;
+          const effect = matching.includes(shelfIndex) ? 'matching' : revealed.includes(shelfIndex) ? 'revealed' : '';
+          return `<div class="shelf ${effect}"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div></div>`;
         }).join('');
-        undo.disabled = history.length === 0;
+        undo.disabled = animating || history.length === 0;
+        restart.disabled = animating;
+        board.setAttribute('aria-busy', String(animating));
         win.hidden = !completed;
       }
 
-      function settle() {
-        for (const shelf of shelves) {
-          let changed = true;
-          while (changed) {
-            changed = false;
-            if (shelf.front[0] && shelf.front.every(item => item === shelf.front[0])) {
-              shelf.front = [null, null, null];
-              changed = true;
-            }
+      function pause(milliseconds) {
+        return new Promise(resolve => setTimeout(resolve, reduceMotion.matches ? 0 : milliseconds));
+      }
+
+      async function settle() {
+        while (true) {
+          const matching = [];
+          const revealed = [];
+          shelves.forEach((shelf, index) => {
+            if (shelf.front[0] && shelf.front.every(item => item === shelf.front[0])) matching.push(index);
+          });
+          if (matching.length) {
+            render(matching);
+            await pause(320);
+            matching.forEach(index => { shelves[index].front = [null, null, null]; });
+          }
+          shelves.forEach((shelf, index) => {
             if (shelf.front.every(item => item === null) && shelf.back.length) {
               shelf.front = shelf.back.shift();
-              changed = true;
+              revealed.push(index);
             }
+          });
+          if (revealed.length) {
+            render([], revealed);
+            await pause(280);
           }
+          if (!matching.length && !revealed.length) break;
         }
         completed = shelves.every(shelf => shelf.front.every(item => item === null) && shelf.back.length === 0);
+        animating = false;
+        message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : 'Continue organizando os produtos.';
+        render();
       }
 
       function move(from, to) {
-        if (!from || !to || completed) return false;
+        if (!from || !to || completed || animating) return false;
         const source = shelves[from.shelf].front;
         const target = shelves[to.shelf].front;
         if (!source[from.slot] || target[to.slot] !== null) return false;
@@ -133,9 +168,9 @@
         target[to.slot] = source[from.slot];
         source[from.slot] = null;
         selected = null;
-        settle();
-        message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : 'Continue organizando os produtos.';
+        animating = true;
         render();
+        settle();
         return true;
       }
 
@@ -145,10 +180,13 @@
       }
 
       board.addEventListener('pointerdown', event => {
-        if (event.button !== 0 || completed) return;
+        if (event.button !== 0 || completed || animating) return;
         const origin = position(event.target);
         if (!origin) return;
-        pointer = { id: event.pointerId, origin, x: event.clientX, y: event.clientY, dragging: false, ghost: null };
+        const slot = event.target.closest('.slot');
+        const item = slot.querySelector('.item');
+        const bounds = item && item.getBoundingClientRect();
+        pointer = { id: event.pointerId, origin, x: event.clientX, y: event.clientY, bounds, dragging: false, ghost: null, target: null };
         board.setPointerCapture(event.pointerId);
       });
 
@@ -161,11 +199,19 @@
           pointer.ghost = document.createElement('div');
           pointer.ghost.className = 'ghost';
           pointer.ghost.innerHTML = itemMarkup(item);
+          pointer.ghost.style.width = `${pointer.bounds.width}px`;
+          pointer.ghost.style.height = `${pointer.bounds.height}px`;
           document.body.append(pointer.ghost);
+          board.querySelector(`[data-shelf="${pointer.origin.shelf}"][data-slot="${pointer.origin.slot}"]`).classList.add('drag-origin');
         }
         if (pointer.ghost) {
-          pointer.ghost.style.left = `${event.clientX}px`;
-          pointer.ghost.style.top = `${event.clientY}px`;
+          pointer.ghost.style.left = `${pointer.bounds.left + event.clientX - pointer.x}px`;
+          pointer.ghost.style.top = `${pointer.bounds.top + event.clientY - pointer.y}px`;
+          if (pointer.target) pointer.target.classList.remove('drop-target');
+          const destination = document.elementFromPoint(event.clientX, event.clientY);
+          const target = position(destination);
+          pointer.target = target && shelves[target.shelf].front[target.slot] === null ? destination.closest('.slot') : null;
+          if (pointer.target) pointer.target.classList.add('drop-target');
         }
       });
 
@@ -174,6 +220,9 @@
         const current = pointer;
         pointer = null;
         if (current.ghost) current.ghost.remove();
+        if (current.target) current.target.classList.remove('drop-target');
+        const origin = board.querySelector(`[data-shelf="${current.origin.shelf}"][data-slot="${current.origin.slot}"]`);
+        if (origin) origin.classList.remove('drag-origin');
         if (cancelled) return;
         const destination = position(document.elementFromPoint(event.clientX, event.clientY));
         if (current.dragging) {
@@ -191,7 +240,7 @@
       board.addEventListener('pointerup', event => finishPointer(event));
       board.addEventListener('pointercancel', event => finishPointer(event, true));
       board.addEventListener('click', event => {
-        if (event.detail !== 0) return;
+        if (event.detail !== 0 || animating || completed) return;
         const destination = position(event.target);
         if (!destination) return;
         if (selected && move(selected, destination)) return;
