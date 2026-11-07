@@ -84,6 +84,13 @@
     <p id="message" class="message" aria-live="polite">Os produtos escuros estão na fileira de trás.</p>
     <section id="win" class="win" hidden aria-live="polite"><h2>Prateleiras organizadas!</h2><p id="win-message"></p><button id="next-level" class="control" type="button">Próxima fase →</button></section>
     <details class="settings">
+      <summary>Progresso</summary>
+      <div class="settings-content">
+        <p class="setting-note">Para jogar desde o começo, reinicie o progresso das fases.</p>
+        <button id="reset-progress" class="control secondary" type="button">Recomeçar da fase 1</button>
+      </div>
+    </details>
+    <details class="settings">
       <summary>♫ Som e vibração</summary>
       <div class="settings-content">
         <div class="setting-row">
@@ -173,6 +180,7 @@
       const board = document.getElementById('board');
       const undo = document.getElementById('undo');
       const restart = document.getElementById('restart');
+      const resetProgress = document.getElementById('reset-progress');
       const message = document.getElementById('message');
       const win = document.getElementById('win');
       const winMessage = document.getElementById('win-message');
@@ -388,6 +396,7 @@
         }).join('');
         undo.disabled = animating || history.length === 0;
         restart.disabled = animating;
+        resetProgress.disabled = animating;
         board.setAttribute('aria-busy', String(animating));
         win.hidden = !completed;
         levelLabel.textContent = `Fase ${currentLevel + 1}`;
@@ -569,6 +578,17 @@
       restart.addEventListener('click', () => {
         if (history.length && !confirm('Recomeçar esta fase?')) return;
         openLevel(currentLevel);
+      });
+      resetProgress.addEventListener('click', () => {
+        if (animating || !confirm('Recomeçar da fase 1? O avanço das fases será apagado neste navegador.')) return;
+        try {
+          localStorage.setItem('mercadinho-unlocked', '0');
+        } catch {
+          message.textContent = 'Não foi possível salvar o reinício do progresso neste navegador.';
+          return;
+        }
+        unlocked = 0;
+        openLevel(0);
       });
       message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : levels[currentLevel].hint;
       render();
