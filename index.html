@@ -134,6 +134,10 @@
           name: 'Café',
           art: '<path d="M12 12 Q28 15 44 12 L48 23 L46 81 Q28 87 10 81 L8 23 Z" fill="#aa5429" stroke="#81401f" stroke-width="2"/><path d="M10 24 Q28 28 46 24 L46 31 Q28 35 10 31 Z" fill="#db8d4f"/><path d="M11 41 Q28 34 45 41 L45 68 Q28 75 11 68 Z" fill="#f9d899"/><ellipse cx="28" cy="51" rx="6" ry="9" transform="rotate(35 28 51)" fill="#88441f"/><path d="M24 56 Q29 52 32 46" fill="none" stroke="#f4c77c" stroke-width="1.5"/><text x="28" y="67" text-anchor="middle" fill="#704020" font-size="8" font-weight="bold">CAFÉ</text>'
         },
+        tea: {
+          name: 'Chá',
+          art: '<rect x="10" y="16" width="36" height="68" rx="5" fill="#8eb35e" stroke="#526f35" stroke-width="2"/><path d="M10 23 H46 V31 H10 Z M10 72 H46 V80 H10 Z" fill="#628a42"/><rect x="14" y="34" width="28" height="32" rx="4" fill="#f5edc4"/><path d="M28 58 C15 51 20 41 32 42 C39 47 36 55 28 58 Z" fill="#76a651"/><path d="M23 53 L33 46" stroke="#f5edc4" stroke-width="2"/><text x="28" y="75" text-anchor="middle" fill="#fff7da" font-size="8" font-weight="bold">CHÁ</text>'
+        },
         jam: {
           name: 'Geleia',
           art: '<rect x="10" y="19" width="36" height="65" rx="9" fill="#ae3041" stroke="#812536" stroke-width="2"/><rect x="8" y="13" width="40" height="13" rx="3" fill="#f0a29a" stroke="#bd6d67" stroke-width="2"/><path d="M9 18 H47" stroke="#f9d3c6" stroke-width="3" stroke-dasharray="5 3"/><rect x="13" y="37" width="30" height="30" rx="5" fill="#fff1d0"/><path d="M28 59 C15 53 21 44 28 48 C35 44 41 53 28 59 Z" fill="#d44853"/><path d="M28 48 L25 44 M28 48 L32 44" stroke="#689347" stroke-width="2"/><text x="28" y="75" text-anchor="middle" fill="#fff1d0" font-size="7" font-weight="bold">GELEIA</text>'
@@ -206,6 +210,30 @@
             { type: 'dispenser', front: [null, 'milk', null], back: [], queue: ['coffee', 'jam', 'milk', 'coffee', 'jam'] },
             { front: ['milk', 'coffee', 'jam'], back: [], lock: { remaining: 2, order: 0 } },
             { front: ['milk', 'coffee', 'jam'], back: [] }
+          ]
+        },
+        {
+          instructions: 'Um novo produto chegou: combine as caixas de chá!',
+          hint: 'A caixa de produtos entrega um item de cada vez.',
+          shelves: [
+            { front: ['milk', 'milk', null], back: [] },
+            { front: ['coffee', 'coffee', null], back: [] },
+            { front: ['jam', 'jam', null], back: [] },
+            { front: ['tea', 'tea', null], back: [] },
+            { type: 'dispenser', front: [null, 'milk', null], back: [], queue: ['coffee', 'jam', 'tea'] },
+            { front: [null, null, null], back: [] }
+          ]
+        },
+        {
+          instructions: 'Combine os quatro produtos e abra a prateleira com corrente.',
+          hint: 'O trio escondido também ajuda a abrir a corrente.',
+          shelves: [
+            { front: ['milk', 'milk', null], back: [['tea', 'tea', 'tea']] },
+            { front: ['coffee', 'coffee', null], back: [] },
+            { front: ['jam', 'jam', null], back: [] },
+            { type: 'dispenser', front: [null, 'milk', null], back: [], queue: ['coffee', 'jam', 'milk', 'coffee', 'jam', 'tea', 'tea', 'tea'] },
+            { front: ['milk', 'coffee', 'jam'], back: [['milk', 'coffee', 'jam']], lock: { remaining: 2, order: 0 } },
+            { front: [null, null, null], back: [] }
           ]
         }
       ];

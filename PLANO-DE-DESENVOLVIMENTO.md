@@ -8,7 +8,7 @@ O jogo será gratuito para instalar e jogar, sem anúncios, compras internas, as
 
 ## Estado atual — 7 de novembro de 2026
 
-O repositório contém um protótipo web publicado no GitHub Pages, com seis fases jogáveis. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases usam produtos ilustrados provisórios, controles por arraste ou seleção, desfazer, reinício e tela de vitória.
+O repositório contém um protótipo web publicado no GitHub Pages, com oito fases jogáveis. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases 7 e 8 apresentam o chá como quarto produto e combinam as mecânicas já introduzidas. As fases usam produtos ilustrados provisórios, controles por arraste ou seleção, desfazer, reinício e tela de vitória.
 
 O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. As fases avançadas com seis compartimentos alternam formatos de prateleira, determinados por uma semente salva no navegador. Uma fase em andamento é retomada após recarregar, a partir da última jogada concluída; até 100 jogadas ficam disponíveis no histórico salvo. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
 
