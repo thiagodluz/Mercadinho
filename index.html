@@ -55,10 +55,6 @@
     .win h2 { margin: 0 0 4px; font-size: 1.3rem; }
     .win p { margin: 0; }
     .win .control { margin-top: 12px; padding-inline: 22px; }
-    .level-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 9px; }
-    .level-choice { border: 1px solid #dfc59e; background: #fff8eb; color: #705238; border-radius: 999px; padding: 5px 12px; font-size: .76rem; font-weight: 800; }
-    .level-choice[aria-current="step"] { background: #79984b; color: white; border-color: #79984b; }
-    .level-choice:disabled { opacity: .5; cursor: default; }
     .settings { width: 100%; margin-top: 14px; border: 1px solid #e2cba8; border-radius: 12px; background: #fff8eb; color: #705238; }
     .settings summary { padding: 11px 14px; cursor: pointer; font-weight: 800; }
     .settings-content { display: grid; gap: 12px; padding: 0 14px 15px; }
@@ -78,12 +74,6 @@
       <div class="eyebrow">Um jogo de organizar</div>
       <h1>Mercadinho</h1>
       <div id="level" class="level">Fase 1</div>
-      <nav class="level-nav" aria-label="Escolher fase">
-        <button id="level-one" class="level-choice" type="button" aria-current="step">Fase 1</button>
-        <button id="level-two" class="level-choice" type="button" disabled>Fase 2 🔒</button>
-        <button id="level-three" class="level-choice" type="button" disabled>Fase 3 🔒</button>
-        <button id="level-four" class="level-choice" type="button" disabled>Fase 4 🔒</button>
-      </nav>
       <p id="instructions" class="instructions">Arraste os produtos e junte três iguais na mesma prateleira.</p>
     </header>
     <div id="board" class="board" aria-label="Prateleiras do jogo"></div>
@@ -189,23 +179,26 @@
       const nextLevel = document.getElementById('next-level');
       const levelLabel = document.getElementById('level');
       const instructions = document.getElementById('instructions');
-      const levelButtons = [document.getElementById('level-one'), document.getElementById('level-two'), document.getElementById('level-three'), document.getElementById('level-four')];
       const copy = value => JSON.parse(JSON.stringify(value));
       let unlocked = 0;
       try {
         const saved = Number(localStorage.getItem('mercadinho-unlocked'));
-        if (Number.isInteger(saved) && saved >= 0 && saved < levels.length) unlocked = saved;
+        if (Number.isInteger(saved) && saved >= 0) unlocked = Math.min(saved, levels.length);
       } catch {}
-      let currentLevel = 0;
-      try {
-        const saved = Number(localStorage.getItem('mercadinho-level'));
-        if (Number.isInteger(saved) && saved >= 0 && saved <= unlocked) currentLevel = saved;
-      } catch {}
+      let currentLevel = Math.min(unlocked, levels.length - 1);
       let shelves = copy(levels[currentLevel].shelves);
       let history = [];
       let selected = null;
       let pointer = null;
-      let completed = false;
+      let completed = unlocked === levels.length;
+      if (completed) {
+        shelves.forEach(shelf => {
+          shelf.front = [null, null, null];
+          shelf.back = [];
+          if (shelf.queue) shelf.queue = [];
+          if (shelf.lock) shelf.lock.remaining = 0;
+        });
+      }
       let animating = false;
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
       const audioSettings = { effects: true, music: false, vibration: false, effectsVolume: 65, musicVolume: 30 };
@@ -399,12 +392,6 @@
         win.hidden = !completed;
         levelLabel.textContent = `Fase ${currentLevel + 1}`;
         instructions.textContent = levels[currentLevel].instructions;
-        levelButtons.forEach((button, index) => {
-          button.disabled = animating || index > unlocked;
-          if (index === currentLevel) button.setAttribute('aria-current', 'step');
-          else button.removeAttribute('aria-current');
-        });
-        levelButtons.forEach((button, index) => { button.textContent = `Fase ${index + 1}${index > unlocked ? ' 🔒' : ''}`; });
         winMessage.textContent = `Você concluiu a fase ${currentLevel + 1}. ✨`;
         nextLevel.hidden = currentLevel === levels.length - 1;
       }
@@ -447,7 +434,7 @@
           if (!matching.length && !revealed.length) break;
         }
         completed = shelves.every(shelf => shelf.front.every(item => item === null) && shelf.back.length === 0 && (!shelf.queue || shelf.queue.length === 0));
-        if (completed && currentLevel < levels.length - 1) {
+        if (completed) {
           unlocked = Math.max(unlocked, currentLevel + 1);
           try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
         }
@@ -551,6 +538,10 @@
       });
       undo.addEventListener('click', () => {
         if (!history.length) return;
+        if (completed && unlocked === currentLevel + 1) {
+          unlocked = currentLevel;
+          try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
+        }
         shelves = history.pop();
         playEffect('undo');
         completed = false;
@@ -560,26 +551,26 @@
       });
       function openLevel(index) {
         if (animating || index > unlocked || index < 0 || index >= levels.length) return;
+        if (index === currentLevel && completed && unlocked === levels.length) {
+          unlocked = currentLevel;
+          try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
+        }
         currentLevel = index;
         shelves = copy(levels[index].shelves);
         history = [];
         selected = null;
         completed = false;
         message.textContent = levels[index].hint;
-        try { localStorage.setItem('mercadinho-level', String(index)); } catch {}
         render();
       }
-      levelButtons.forEach((button, index) => button.addEventListener('click', () => {
-        if (index === currentLevel) return;
-        if (history.length && !completed && !confirm('Trocar de fase e recomeçar a fase atual?')) return;
-        openLevel(index);
-      }));
-      nextLevel.addEventListener('click', () => openLevel(currentLevel + 1));
+      nextLevel.addEventListener('click', () => {
+        if (completed) openLevel(currentLevel + 1);
+      });
       restart.addEventListener('click', () => {
         if (history.length && !confirm('Recomeçar esta fase?')) return;
         openLevel(currentLevel);
       });
-      message.textContent = levels[currentLevel].hint;
+      message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : levels[currentLevel].hint;
       render();
     })();
   </script>
