@@ -83,25 +83,24 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 
 ## Próximas prioridades
 
-1. **Testar o protótipo em um celular físico.** Conferir arraste, encaixe, efeitos, música, vibração, legibilidade e retomada após interrupções. Registrar problemas e ajustá-los antes de ampliar o conteúdo.
-2. **Preparar uma versão Android de teste.** Avaliar e integrar o Capacitor, gerar um APK de teste e verificar tela cheia, áreas seguras, salvamento, áudio, vibração e funcionamento offline. A verificação no aparelho continua necessária mesmo após o empacotamento.
-3. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. Implementar identificação de impasse e definir o comportamento da dica.
-4. **Criar mais conteúdo.** Ampliar a campanha gradualmente, projetar e validar uma solução para cada fase e avaliar a dificuldade com jogadores.
-5. **Refinar a apresentação.** Evoluir as ilustrações e as animações a partir do mockup e substituir ou aprovar a melodia provisória após escuta e testes.
+1. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. Implementar identificação de impasse e definir o comportamento da dica.
+2. **Criar mais conteúdo.** Ampliar a campanha gradualmente, projetar e validar uma solução para cada fase e avaliar a dificuldade com jogadores.
+3. **Refinar a apresentação.** Evoluir as ilustrações e as animações a partir do mockup e substituir ou aprovar a melodia provisória após escuta e testes.
+4. **Testar e finalizar a versão web.** Conferir arraste, encaixe, áudio, vibração, legibilidade, salvamento e retomada no navegador do computador e em um celular físico. Implementar e verificar o funcionamento offline pretendido.
+5. **Preparar o aplicativo Android.** Após a versão web estar completa e testada, avaliar e integrar o Capacitor, gerar um APK de teste e verificar tela cheia, áreas seguras, salvamento, áudio, vibração e funcionamento offline no aplicativo.
 
 ## Etapas de desenvolvimento
 
 ### 1. Preparação do projeto
 
 - [x] Preparar a execução no navegador e publicar o protótipo web no GitHub Pages.
-- [ ] Avaliar e integrar o empacotamento Android com Capacitor.
 - [ ] Definir estrutura do código, formatos de fase e organização dos recursos.
 - [x] Criar repositório funcional e hospedar o protótipo web.
-- [ ] Acrescentar instruções de execução local, testes e compilação Android.
+- [ ] Acrescentar instruções de execução local e testes da versão web.
 - [ ] Definir padrão de nomes, resolução de referência e adaptação a telas verticais.
 - [ ] Preparar um fluxo simples de versões e verificação antes de integrar alterações.
 
-Entrega: projeto abre no navegador e o caminho de geração de uma versão Android está preparado.
+Entrega: projeto abre no navegador, com estrutura e instruções para continuar o desenvolvimento web.
 
 ### 2. Núcleo jogável
 
@@ -150,7 +149,7 @@ Entrega: uma versão visualmente consistente e confortável de jogar.
 - [ ] Variar quantidade de vagas, tipos de produto, profundidade e posição dos obstáculos.
 - [x] Salvar a fase desbloqueada, a fase selecionada e as preferências de áudio no navegador.
 - [ ] Definir e implementar a persistência do estado da fase em andamento, se desejada.
-- [ ] Verificar a migração e a preservação dos dados na versão Android e em futuras atualizações.
+- [ ] Verificar a preservação dos dados em futuras atualizações da versão web e, posteriormente, na versão Android.
 - [x] Permitir voltar às fases desbloqueadas e preservar o desbloqueio ao recarregar o navegador.
 - [ ] Validar o comportamento após fechamento e atualização no aplicativo Android.
 - [ ] Validar solução e conclusão de cada fase. Automatizar verificações de tabuleiro e acrescentar testes manuais para situações não cobertas.
@@ -159,11 +158,11 @@ Entrega: campanha inicial completa e jogável offline.
 
 ### 6. Testes e refinamento
 
-- [ ] Testar tela pequena, diferentes proporções, recortes e áreas de navegação do Android.
+- [ ] Testar a versão web em telas pequenas, diferentes proporções e navegadores, inclusive no celular.
 - [ ] Testar toque rápido, arraste interrompido, tela bloqueada, chamadas e retorno ao jogo.
-- [ ] Testar consistência após fechar o aplicativo, reiniciar e atualizar versões.
+- [ ] Testar consistência da versão web após fechar, reabrir e atualizar o jogo.
 - [ ] Validar vitória, impasse, desfazer e reinício em fases com camadas, dispensadores e correntes.
-- [ ] Avaliar fluidez, consumo de bateria, tamanho do aplicativo e legibilidade.
+- [ ] Avaliar fluidez, consumo de bateria, tamanho dos recursos e legibilidade na versão web.
 - [ ] Fazer testes com jogadores e registrar onde ficam confusos ou presos.
 - [ ] Corrigir falhas e ajustar a dificuldade antes da publicação.
 
@@ -173,7 +172,9 @@ Entrega: versão candidata com fases verificadas e desempenho aceitável nos apa
 
 - [ ] Criar nome final, ícone, capturas de tela e descrição coerentes com o jogo.
 - [ ] Revisar direitos de uso dos recursos artísticos, fontes, sons e bibliotecas.
-- [ ] Preparar versão Android assinada e proteger a chave de assinatura.
+- [ ] Com a versão web pronta e testada, avaliar e integrar o Capacitor e gerar um APK de teste.
+- [ ] Verificar o aplicativo em celular físico, incluindo tela cheia, áreas seguras, salvamento, áudio, vibração, interrupções e funcionamento offline.
+- [ ] Preparar versão Android assinada, documentar a compilação e proteger a chave de assinatura.
 - [ ] Conferir os requisitos vigentes da Google Play, incluindo testes, compatibilidade, segurança de dados e políticas aplicáveis.
 - [ ] Realizar teste fechado quando exigido e corrigir os problemas encontrados.
 - [ ] Publicar a primeira versão quando estiver pronta, com histórico de mudanças e canal de suporte.
