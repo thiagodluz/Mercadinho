@@ -254,6 +254,40 @@
           if (shelf.lock) shelf.lock.remaining = 0;
         });
       }
+      // Salva apenas estados já estabilizados, incluindo o histórico para desfazer.
+      const saveKey = 'mercadinho-partida-v1';
+      function validSnapshot(value, level) {
+        if (!Array.isArray(value) || value.length !== level.shelves.length) return false;
+        const validRow = row => Array.isArray(row) && row.length === 3 && row.every(item => item === null || Object.hasOwn(products, item));
+        return value.every((shelf, i) => {
+          const original = level.shelves[i];
+          if (!shelf || shelf.type !== original.type || !validRow(shelf.front) || !Array.isArray(shelf.back) || shelf.back.length > original.back.length || !shelf.back.every(validRow)) return false;
+          if (original.type === 'dispenser') {
+            if (!Array.isArray(shelf.queue) || shelf.queue.length > original.queue.length || !shelf.queue.every(item => Object.hasOwn(products, item)) || shelf.front[0] !== null || shelf.front[2] !== null) return false;
+          } else if (shelf.queue !== undefined) return false;
+          if (original.lock) {
+            if (!shelf.lock || shelf.lock.order !== original.lock.order || !Number.isInteger(shelf.lock.remaining) || shelf.lock.remaining < 0 || shelf.lock.remaining > original.lock.remaining) return false;
+          } else if (shelf.lock) return false;
+          return true;
+        });
+      }
+      let restored = false;
+      if (!completed) {
+        try {
+          const saved = JSON.parse(localStorage.getItem(saveKey) || 'null');
+          if (saved && saved.version === 1 && saved.level === currentLevel && validSnapshot(saved.shelves, levels[currentLevel]) && Array.isArray(saved.history) && saved.history.length <= 100 && saved.history.every(state => validSnapshot(state, levels[currentLevel]))) {
+            shelves = saved.shelves;
+            history = saved.history;
+            restored = true;
+          }
+        } catch {}
+      }
+      function saveGame() {
+        try {
+          if (completed) localStorage.removeItem(saveKey);
+          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, level: currentLevel, shelves, history: history.slice(-100) }));
+        } catch {}
+      }
       let animating = false;
       let advanceTimer = null;
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -519,6 +553,7 @@
         }
         if (completed) playEffect('win');
         animating = false;
+        saveGame();
         message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : 'Continue organizando os produtos.';
         render();
         if (completed && currentLevel < levels.length - 1) {
@@ -635,6 +670,7 @@
         completed = false;
         selected = null;
         message.textContent = 'Última jogada desfeita.';
+        saveGame();
         render();
       });
       function openLevel(index) {
@@ -651,6 +687,7 @@
         selected = null;
         completed = false;
         message.textContent = levels[index].hint;
+        saveGame();
         render();
       }
       restart.addEventListener('click', () => {
@@ -668,7 +705,7 @@
         unlocked = 0;
         openLevel(0);
       });
-      message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : levels[currentLevel].hint;
+      message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : restored ? 'Sua partida foi retomada.' : levels[currentLevel].hint;
       render();
     })();
   </script>

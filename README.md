@@ -23,7 +23,7 @@ O protótipo publicado tem seis fases de demonstração, com progressão gradual
 - **Dispensador:** retire os produtos na ordem apresentada.
 - **Correntes:** complete trios para abrir compartimentos bloqueados.
 - **Controles de partida:** arraste ou selecione um produto, desfaça movimentos e reinicie a fase.
-- **Progresso local:** o navegador guarda a fase mais avançada e as preferências de áudio.
+- **Progresso local:** o navegador guarda a fase mais avançada, a partida em andamento e as preferências de áudio.
 
 O conteúdo ainda é um protótipo; número de fases, arte, áudio e regras podem mudar conforme os testes.
 

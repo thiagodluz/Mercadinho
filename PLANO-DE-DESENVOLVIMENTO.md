@@ -10,7 +10,7 @@ O jogo será gratuito para instalar e jogar, sem anúncios, compras internas, as
 
 O repositório contém um protótipo web publicado no GitHub Pages, com seis fases jogáveis. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases usam produtos ilustrados provisórios, controles por arraste ou seleção, desfazer, reinício e tela de vitória.
 
-O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. As fases avançadas com seis compartimentos alternam formatos de prateleira, determinados por uma semente salva no navegador. Uma fase em andamento começa novamente ao recarregar. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
+O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. As fases avançadas com seis compartimentos alternam formatos de prateleira, determinados por uma semente salva no navegador. Uma fase em andamento é retomada após recarregar, a partir da última jogada concluída; até 100 jogadas ficam disponíveis no histórico salvo. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
 
 O protótipo foi verificado no navegador e por testes pontuais da lógica. Os testes automatizados usados até agora não estão versionados no repositório. O toque, a vibração, o áudio e a retomada precisam ser verificados em um celular físico. Ainda é necessário criar o aplicativo Android e validar o funcionamento offline da versão web publicada.
 
@@ -148,7 +148,7 @@ Entrega: uma versão visualmente consistente e confortável de jogar.
 - [ ] Introduzir cada mecânica de forma gradual e variar a dificuldade sem saltos bruscos.
 - [ ] Variar quantidade de vagas, tipos de produto, profundidade e posição dos obstáculos.
 - [x] Salvar a fase mais avançada e as preferências de áudio no navegador.
-- [ ] Definir e implementar a persistência do estado da fase em andamento, se desejada.
+- [x] Salvar e retomar o estado estabilizado da fase em andamento no navegador, incluindo até 100 jogadas para desfazer.
 - [ ] Verificar a preservação dos dados em futuras atualizações da versão web e, posteriormente, na versão Android.
 - [x] Avançar pelas fases em sequência, permitir reiniciar a fase atual e preservar o progresso ao recarregar o navegador.
 - [ ] Validar o comportamento após fechamento e atualização no aplicativo Android.
@@ -204,5 +204,5 @@ Entrega: versão pública gratuita e sem anúncios, acompanhada de instruções 
 - Quantidade de desfazimentos e critérios para a dica.
 - Fórmula de pontuação e se combos terão uma janela de tempo na campanha.
 - Tratamento de troca entre itens acessíveis em uma versão futura.
-- Retomada de uma fase interrompida no ponto exato ou no início.
+- Validar a retomada após interrupções e atualizações em diferentes navegadores e, depois, no aplicativo Android.
 - Modelo de criação e validação de fases adicionais, incluindo geração automática apenas se mantiver solução verificável.
