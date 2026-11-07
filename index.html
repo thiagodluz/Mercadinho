@@ -59,6 +59,14 @@
     .level-choice { border: 1px solid #dfc59e; background: #fff8eb; color: #705238; border-radius: 999px; padding: 5px 12px; font-size: .76rem; font-weight: 800; }
     .level-choice[aria-current="step"] { background: #79984b; color: white; border-color: #79984b; }
     .level-choice:disabled { opacity: .5; cursor: default; }
+    .settings { width: 100%; margin-top: 14px; border: 1px solid #e2cba8; border-radius: 12px; background: #fff8eb; color: #705238; }
+    .settings summary { padding: 11px 14px; cursor: pointer; font-weight: 800; }
+    .settings-content { display: grid; gap: 12px; padding: 0 14px 15px; }
+    .setting-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 14px; font-size: .9rem; }
+    .setting-row label { font-weight: 700; }
+    .setting-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #78984b; }
+    .setting-row input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: #78984b; }
+    .setting-note { margin: 0; font-size: .77rem; line-height: 1.35; color: #806b51; }
     [hidden] { display: none !important; }
     @media (max-height: 650px) { h1 { padding: 6px 20px; margin: 4px 0 6px; } .instructions { margin: 8px auto; } .shelf { height: min(25vw, 110px); } .controls { margin-top: 18px; } }
     @media (prefers-reduced-motion: reduce) { .matching .front-row .item, .revealed .front-row .item { animation-duration: .01ms; } }
@@ -84,6 +92,30 @@
     </div>
     <p id="message" class="message" aria-live="polite">Os produtos escuros estão na fileira de trás.</p>
     <section id="win" class="win" hidden aria-live="polite"><h2>Prateleiras organizadas!</h2><p id="win-message"></p><button id="next-level" class="control" type="button">Próxima fase →</button></section>
+    <details class="settings">
+      <summary>♫ Som e vibração</summary>
+      <div class="settings-content">
+        <div class="setting-row">
+          <label for="effects-enabled">Efeitos sonoros</label>
+          <input id="effects-enabled" type="checkbox">
+          <label for="effects-volume">Volume dos efeitos</label>
+          <output id="effects-value" for="effects-volume"></output>
+          <input id="effects-volume" type="range" min="0" max="100" step="1">
+        </div>
+        <div class="setting-row">
+          <label for="music-enabled">Música ambiente</label>
+          <input id="music-enabled" type="checkbox">
+          <label for="music-volume">Volume da música</label>
+          <output id="music-value" for="music-volume"></output>
+          <input id="music-volume" type="range" min="0" max="100" step="1">
+        </div>
+        <div id="vibration-row" class="setting-row">
+          <label for="vibration-enabled">Vibração</label>
+          <input id="vibration-enabled" type="checkbox">
+        </div>
+        <p class="setting-note">A música começa depois da primeira interação com o jogo.</p>
+      </div>
+    </details>
   </main>
   <script>
     (() => {
@@ -163,6 +195,162 @@
       let completed = false;
       let animating = false;
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const audioSettings = { effects: true, music: false, vibration: false, effectsVolume: 65, musicVolume: 30 };
+      try {
+        const saved = JSON.parse(localStorage.getItem('mercadinho-audio') || '{}');
+        for (const key of ['effects', 'music', 'vibration']) {
+          if (typeof saved[key] === 'boolean') audioSettings[key] = saved[key];
+        }
+        for (const key of ['effectsVolume', 'musicVolume']) {
+          if (Number.isFinite(saved[key])) audioSettings[key] = Math.max(0, Math.min(100, saved[key]));
+        }
+      } catch {}
+      const effectsEnabled = document.getElementById('effects-enabled');
+      const effectsVolume = document.getElementById('effects-volume');
+      const effectsValue = document.getElementById('effects-value');
+      const musicEnabled = document.getElementById('music-enabled');
+      const musicVolume = document.getElementById('music-volume');
+      const musicValue = document.getElementById('music-value');
+      const vibrationEnabled = document.getElementById('vibration-enabled');
+      const vibrationRow = document.getElementById('vibration-row');
+      let audioContext = null;
+      let musicGain = null;
+      let musicTimer = null;
+
+      function saveAudioSettings() {
+        try { localStorage.setItem('mercadinho-audio', JSON.stringify(audioSettings)); } catch {}
+      }
+
+      function updateAudioControls() {
+        effectsEnabled.checked = audioSettings.effects;
+        effectsVolume.value = audioSettings.effectsVolume;
+        effectsValue.textContent = `${audioSettings.effectsVolume}%`;
+        musicEnabled.checked = audioSettings.music;
+        musicVolume.value = audioSettings.musicVolume;
+        musicValue.textContent = `${audioSettings.musicVolume}%`;
+        vibrationEnabled.checked = audioSettings.vibration;
+        vibrationRow.hidden = typeof navigator.vibrate !== 'function';
+        if (musicGain && audioContext) {
+          musicGain.gain.setTargetAtTime(audioSettings.music ? audioSettings.musicVolume / 100 : 0, audioContext.currentTime, 0.02);
+        }
+      }
+
+      async function activateAudio() {
+        if ((!audioSettings.effects && !audioSettings.music) || document.hidden) return null;
+        try {
+          const AudioEngine = window.AudioContext || window.webkitAudioContext;
+          if (!AudioEngine) return null;
+          if (!audioContext) {
+            audioContext = new AudioEngine();
+            musicGain = audioContext.createGain();
+            musicGain.connect(audioContext.destination);
+            updateAudioControls();
+          }
+          if (audioContext.state === 'suspended') await audioContext.resume();
+          return audioContext.state === 'running' ? audioContext : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function tone(context, frequency, start, duration, volume, output) {
+        const oscillator = context.createOscillator();
+        const envelope = context.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(frequency, start);
+        envelope.gain.setValueAtTime(0.0001, start);
+        envelope.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), start + 0.025);
+        envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        oscillator.connect(envelope);
+        envelope.connect(output);
+        oscillator.onended = () => { oscillator.disconnect(); envelope.disconnect(); };
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.02);
+      }
+
+      function playEffect(kind) {
+        if (!audioSettings.effects || audioSettings.effectsVolume === 0) return;
+        activateAudio().then(context => {
+          if (!context || !audioSettings.effects || audioSettings.effectsVolume === 0) return;
+          const sounds = {
+            place: [523.25],
+            match: [659.25, 783.99, 1046.5],
+            unlock: [523.25, 659.25, 783.99],
+            win: [523.25, 659.25, 783.99, 1046.5],
+            undo: [440, 349.23]
+          };
+          const notes = sounds[kind] || [];
+          notes.forEach((frequency, index) => tone(context, frequency, context.currentTime + index * 0.075, 0.22, 0.045 * audioSettings.effectsVolume / 100, context.destination));
+        });
+      }
+
+      function playMusicPhrase() {
+        if (!audioContext || audioContext.state !== 'running' || !audioSettings.music || document.hidden) return;
+        const notes = [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23];
+        notes.forEach((frequency, index) => tone(audioContext, frequency, audioContext.currentTime + index * 0.7, 0.8, 0.025, musicGain));
+      }
+
+      function stopMusic() {
+        if (musicTimer !== null) clearInterval(musicTimer);
+        musicTimer = null;
+      }
+
+      async function startMusic() {
+        if (!audioSettings.music || document.hidden || musicTimer !== null) return;
+        const context = await activateAudio();
+        if (!context || !audioSettings.music || document.hidden || musicTimer !== null) return;
+        playMusicPhrase();
+        musicTimer = setInterval(playMusicPhrase, 5600);
+      }
+
+      function vibrate(duration) {
+        if (!audioSettings.vibration || typeof navigator.vibrate !== 'function') return;
+        try { navigator.vibrate(duration); } catch {}
+      }
+
+      effectsEnabled.addEventListener('change', () => {
+        audioSettings.effects = effectsEnabled.checked;
+        saveAudioSettings();
+        updateAudioControls();
+        if (audioSettings.effects) playEffect('place');
+      });
+      effectsVolume.addEventListener('input', () => {
+        audioSettings.effectsVolume = Number(effectsVolume.value);
+        saveAudioSettings();
+        updateAudioControls();
+      });
+      musicEnabled.addEventListener('change', () => {
+        audioSettings.music = musicEnabled.checked;
+        saveAudioSettings();
+        updateAudioControls();
+        if (audioSettings.music) startMusic();
+        else stopMusic();
+      });
+      musicVolume.addEventListener('input', () => {
+        audioSettings.musicVolume = Number(musicVolume.value);
+        saveAudioSettings();
+        updateAudioControls();
+      });
+      vibrationEnabled.addEventListener('change', () => {
+        audioSettings.vibration = vibrationEnabled.checked;
+        saveAudioSettings();
+        updateAudioControls();
+        vibrate(15);
+      });
+      function onInteraction() {
+        activateAudio().then(() => startMusic());
+      }
+      document.addEventListener('pointerdown', onInteraction, { passive: true });
+      document.addEventListener('keydown', onInteraction);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          stopMusic();
+          if (audioContext && audioContext.state === 'running') audioContext.suspend().catch(() => {});
+        } else if (audioSettings.music) {
+          startMusic();
+        }
+      });
+      updateAudioControls();
 
       function itemMarkup(id) {
         if (!id) return '';
@@ -221,11 +409,16 @@
           });
           if (matching.length) {
             render(matching);
+            playEffect('match');
+            vibrate(30);
             await pause(320);
             matching.forEach(index => { shelves[index].front = [null, null, null]; });
             for (const index of matching) {
               const activeLock = shelves.filter(shelf => shelf.lock && shelf.lock.remaining > 0).sort((a, b) => a.lock.order - b.lock.order)[0];
-              if (activeLock) activeLock.lock.remaining -= 1;
+              if (activeLock) {
+                activeLock.lock.remaining -= 1;
+                if (activeLock.lock.remaining === 0) playEffect('unlock');
+              }
             }
           }
           shelves.forEach((shelf, index) => {
@@ -245,6 +438,7 @@
           unlocked = Math.max(unlocked, currentLevel + 1);
           try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
         }
+        if (completed) playEffect('win');
         animating = false;
         message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : 'Continue organizando os produtos.';
         render();
@@ -260,6 +454,8 @@
         history.push(copy(shelves));
         target[to.slot] = source[from.slot];
         source[from.slot] = sourceShelf.type === 'dispenser' ? (sourceShelf.queue.shift() || null) : null;
+        playEffect('place');
+        vibrate(12);
         selected = null;
         animating = true;
         render();
@@ -343,6 +539,7 @@
       undo.addEventListener('click', () => {
         if (!history.length) return;
         shelves = history.pop();
+        playEffect('undo');
         completed = false;
         selected = null;
         message.textContent = 'Última jogada desfeita.';
