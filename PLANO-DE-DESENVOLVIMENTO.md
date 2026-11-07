@@ -83,7 +83,7 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 
 ## Próximas prioridades
 
-1. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. A matriz atual verifica 72 tabuleiros gerados em seis sementes, com até 14 tipos de produto. Ampliar a cobertura para posições intermediárias e avaliar a busca em celulares.
+1. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. A matriz atual verifica 72 tabuleiros gerados em seis sementes, com até 14 tipos de produto. Ampliar a cobertura para posições intermediárias e repetir a validação da busca em outros celulares.
 2. **Criar mais conteúdo.** Ampliar a campanha gradualmente, projetar e validar uma solução para cada fase e avaliar a dificuldade com jogadores.
 3. **Refinar a apresentação.** Evoluir as ilustrações e as animações a partir do mockup e substituir ou aprovar a melodia provisória após escuta e testes.
 4. **Testar e finalizar a versão web.** Conferir arraste, encaixe, áudio, vibração, legibilidade, salvamento e retomada no navegador do computador e em um celular físico. Implementar e verificar o funcionamento offline pretendido.
@@ -158,6 +158,7 @@ Entrega: campanha inicial completa e jogável offline.
 
 ### 6. Testes e refinamento
 
+- [x] Conferir no celular o comportamento das fases geradas e da dica. Thiago confirmou que os testes desta etapa passaram em 7 de novembro de 2026.
 - [ ] Testar a versão web em telas pequenas, diferentes proporções e navegadores, inclusive no celular.
 - [ ] Testar toque rápido, arraste interrompido, tela bloqueada, chamadas e retorno ao jogo.
 - [ ] Testar consistência da versão web após fechar, reabrir e atualizar o jogo.
