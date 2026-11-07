@@ -82,7 +82,7 @@
       <button id="restart" class="control" type="button">↻ Reiniciar</button>
     </div>
     <p id="message" class="message" aria-live="polite">Os produtos escuros estão na fileira de trás.</p>
-    <section id="win" class="win" hidden aria-live="polite"><h2>Prateleiras organizadas!</h2><p id="win-message"></p><button id="next-level" class="control" type="button">Próxima fase →</button></section>
+    <section id="win" class="win" hidden aria-live="polite"><h2>Prateleiras organizadas!</h2><p id="win-message"></p></section>
     <details class="settings">
       <summary>Progresso</summary>
       <div class="settings-content">
@@ -184,7 +184,6 @@
       const message = document.getElementById('message');
       const win = document.getElementById('win');
       const winMessage = document.getElementById('win-message');
-      const nextLevel = document.getElementById('next-level');
       const levelLabel = document.getElementById('level');
       const instructions = document.getElementById('instructions');
       const copy = value => JSON.parse(JSON.stringify(value));
@@ -208,6 +207,7 @@
         });
       }
       let animating = false;
+      let advanceTimer = null;
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
       const audioSettings = { effects: true, music: false, vibration: false, effectsVolume: 65, musicVolume: 30 };
       try {
@@ -418,8 +418,9 @@
         win.hidden = !completed;
         levelLabel.textContent = `Fase ${currentLevel + 1}`;
         instructions.textContent = levels[currentLevel].instructions;
-        winMessage.textContent = `Você concluiu a fase ${currentLevel + 1}. ✨`;
-        nextLevel.hidden = currentLevel === levels.length - 1;
+        winMessage.textContent = currentLevel < levels.length - 1
+          ? `Você concluiu a fase ${currentLevel + 1}. A próxima fase já vai começar! ✨`
+          : `Você concluiu todas as fases disponíveis! ✨`;
       }
 
       function pause(milliseconds) {
@@ -468,6 +469,13 @@
         animating = false;
         message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : 'Continue organizando os produtos.';
         render();
+        if (completed && currentLevel < levels.length - 1) {
+          const finishedLevel = currentLevel;
+          advanceTimer = setTimeout(() => {
+            advanceTimer = null;
+            if (completed && currentLevel === finishedLevel) openLevel(finishedLevel + 1);
+          }, 1800);
+        }
       }
 
       function move(from, to) {
@@ -564,6 +572,8 @@
       });
       undo.addEventListener('click', () => {
         if (!history.length) return;
+        clearTimeout(advanceTimer);
+        advanceTimer = null;
         if (completed && unlocked === currentLevel + 1) {
           unlocked = currentLevel;
           try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
@@ -577,6 +587,8 @@
       });
       function openLevel(index) {
         if (animating || index > unlocked || index < 0 || index >= levels.length) return;
+        clearTimeout(advanceTimer);
+        advanceTimer = null;
         if (index === currentLevel && completed && unlocked === levels.length) {
           unlocked = currentLevel;
           try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
@@ -589,9 +601,6 @@
         message.textContent = levels[index].hint;
         render();
       }
-      nextLevel.addEventListener('click', () => {
-        if (completed) openLevel(currentLevel + 1);
-      });
       restart.addEventListener('click', () => {
         if (history.length && !confirm('Recomeçar esta fase?')) return;
         openLevel(currentLevel);
