@@ -33,6 +33,11 @@
     .dispenser .slot { width: 34%; }
     .dispenser-label { position: absolute; z-index: 2; top: 4px; left: 4px; right: 4px; text-align: center; font-size: clamp(.6rem, 2.2vw, .72rem); font-weight: 800; color: #ffe7ba; pointer-events: none; }
     .dispenser-count { position: absolute; z-index: 2; right: 5px; bottom: 4px; background: #fff1d0; color: #704020; border-radius: 999px; padding: 2px 6px; font-size: .72rem; font-weight: 800; pointer-events: none; }
+    .lock-overlay { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; pointer-events: none; background: #38231377; }
+    .lock-overlay::before, .lock-overlay::after { content: ''; position: absolute; width: 145%; height: 8px; background: repeating-linear-gradient(90deg, #d5b373 0 7px, #8c7149 7px 10px); border: 1px solid #6c5233; box-shadow: 0 2px 2px #36200e88; transform: rotate(22deg); }
+    .lock-overlay::after { transform: rotate(-22deg); }
+    .lock-badge { position: relative; z-index: 1; padding: 5px 9px; border: 2px solid #956026; border-radius: 9px; background: #ffd270; color: #5b381b; font-size: .8rem; font-weight: 900; text-align: center; box-shadow: 0 2px 4px #34200e77; }
+    .lock-caption { position: absolute; bottom: 3px; z-index: 1; padding: 2px 5px; border-radius: 5px; background: #4a301fe8; color: #fff3d7; font-size: .65rem; font-weight: 800; }
     .item { width: min(100%, 58px); height: 78%; min-height: 62px; max-height: 95px; display: flex; align-items: center; justify-content: center; user-select: none; pointer-events: none; transform-origin: bottom center; }
     .item svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 2px #43291666); }
     .ghost { position: fixed; z-index: 20; pointer-events: none; opacity: .96; filter: drop-shadow(0 7px 5px #39210d55); }
@@ -68,6 +73,7 @@
       <nav class="level-nav" aria-label="Escolher fase">
         <button id="level-one" class="level-choice" type="button" aria-current="step">Fase 1</button>
         <button id="level-two" class="level-choice" type="button" disabled>Fase 2 🔒</button>
+        <button id="level-three" class="level-choice" type="button" disabled>Fase 3 🔒</button>
       </nav>
       <p id="instructions" class="instructions">Arraste os produtos e junte três iguais na mesma prateleira.</p>
     </header>
@@ -115,6 +121,18 @@
             { front: ['coffee', 'coffee', null], back: [] },
             { front: ['jam', 'jam', null], back: [] }
           ]
+        },
+        {
+          instructions: 'Forme trios para abrir as prateleiras com correntes, uma de cada vez.',
+          hint: 'A corrente destacada abre primeiro. Cada trio reduz seu contador.',
+          shelves: [
+            { front: ['milk', 'milk', null], back: [] },
+            { front: ['coffee', 'coffee', 'milk'], back: [] },
+            { front: ['jam', 'jam', 'coffee'], back: [] },
+            { front: ['jam', null, null], back: [], lock: { remaining: 1, order: 0 } },
+            { front: ['milk', 'milk', 'jam'], back: [], lock: { remaining: 1, order: 1 } },
+            { front: ['milk', 'jam', 'jam'], back: [] }
+          ]
         }
       ];
       const board = document.getElementById('board');
@@ -126,12 +144,18 @@
       const nextLevel = document.getElementById('next-level');
       const levelLabel = document.getElementById('level');
       const instructions = document.getElementById('instructions');
-      const levelButtons = [document.getElementById('level-one'), document.getElementById('level-two')];
+      const levelButtons = [document.getElementById('level-one'), document.getElementById('level-two'), document.getElementById('level-three')];
       const copy = value => JSON.parse(JSON.stringify(value));
       let unlocked = 0;
-      try { unlocked = localStorage.getItem('mercadinho-unlocked') === '1' ? 1 : 0; } catch {}
+      try {
+        const saved = Number(localStorage.getItem('mercadinho-unlocked'));
+        if (Number.isInteger(saved) && saved >= 0 && saved < levels.length) unlocked = saved;
+      } catch {}
       let currentLevel = 0;
-      try { if (unlocked && localStorage.getItem('mercadinho-level') === '1') currentLevel = 1; } catch {}
+      try {
+        const saved = Number(localStorage.getItem('mercadinho-level'));
+        if (Number.isInteger(saved) && saved >= 0 && saved <= unlocked) currentLevel = saved;
+      } catch {}
       let shelves = copy(levels[currentLevel].shelves);
       let history = [];
       let selected = null;
@@ -147,6 +171,7 @@
       }
 
       function render(matching = [], revealed = []) {
+        const activeLock = shelves.filter(shelf => shelf.lock && shelf.lock.remaining > 0).sort((a, b) => a.lock.order - b.lock.order)[0];
         board.innerHTML = shelves.map((shelf, shelfIndex) => {
           if (shelf.type === 'dispenser') {
             const item = shelf.front[1];
@@ -156,14 +181,16 @@
             return `<div class="shelf dispenser"><span class="dispenser-label">Caixa de produtos</span><div class="front-row"><button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="1" aria-label="${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button></div><span class="dispenser-count" aria-hidden="true">${count} restantes</span></div>`;
           }
           const behind = shelf.back[0] || [null, null, null];
+          const locked = shelf.lock && shelf.lock.remaining > 0;
           const backRow = behind.map(item => `<span>${itemMarkup(item)}</span>`).join('');
           const frontRow = shelf.front.map((item, slotIndex) => {
             const active = selected && selected.shelf === shelfIndex && selected.slot === slotIndex;
             const label = item ? products[item].name : 'Vaga livre';
-            return `<button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="${slotIndex}" aria-label="Prateleira ${shelfIndex + 1}, posição ${slotIndex + 1}: ${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button>`;
+            return `<button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="${slotIndex}" aria-label="Prateleira ${shelfIndex + 1}, posição ${slotIndex + 1}: ${label}" ${completed || locked ? 'disabled' : ''}>${itemMarkup(item)}</button>`;
           }).join('');
           const effect = matching.includes(shelfIndex) ? 'matching' : revealed.includes(shelfIndex) ? 'revealed' : '';
-          return `<div class="shelf ${effect}"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div></div>`;
+          const lock = locked ? `<div class="lock-overlay" role="img" aria-label="Prateleira ${shelfIndex + 1} bloqueada, ${shelf.lock.remaining} trio para abrir, ${shelf === activeLock ? 'abre primeiro' : 'abre depois'}"><span class="lock-badge">🔒 ${shelf.lock.remaining}</span><span class="lock-caption">${shelf === activeLock ? 'Abre primeiro' : 'Abre depois'}</span></div>` : '';
+          return `<div class="shelf ${effect}"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}</div>`;
         }).join('');
         undo.disabled = animating || history.length === 0;
         restart.disabled = animating;
@@ -176,8 +203,8 @@
           if (index === currentLevel) button.setAttribute('aria-current', 'step');
           else button.removeAttribute('aria-current');
         });
-        levelButtons[1].textContent = unlocked ? 'Fase 2' : 'Fase 2 🔒';
-        winMessage.textContent = currentLevel === 0 ? 'Você concluiu a fase 1. ✨' : 'Você concluiu a fase 2. ✨';
+        levelButtons.forEach((button, index) => { button.textContent = `Fase ${index + 1}${index > unlocked ? ' 🔒' : ''}`; });
+        winMessage.textContent = `Você concluiu a fase ${currentLevel + 1}. ✨`;
         nextLevel.hidden = currentLevel === levels.length - 1;
       }
 
@@ -190,15 +217,19 @@
           const matching = [];
           const revealed = [];
           shelves.forEach((shelf, index) => {
-            if (shelf.front[0] && shelf.front.every(item => item === shelf.front[0])) matching.push(index);
+            if ((!shelf.lock || shelf.lock.remaining === 0) && shelf.front[0] && shelf.front.every(item => item === shelf.front[0])) matching.push(index);
           });
           if (matching.length) {
             render(matching);
             await pause(320);
             matching.forEach(index => { shelves[index].front = [null, null, null]; });
+            for (const index of matching) {
+              const activeLock = shelves.filter(shelf => shelf.lock && shelf.lock.remaining > 0).sort((a, b) => a.lock.order - b.lock.order)[0];
+              if (activeLock) activeLock.lock.remaining -= 1;
+            }
           }
           shelves.forEach((shelf, index) => {
-            if (shelf.front.every(item => item === null) && shelf.back.length) {
+            if ((!shelf.lock || shelf.lock.remaining === 0) && shelf.front.every(item => item === null) && shelf.back.length) {
               shelf.front = shelf.back.shift();
               revealed.push(index);
             }
@@ -225,7 +256,7 @@
         const targetShelf = shelves[to.shelf];
         const source = sourceShelf.front;
         const target = targetShelf.front;
-        if (!source[from.slot] || targetShelf.type === 'dispenser' || target[to.slot] !== null) return false;
+        if (!source[from.slot] || (sourceShelf.lock && sourceShelf.lock.remaining > 0) || (targetShelf.lock && targetShelf.lock.remaining > 0) || targetShelf.type === 'dispenser' || target[to.slot] !== null) return false;
         history.push(copy(shelves));
         target[to.slot] = source[from.slot];
         source[from.slot] = sourceShelf.type === 'dispenser' ? (sourceShelf.queue.shift() || null) : null;
@@ -272,7 +303,7 @@
           if (pointer.target) pointer.target.classList.remove('drop-target');
           const destination = document.elementFromPoint(event.clientX, event.clientY);
           const target = position(destination);
-          pointer.target = target && shelves[target.shelf].type !== 'dispenser' && shelves[target.shelf].front[target.slot] === null ? destination.closest('.slot') : null;
+          pointer.target = target && shelves[target.shelf].type !== 'dispenser' && (!shelves[target.shelf].lock || shelves[target.shelf].lock.remaining === 0) && shelves[target.shelf].front[target.slot] === null ? destination.closest('.slot') : null;
           if (pointer.target) pointer.target.classList.add('drop-target');
         }
       });
