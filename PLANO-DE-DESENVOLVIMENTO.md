@@ -6,11 +6,19 @@ Mercadinho é um jogo casual de organização de produtos em prateleiras. O joga
 
 O jogo será gratuito para instalar e jogar, sem anúncios, compras internas, assinaturas, vidas limitadas ou pagamentos para continuar. A campanha funcionará offline, com progresso salvo no aparelho.
 
+## Estado atual — 7 de novembro de 2026
+
+O repositório contém um protótipo web publicado no GitHub Pages, com três fases jogáveis. A primeira apresenta camadas, a segunda apresenta um dispensador e a terceira apresenta correntes sequenciais. As fases usam produtos ilustrados provisórios, controles por arraste ou seleção, desfazer, reinício e tela de vitória.
+
+O navegador guarda a fase desbloqueada, a fase selecionada e as preferências de áudio. Uma fase em andamento começa novamente ao recarregar. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
+
+O protótipo foi verificado no navegador e por testes pontuais da lógica. Os testes automatizados usados até agora não estão versionados no repositório. O toque, a vibração, o áudio e a retomada precisam ser verificados em um celular físico. Ainda é necessário criar o aplicativo Android e validar o funcionamento offline da versão web publicada.
+
 ## Público e plataformas
 
 - Público casual, com partidas curtas e controles simples.
-- Plataforma inicial proposta: Android, em orientação vertical.
-- Versão para navegador e PC como objetivo posterior, aproveitando as mesmas regras.
+- Primeira plataforma disponível: navegador, em orientação vertical adaptável a celular e computador.
+- Aplicativo Android como próximo alvo de plataforma, aproveitando a base web.
 - Idioma inicial: português brasileiro.
 - Arte original, com produtos fictícios e ambiente de mercadinho.
 
@@ -41,14 +49,14 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 
 1. O tabuleiro contém compartimentos, cada um com três vagas na fileira acessível.
 2. Compartimentos comuns podem conter fileiras adicionais atrás da primeira.
-3. Produtos na frente podem ser arrastados para vagas livres acessíveis de outro compartimento comum.
+3. Produtos na frente podem ser arrastados ou selecionados e movidos para vagas livres acessíveis, inclusive em outro lugar do mesmo compartimento comum.
 4. Produtos de trás aparecem escurecidos e não podem ser selecionados até avançar.
 5. Itens distintos podem dividir um compartimento. Movimentos que apenas reorganizam peças são válidos.
 6. Se a fileira da frente ficar vazia, a próxima avança como uma unidade após as combinações pendentes.
 7. Quando três produtos iguais ocuparem a mesma fileira acessível de um compartimento comum, eles são removidos automaticamente.
 8. Uma movimentação inválida devolve o produto à origem. No protótipo, produtos não trocam diretamente de lugar ao serem soltos sobre vagas ocupadas.
 9. A vitória ocorre quando não restarem produtos acessíveis, escondidos ou em dispensadores, após o término das ações pendentes.
-10. Se não houver movimentos legais e a fase não estiver concluída, mostrar opções de desfazer ou reiniciar. A ausência de solução futura, apesar de movimentos legais, é um caso separado que precisa de validação específica.
+10. Quando não houver movimentos legais e a fase não estiver concluída, o objetivo é mostrar opções de desfazer ou reiniciar. Essa detecção ainda precisa ser implementada. A ausência de solução futura, apesar de movimentos legais, é um caso separado que precisa de validação específica.
 
 ### Dispensadores
 
@@ -70,16 +78,26 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 
 - Desfazer restaura integralmente a jogada anterior, incluindo produtos, camadas, dispensadores e correntes. Durante animações, aguardar o estado estável antes de aplicar a ação.
 - Reiniciar recompõe a configuração inicial da fase, mediante confirmação.
-- Dica sugere uma ação útil quando houver informação suficiente. Uma jogada legal isolada pode levar a um impasse, por isso a dica deve vir de uma solução verificada ou informar sua limitação.
-- Pausa, ajuste separado de música e efeitos, vibração opcional e opção de reduzir animações.
+- A dica ainda precisa ser criada. Uma jogada legal isolada pode levar a um impasse, por isso a dica deve vir de uma solução verificada ou informar sua limitação.
+- Já há controles separados de música e efeitos, vibração opcional em navegadores compatíveis e suporte à preferência de movimento reduzido do sistema. O menu de pausa e uma opção própria para reduzir animações ainda precisam ser implementados.
+
+## Próximas prioridades
+
+1. **Testar o protótipo em um celular físico.** Conferir arraste, encaixe, efeitos, música, vibração, legibilidade e retomada após interrupções. Registrar problemas e ajustá-los antes de ampliar o conteúdo.
+2. **Preparar uma versão Android de teste.** Avaliar e integrar o Capacitor, gerar um APK de teste e verificar tela cheia, áreas seguras, salvamento, áudio, vibração e funcionamento offline. A verificação no aparelho continua necessária mesmo após o empacotamento.
+3. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. Implementar identificação de impasse e definir o comportamento da dica.
+4. **Criar mais conteúdo.** Ampliar a campanha gradualmente, projetar e validar uma solução para cada fase e avaliar a dificuldade com jogadores.
+5. **Refinar a apresentação.** Evoluir as ilustrações e as animações a partir do mockup e substituir ou aprovar a melodia provisória após escuta e testes.
 
 ## Etapas de desenvolvimento
 
 ### 1. Preparação do projeto
 
-- [ ] Preparar a execução no navegador e avaliar o empacotamento Android com Capacitor.
+- [x] Preparar a execução no navegador e publicar o protótipo web no GitHub Pages.
+- [ ] Avaliar e integrar o empacotamento Android com Capacitor.
 - [ ] Definir estrutura do código, formatos de fase e organização dos recursos.
-- [ ] Criar repositório funcional com instruções de execução e compilação.
+- [x] Criar repositório funcional e hospedar o protótipo web.
+- [ ] Acrescentar instruções de execução local, testes e compilação Android.
 - [ ] Definir padrão de nomes, resolução de referência e adaptação a telas verticais.
 - [ ] Preparar um fluxo simples de versões e verificação antes de integrar alterações.
 
@@ -87,31 +105,39 @@ Entrega: projeto abre no navegador e o caminho de geração de uma versão Andro
 
 ### 2. Núcleo jogável
 
-- [ ] Implementar prateleiras, vagas e produtos temporários bem distinguíveis.
-- [ ] Implementar arraste por toque e mouse, encaixe, rejeição e retorno à origem.
-- [ ] Implementar trios automáticos, múltiplos compartimentos e fileiras de fundo.
-- [ ] Garantir atualização ordenada de remoção, avanço de fileira e condição de vitória.
-- [ ] Criar uma fase curta com solução documentada.
+- [x] Implementar prateleiras, vagas e produtos temporários distinguíveis.
+- [x] Implementar arraste por ponteiro, seleção por toque, encaixe e rejeição de movimentos inválidos.
+- [ ] Validar a precisão do toque e do arraste em celular físico.
+- [x] Implementar trios automáticos, múltiplos compartimentos e fileiras de fundo.
+- [x] Implementar remoção, avanço de fileira e condição de vitória com atualização ordenada.
+- [ ] Versionar testes que protejam a sequência de animações e mudanças de estado.
+- [x] Criar uma fase curta com solução verificada.
+- [ ] Documentar ou automatizar a verificação das soluções.
 - [ ] Validar toque, estado do tabuleiro e reinício em aparelhos diferentes.
 
 Entrega: fase completa jogável, do início à vitória.
 
 ### 3. Mecânicas dos vídeos
 
-- [ ] Adicionar dispensadores e indicação da quantidade restante.
-- [ ] Adicionar correntes, contador e sequência de desbloqueio.
-- [ ] Adicionar desfazer, reiniciar, pausa e mensagem de vitória.
-- [ ] Criar três fases de demonstração, uma para camadas, uma para dispensadores e uma para correntes.
+- [x] Adicionar dispensadores e indicação da quantidade restante.
+- [x] Adicionar correntes, contador e sequência de desbloqueio.
+- [x] Adicionar desfazer, reiniciar e mensagem de vitória.
+- [ ] Adicionar pausa para a versão Android e possíveis modos cronometrados.
+- [x] Criar três fases de demonstração, uma para camadas, uma para dispensadores e uma para correntes.
 - [ ] Verificar cada fase completa, desfazer em diferentes estados e reinício durante uso normal.
 
 Entrega: protótipo com as três mecânicas principais e controles confiáveis.
 
 ### 4. Apresentação e sensação ao jogar
 
-- [ ] Criar identidade visual do Mercadinho e elementos de interface originais.
-- [ ] Produzir um conjunto inicial de produtos com silhuetas, cores e rótulos distinguíveis.
-- [ ] Criar animações curtas de seleção, encaixe, trio, desbloqueio e vitória.
-- [ ] Adicionar sons de encaixe e combinação, música e vibração ajustáveis.
+- [x] Criar uma identidade visual provisória com elementos de interface originais.
+- [ ] Refinar a identidade visual definitiva a partir do mockup e de testes em celular.
+- [x] Produzir ilustrações provisórias para leite, café e geleia.
+- [ ] Ampliar o conjunto de produtos e validar silhuetas, cores e rótulos em telas pequenas.
+- [x] Criar animações para trios e avanço das fileiras.
+- [ ] Refinar o feedback visual de seleção e encaixe e criar animações de desbloqueio e vitória.
+- [x] Adicionar efeitos sonoros, melodia provisória, volumes separados e vibração opcional quando suportada.
+- [ ] Avaliar o som e a vibração em aparelhos físicos e decidir a música definitiva.
 - [ ] Garantir que efeitos não cubram as peças nem dificultem jogadas consecutivas.
 - [ ] Ajustar contraste, tamanhos de toque, fontes e opção de movimento reduzido.
 
@@ -122,8 +148,11 @@ Entrega: uma versão visualmente consistente e confortável de jogar.
 - [ ] Criar entre 20 e 30 fases manuais para a primeira versão de teste.
 - [ ] Introduzir cada mecânica de forma gradual e variar a dificuldade sem saltos bruscos.
 - [ ] Variar quantidade de vagas, tipos de produto, profundidade e posição dos obstáculos.
-- [ ] Salvar nível desbloqueado, configurações e progresso em armazenamento local.
-- [ ] Permitir voltar a fases anteriores e manter o progresso após fechar e abrir o jogo.
+- [x] Salvar a fase desbloqueada, a fase selecionada e as preferências de áudio no navegador.
+- [ ] Definir e implementar a persistência do estado da fase em andamento, se desejada.
+- [ ] Verificar a migração e a preservação dos dados na versão Android e em futuras atualizações.
+- [x] Permitir voltar às fases desbloqueadas e preservar o desbloqueio ao recarregar o navegador.
+- [ ] Validar o comportamento após fechamento e atualização no aplicativo Android.
 - [ ] Validar solução e conclusão de cada fase. Automatizar verificações de tabuleiro e acrescentar testes manuais para situações não cobertas.
 
 Entrega: campanha inicial completa e jogável offline.
@@ -156,15 +185,15 @@ Entrega: versão pública gratuita e sem anúncios, acompanhada de instruções 
 - [ ] Acompanhar falhas e relatos de jogadores.
 - [ ] Adicionar novos conjuntos de fases, objetos e cenários originais.
 - [ ] Avaliar modo cronometrado separado e novos obstáculos com base nos testes.
-- [ ] Planejar exportação web e outras plataformas após estabilizar a versão Android.
+- [ ] Avaliar outras plataformas e melhorias da versão web após estabilizar a versão Android.
 
 ## Critérios para a primeira versão pública
 
-- A campanha inicial pode ser concluída sem pagamento, publicidade ou conexão.
+- A campanha inicial pode ser concluída sem pagamento ou publicidade, e o funcionamento offline foi verificado no aplicativo Android e na versão web escolhida para uso offline.
 - Todas as fases da campanha têm solução verificada e podem ser reiniciadas.
 - O toque é preciso, os produtos são distinguíveis e as regras de bloqueio são apresentadas ao jogador.
 - O jogo salva progresso e configurações localmente.
-- As funções de desfazer, pausar e reiniciar preservam um estado consistente.
+- As funções de desfazer e reiniciar preservam um estado consistente. A pausa, quando disponível, também preserva o estado.
 - Não há falhas conhecidas que impeçam avançar ou provoquem perda de progresso.
 - Música, efeitos e vibração têm controles próprios.
 
