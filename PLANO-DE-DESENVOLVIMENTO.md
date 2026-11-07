@@ -78,12 +78,12 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 
 - Desfazer restaura integralmente a jogada anterior, incluindo produtos, camadas, dispensadores e correntes. Durante animações, aguardar o estado estável antes de aplicar a ação.
 - Reiniciar recompõe a configuração inicial da fase, mediante confirmação.
-- A dica ainda precisa ser criada. Uma jogada legal isolada pode levar a um impasse, por isso a dica deve vir de uma solução verificada ou informar sua limitação.
+- A dica procura uma sequência completa até a vitória e destaca a primeira jogada. A busca tem limites de tempo e estados; se não encontrar solução dentro desses limites, informa que não encontrou, sem concluir que a fase é impossível.
 - Já há controles separados de música e efeitos, vibração opcional em navegadores compatíveis e suporte à preferência de movimento reduzido do sistema. Há um menu de pausa na versão web, que interrompe a música e permite retomar a partida. Uma opção própria para reduzir animações ainda precisa ser implementada.
 
 ## Próximas prioridades
 
-1. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. Implementar identificação de impasse e definir o comportamento da dica.
+1. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. Aprimorar a identificação de situações sem solução e validar a dica em tabuleiros mais complexos.
 2. **Criar mais conteúdo.** Ampliar a campanha gradualmente, projetar e validar uma solução para cada fase e avaliar a dificuldade com jogadores.
 3. **Refinar a apresentação.** Evoluir as ilustrações e as animações a partir do mockup e substituir ou aprovar a melodia provisória após escuta e testes.
 4. **Testar e finalizar a versão web.** Conferir arraste, encaixe, áudio, vibração, legibilidade, salvamento e retomada no navegador do computador e em um celular físico. Implementar e verificar o funcionamento offline pretendido.
@@ -201,7 +201,7 @@ Entrega: versão pública gratuita e sem anúncios, acompanhada de instruções 
 ## Pontos para decidir durante o protótipo
 
 - Identidade visual definitiva, nome dos cenários e estilo dos produtos.
-- Quantidade de desfazimentos e critérios para a dica.
+- Quantidade de desfazimentos e limites de busca da dica para fases maiores.
 - Fórmula de pontuação e se combos terão uma janela de tempo na campanha.
 - Tratamento de troca entre itens acessíveis em uma versão futura.
 - Validar a retomada após interrupções e atualizações em diferentes navegadores e, depois, no aplicativo Android.

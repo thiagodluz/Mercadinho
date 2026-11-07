@@ -40,6 +40,8 @@
     .slot { position: relative; min-width: 0; height: 84%; display: flex; align-items: end; justify-content: center; border: 0; padding: 2px; background: transparent; border-radius: 8px; touch-action: none; }
     .slot:focus-visible { outline: 3px solid #ffdf72; outline-offset: -2px; }
     .slot.empty::after { content: ''; width: 70%; height: 8px; margin-bottom: 2px; background: #633e2866; border-radius: 50%; }
+    .slot.hint-origin { background: #ffdf7277; box-shadow: inset 0 0 0 3px #ffe17a; }
+    .slot.hint-destination { background: #c9ec8077; box-shadow: inset 0 0 0 3px #d8f795; }
     .slot.selected { background: #ffdf7255; box-shadow: inset 0 0 0 2px #ffdf72; }
     .slot.drop-target { background: #c9ec8055; box-shadow: inset 0 0 0 3px #d8f795, 0 0 12px #e4ffb8; }
     .slot.drag-origin .item { opacity: .25; }
@@ -95,6 +97,7 @@
     <div id="board" class="board" aria-label="Prateleiras do jogo"></div>
     <div class="controls">
       <button id="undo" class="control secondary" type="button" disabled>↶ Desfazer</button>
+      <button id="hint" class="control secondary" type="button">💡 Dica</button>
       <button id="restart" class="control" type="button">↻ Reiniciar</button>
     </div>
     <p id="message" class="message" aria-live="polite">Os produtos escuros estão na fileira de trás.</p>
@@ -255,6 +258,7 @@
       const pauseDialog = document.getElementById('pause-dialog');
       const resumeButton = document.getElementById('resume');
       const undo = document.getElementById('undo');
+      const hintButton = document.getElementById('hint');
       const restart = document.getElementById('restart');
       const resetProgress = document.getElementById('reset-progress');
       const message = document.getElementById('message');
@@ -334,6 +338,10 @@
           else localStorage.setItem(saveKey, JSON.stringify({ version: 1, level: currentLevel, shelves, history: history.slice(-100), pending }));
         } catch {}
       }
+      let currentHint = null;
+      let hintPlan = [];
+      let hintSearching = false;
+      let hintRequest = 0;
       let paused = false;
       let animating = false;
       let advanceTimer = null;
@@ -482,6 +490,9 @@
       });
       pauseButton.addEventListener('click', () => {
         if (paused || animating || completed) return;
+        if (hintSearching) message.textContent = levels[currentLevel].hint;
+        cancelHint();
+        render();
         pauseDialog.showModal();
         paused = true;
         stopMusic();
@@ -558,6 +569,13 @@
           const lock = locked ? `<div class="lock-overlay" role="img" aria-label="Prateleira ${shelfIndex + 1} bloqueada, ${shelf.lock.remaining} ${shelf.lock.remaining === 1 ? 'trio' : 'trios'} para abrir, ${shelf === activeLock ? 'abre primeiro' : 'abre depois'}"><span class="lock-badge">🔒 ${shelf.lock.remaining}</span><span class="lock-caption">${shelf === activeLock ? 'Abre primeiro' : 'Abre depois'}</span></div>` : '';
           return `<div class="shelf ${effect}"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}</div>`;
         }).join('');
+        if (currentHint) {
+          for (const [pos, cls] of [[currentHint.from, 'hint-origin'], [currentHint.to, 'hint-destination']]) {
+            const el = board.querySelector(`[data-shelf="${pos.shelf}"][data-slot="${pos.slot}"]`);
+            if (el) el.classList.add(cls);
+          }
+        }
+        hintButton.disabled = animating || completed || hintSearching;
         pauseButton.disabled = animating || completed;
         undo.disabled = animating || history.length === 0;
         restart.disabled = animating;
@@ -570,6 +588,108 @@
           ? `Você concluiu a fase ${currentLevel + 1}. A próxima fase já vai começar! ✨`
           : `Você concluiu todas as fases disponíveis! ✨`;
       }
+
+      // Procura uma sequência completa sem alterar o tabuleiro do jogador.
+      function solveMove(state, from, to) {
+        const next = copy(state);
+        const source = next[from.shelf], target = next[to.shelf];
+        target.front[to.slot] = source.front[from.slot];
+        source.front[from.slot] = source.type === 'dispenser' ? (source.queue.shift() || null) : null;
+        while (true) {
+          const matching = [];
+          next.forEach((s, i) => {
+            if ((!s.lock || s.lock.remaining === 0) && s.front[0] && s.front.every(item => item === s.front[0])) matching.push(i);
+          });
+          for (const i of matching) next[i].front = [null, null, null];
+          for (const i of matching) {
+            const active = next.filter(s => s.lock && s.lock.remaining > 0).sort((a, b) => a.lock.order - b.lock.order)[0];
+            if (active) active.lock.remaining--;
+          }
+          let revealed = false;
+          for (const s of next) {
+            if ((!s.lock || s.lock.remaining === 0) && s.front.every(item => item === null) && s.back.length) {
+              s.front = s.back.shift();
+              revealed = true;
+            }
+          }
+          if (!matching.length && !revealed) break;
+        }
+        return next;
+      }
+      function isSolved(state) {
+        return state.every(s => s.front.every(item => item === null) && !s.back.length && (!s.queue || !s.queue.length));
+      }
+      function searchKey(state) {
+        const sorted = row => row.slice().sort((a, b) => String(a).localeCompare(String(b)));
+        return JSON.stringify(state.map(s => [sorted(s.front), s.back.map(sorted), s.queue || [], s.lock ? s.lock.remaining : 0]));
+      }
+      function possibleMoves(state) {
+        const moves = [];
+        state.forEach((source, i) => {
+          if (source.lock && source.lock.remaining > 0) return;
+          const seen = new Set();
+          source.front.forEach((item, slot) => {
+            if (!item || seen.has(item)) return;
+            seen.add(item);
+            state.forEach((target, j) => {
+              if (i === j || target.type === 'dispenser' || (target.lock && target.lock.remaining > 0)) return;
+              const empty = target.front.indexOf(null);
+              if (empty < 0) return;
+              const same = target.front.filter(value => value === item).length;
+              const other = target.front.filter(value => value && value !== item).length;
+              moves.push({ from: { shelf: i, slot }, to: { shelf: j, slot: empty }, score: same * 10 - other * 2 + (source.type === 'dispenser' ? 2 : 0) });
+            });
+          });
+        });
+        return moves.sort((a, b) => a.score - b.score);
+      }
+      async function findSolutionHint(initial, request) {
+        const stack = [{ state: copy(initial), path: [] }];
+        const seen = new Set();
+        const deadline = Date.now() + 3500;
+        while (stack.length && seen.size < 20000 && Date.now() < deadline) {
+          if (request !== hintRequest) return null;
+          for (let batch = 0; batch < 80 && stack.length && seen.size < 20000 && Date.now() < deadline; batch++) {
+            const node = stack.pop();
+            const key = searchKey(node.state);
+            if (seen.has(key)) continue;
+            seen.add(key);
+            if (isSolved(node.state)) return node.path;
+            for (const move of possibleMoves(node.state)) {
+              if (stack.length >= 40000) break;
+              stack.push({ state: solveMove(node.state, move.from, move.to), path: [...node.path, move] });
+            }
+          }
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        return null;
+      }
+      function cancelHint() {
+        hintRequest++;
+        hintSearching = false;
+        currentHint = null;
+      }
+      hintButton.addEventListener('click', async () => {
+        if (animating || completed || paused || hintSearching) return;
+        const request = ++hintRequest;
+        hintSearching = true;
+        currentHint = null;
+        message.textContent = 'Procurando uma jogada para concluir a fase...';
+        render();
+        const result = hintPlan.length ? hintPlan : await findSolutionHint(shelves, request);
+        if (request !== hintRequest) return;
+        hintSearching = false;
+        hintPlan = result || [];
+        currentHint = hintPlan[0] || null;
+        if (currentHint) {
+          const item = shelves[currentHint.from.shelf].front[currentHint.from.slot];
+          const origin = shelves[currentHint.from.shelf].type === 'dispenser' ? 'caixa de produtos' : `prateleira ${currentHint.from.shelf + 1}, posição ${currentHint.from.slot + 1}`;
+          message.textContent = `Mova ${products[item].name} da ${origin} para a prateleira ${currentHint.to.shelf + 1}, posição ${currentHint.to.slot + 1}.`;
+        } else {
+          message.textContent = 'Não encontrei uma solução agora. Você pode desfazer ou reiniciar a fase.';
+        }
+        render();
+      });
 
       function pause(milliseconds) {
         return new Promise(resolve => setTimeout(resolve, reduceMotion.matches ? 0 : milliseconds));
@@ -634,6 +754,12 @@
         const source = sourceShelf.front;
         const target = targetShelf.front;
         if (!source[from.slot] || (sourceShelf.lock && sourceShelf.lock.remaining > 0) || (targetShelf.lock && targetShelf.lock.remaining > 0) || targetShelf.type === 'dispenser' || target[to.slot] !== null) return false;
+        if (hintPlan.length) {
+          const expected = hintPlan[0];
+          if (expected.from.shelf === from.shelf && expected.from.slot === from.slot && expected.to.shelf === to.shelf && expected.to.slot === to.slot) hintPlan.shift();
+          else hintPlan = [];
+        }
+        cancelHint();
         history.push(copy(shelves));
         target[to.slot] = source[from.slot];
         source[from.slot] = sourceShelf.type === 'dispenser' ? (sourceShelf.queue.shift() || null) : null;
@@ -723,6 +849,8 @@
       });
       undo.addEventListener('click', () => {
         if (!history.length) return;
+        hintPlan = [];
+        cancelHint();
         clearTimeout(advanceTimer);
         advanceTimer = null;
         if (completed && unlocked === currentLevel + 1) {
@@ -739,6 +867,8 @@
       });
       function openLevel(index) {
         if (animating || index > unlocked || index < 0 || index >= levels.length) return;
+        hintPlan = [];
+        cancelHint();
         clearTimeout(advanceTimer);
         advanceTimer = null;
         if (index === currentLevel && completed && unlocked === levels.length) {
