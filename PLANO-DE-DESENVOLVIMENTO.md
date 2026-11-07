@@ -8,9 +8,9 @@ O jogo será gratuito para instalar e jogar, sem anúncios, compras internas, as
 
 ## Estado atual — 7 de novembro de 2026
 
-O repositório contém um protótipo web publicado no GitHub Pages, com oito fases jogáveis. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases 7 e 8 apresentam o chá como quarto produto e combinam as mecânicas já introduzidas. As fases usam produtos ilustrados provisórios, controles por arraste ou seleção, desfazer, reinício e tela de vitória.
+O repositório contém um protótipo web publicado no GitHub Pages, com oito fases iniciais e uma sequência contínua de fases geradas a partir da fase 9. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases 7 e 8 apresentam o chá como quarto produto e combinam as mecânicas já introduzidas. As fases usam produtos ilustrados provisórios, controles por arraste ou seleção, desfazer, reinício e tela de vitória.
 
-O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. As fases avançadas com seis compartimentos alternam formatos de prateleira, determinados por uma semente salva no navegador. Uma fase em andamento é retomada após recarregar, a partir da última jogada concluída; até 100 jogadas ficam disponíveis no histórico salvo. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
+O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. As fases avançadas com seis compartimentos alternam formatos de prateleira. A partir da fase 9, modelos manuais são variados com permutações de produtos, posições e prateleiras; uma semente salva mantém cada tabuleiro estável ao retomar. As variações preservam soluções dos modelos, mas não geram mecânicas novas. Uma fase em andamento é retomada após recarregar, a partir da última jogada concluída; até 100 jogadas ficam disponíveis no histórico salvo. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
 
 O protótipo foi verificado no navegador e por testes pontuais da lógica. O repositório inclui testes automatizados da lógica, das soluções das fases, da persistência, da pausa e da preferência de animações; a cobertura ainda precisa ser ampliada. O toque, a vibração, o áudio e a retomada precisam ser verificados em um celular físico. Ainda é necessário criar o aplicativo Android e validar o funcionamento offline da versão web publicada.
 
@@ -205,4 +205,4 @@ Entrega: versão pública gratuita e sem anúncios, acompanhada de instruções 
 - Fórmula de pontuação e se combos terão uma janela de tempo na campanha.
 - Tratamento de troca entre itens acessíveis em uma versão futura.
 - Validar a retomada após interrupções e atualizações em diferentes navegadores e, depois, no aplicativo Android.
-- Modelo de criação e validação de fases adicionais, incluindo geração automática apenas se mantiver solução verificável.
+- Ampliar os modelos usados na geração e testar dificuldade e limites da dica nas fases geradas.

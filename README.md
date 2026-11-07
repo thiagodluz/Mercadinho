@@ -16,7 +16,7 @@ O mockup acima apresenta a direção visual inicial. As ilustrações e alguns e
 
 ## Protótipo atual
 
-O protótipo publicado tem oito fases de demonstração, com progressão gradual e estas mecânicas:
+O protótipo começa com oito fases manuais. A partir da fase 9, gera fases continuamente a partir de variações de modelos com solução, com estas mecânicas:
 
 - **Trincas:** reúna três produtos iguais no mesmo compartimento para removê-los.
 - **Prateleiras em camadas:** organize os itens da frente para revelar os que estão atrás.
@@ -34,7 +34,7 @@ O conteúdo ainda é um protótipo; número de fases, arte, áudio e regras pode
 3. Junte três produtos iguais no mesmo compartimento.
 4. Continue organizando as prateleiras até concluir a fase.
 
-Use **Desfazer** para voltar uma jogada ou **Reiniciar** para começar a fase atual novamente. As fases são liberadas uma depois da outra.
+Use **Desfazer** para voltar uma jogada ou **Reiniciar** para começar a fase atual novamente. As fases são liberadas uma depois da outra. As fases geradas mantêm o mesmo tabuleiro ao reiniciar ou reabrir no mesmo navegador.
 
 ## Executar localmente
 
@@ -54,7 +54,7 @@ Com o Node.js instalado, execute na pasta do projeto:
 node tests/run.cjs
 ```
 
-Os testes cobrem soluções das fases, salvamento, interrupções, pausa, acessibilidade e interações entre camadas, correntes e dispensadores. A verificação em aparelhos físicos continua necessária.
+Os testes cobrem soluções das fases iniciais e amostras de fases geradas, salvamento, interrupções, pausa, acessibilidade e interações entre camadas, correntes e dispensadores. A verificação em aparelhos físicos continua necessária.
 
 ## Estrutura
 
