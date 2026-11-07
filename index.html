@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7ead2">
+  <title>Mercadinho</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #51351e; background: #f6e9d1; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100dvh; background: radial-gradient(circle at top, #fff9eb, #f1dfbd); }
+    button { font: inherit; cursor: pointer; }
+    .app { width: min(100%, 520px); min-height: 100dvh; margin: auto; padding: max(18px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; }
+    header { text-align: center; width: 100%; }
+    .eyebrow { color: #78854b; font-size: .72rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { font-size: clamp(2rem, 9vw, 3rem); line-height: 1; margin: 6px 0; color: #73421f; letter-spacing: -.05em; }
+    .level { display: inline-block; background: #fff9ed; border: 1px solid #e7cda4; border-radius: 999px; padding: 6px 17px; font-weight: 800; font-size: .85rem; }
+    .instructions { margin: 14px auto 10px; max-width: 310px; font-size: .91rem; line-height: 1.4; color: #775b3c; }
+    .board { position: relative; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 15px; border: 7px solid #a95e29; border-radius: 14px; background: #c27b3b; box-shadow: inset 0 3px 0 #e3aa6d, 0 10px 0 #8c4c24, 0 18px 28px #77532930; touch-action: none; }
+    .shelf { position: relative; min-width: 0; height: clamp(105px, 29vw, 150px); display: flex; align-items: end; border: 4px solid #8e4d25; border-bottom: 10px solid #d69654; border-radius: 5px; background: linear-gradient(#895332, #a96939 73%, #b77b45 74%); box-shadow: inset 0 6px 12px #5a2f1c50; }
+    .back-row, .front-row { position: absolute; inset: 0 3px 2px; display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; }
+    .back-row { transform: translateY(-14%); opacity: .32; filter: brightness(.55); pointer-events: none; }
+    .front-row { z-index: 1; }
+    .slot { position: relative; min-width: 0; height: 84%; display: flex; align-items: end; justify-content: center; border: 0; padding: 2px; background: transparent; border-radius: 8px; touch-action: none; }
+    .slot:focus-visible { outline: 3px solid #ffdf72; outline-offset: -2px; }
+    .slot.empty::after { content: ''; width: 70%; height: 8px; margin-bottom: 2px; background: #633e2866; border-radius: 50%; }
+    .slot.selected { background: #ffdf7255; box-shadow: inset 0 0 0 2px #ffdf72; }
+    .item { width: min(100%, 58px); height: 75%; min-height: 62px; max-height: 95px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 3px solid #ffffff88; border-radius: 10px 10px 7px 7px; box-shadow: inset 0 -8px 0 #00000012, 0 3px 3px #43291644; color: #fff; user-select: none; pointer-events: none; }
+    .item .icon { font-size: clamp(22px, 6vw, 31px); line-height: 1.15; }
+    .item .name { font-size: clamp(8px, 2vw, 11px); font-weight: 900; text-transform: uppercase; letter-spacing: .02em; text-shadow: 0 1px 2px #0006; }
+    .milk { background: linear-gradient(#8ac2ea 25%, #f1f9ff 25% 70%, #65a4d5 70%); color: #275a85; }
+    .coffee { background: linear-gradient(#974422, #c87337); }
+    .jam { background: linear-gradient(#e69494 17%, #b7314a 17% 83%, #8b2334 83%); }
+    .ghost { position: fixed; z-index: 20; width: 50px; height: 80px; pointer-events: none; transform: translate(-50%, -65%) scale(1.08); opacity: .92; }
+    .controls { width: 100%; margin-top: 27px; display: flex; gap: 10px; }
+    .control { flex: 1; min-height: 50px; border: 0; border-radius: 12px; padding: 10px; font-weight: 800; background: #78984b; color: white; box-shadow: 0 4px #537135; }
+    .control.secondary { background: #fff8eb; color: #795634; box-shadow: 0 4px #d6bc94; }
+    .control:disabled { opacity: .48; cursor: default; }
+    .message { min-height: 2.6em; text-align: center; color: #70563a; font-size: .86rem; margin: 17px 0 0; }
+    .win { margin-top: 10px; text-align: center; background: #fff7e4; border: 2px solid #e0bd77; padding: 16px; border-radius: 14px; width: 100%; }
+    .win h2 { margin: 0 0 4px; font-size: 1.3rem; }
+    .win p { margin: 0; }
+    [hidden] { display: none !important; }
+    @media (max-height: 650px) { .instructions { margin: 8px auto; } .shelf { height: min(25vw, 110px); } .controls { margin-top: 18px; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="eyebrow">Um jogo de organizar</div>
+      <h1>Mercadinho</h1>
+      <div class="level">Primeira fase</div>
+      <p class="instructions">Arraste os produtos e junte três iguais na mesma prateleira.</p>
+    </header>
+    <div id="board" class="board" aria-label="Prateleiras do jogo"></div>
+    <div class="controls">
+      <button id="undo" class="control secondary" type="button" disabled>↶ Desfazer</button>
+      <button id="restart" class="control" type="button">↻ Reiniciar</button>
+    </div>
+    <p id="message" class="message" aria-live="polite">Os produtos escuros estão na fileira de trás.</p>
+    <section id="win" class="win" hidden aria-live="polite"><h2>Prateleiras organizadas!</h2><p>Você concluiu a primeira fase. ✨</p></section>
+  </main>
+  <script>
+    (() => {
+      const products = {
+        milk: { name: 'Leite', icon: '🥛' },
+        coffee: { name: 'Café', icon: '☕' },
+        jam: { name: 'Geleia', icon: '🍓' }
+      };
+      const initial = [
+        { front: ['milk', 'milk', null], back: [['coffee', 'jam', null]] },
+        { front: ['coffee', 'coffee', 'milk'], back: [] },
+        { front: ['jam', 'jam', null], back: [] },
+        { front: [null, null, null], back: [] }
+      ];
+      const board = document.getElementById('board');
+      const undo = document.getElementById('undo');
+      const restart = document.getElementById('restart');
+      const message = document.getElementById('message');
+      const win = document.getElementById('win');
+      const copy = value => JSON.parse(JSON.stringify(value));
+      let shelves = copy(initial);
+      let history = [];
+      let selected = null;
+      let pointer = null;
+      let completed = false;
+
+      function itemMarkup(id) {
+        if (!id) return '';
+        const product = products[id];
+        return `<span class="item ${id}"><span class="icon">${product.icon}</span><span class="name">${product.name}</span></span>`;
+      }
+
+      function render() {
+        board.innerHTML = shelves.map((shelf, shelfIndex) => {
+          const behind = shelf.back[0] || [null, null, null];
+          const backRow = behind.map(item => `<span>${itemMarkup(item)}</span>`).join('');
+          const frontRow = shelf.front.map((item, slotIndex) => {
+            const active = selected && selected.shelf === shelfIndex && selected.slot === slotIndex;
+            const label = item ? products[item].name : 'Vaga livre';
+            return `<button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="${slotIndex}" aria-label="Prateleira ${shelfIndex + 1}, posição ${slotIndex + 1}: ${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button>`;
+          }).join('');
+          return `<div class="shelf"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div></div>`;
+        }).join('');
+        undo.disabled = history.length === 0;
+        win.hidden = !completed;
+      }
+
+      function settle() {
+        for (const shelf of shelves) {
+          let changed = true;
+          while (changed) {
+            changed = false;
+            if (shelf.front[0] && shelf.front.every(item => item === shelf.front[0])) {
+              shelf.front = [null, null, null];
+              changed = true;
+            }
+            if (shelf.front.every(item => item === null) && shelf.back.length) {
+              shelf.front = shelf.back.shift();
+              changed = true;
+            }
+          }
+        }
+        completed = shelves.every(shelf => shelf.front.every(item => item === null) && shelf.back.length === 0);
+      }
+
+      function move(from, to) {
+        if (!from || !to || completed) return false;
+        const source = shelves[from.shelf].front;
+        const target = shelves[to.shelf].front;
+        if (!source[from.slot] || target[to.slot] !== null) return false;
+        history.push(copy(shelves));
+        target[to.slot] = source[from.slot];
+        source[from.slot] = null;
+        selected = null;
+        settle();
+        message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : 'Continue organizando os produtos.';
+        render();
+        return true;
+      }
+
+      function position(element) {
+        const slot = element && element.closest('.slot');
+        return slot && board.contains(slot) ? { shelf: Number(slot.dataset.shelf), slot: Number(slot.dataset.slot) } : null;
+      }
+
+      board.addEventListener('pointerdown', event => {
+        if (event.button !== 0 || completed) return;
+        const origin = position(event.target);
+        if (!origin) return;
+        pointer = { id: event.pointerId, origin, x: event.clientX, y: event.clientY, dragging: false, ghost: null };
+        board.setPointerCapture(event.pointerId);
+      });
+
+      board.addEventListener('pointermove', event => {
+        if (!pointer || event.pointerId !== pointer.id) return;
+        const item = shelves[pointer.origin.shelf].front[pointer.origin.slot];
+        if (!item) return;
+        if (!pointer.dragging && Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 8) {
+          pointer.dragging = true;
+          pointer.ghost = document.createElement('div');
+          pointer.ghost.className = 'ghost';
+          pointer.ghost.innerHTML = itemMarkup(item);
+          document.body.append(pointer.ghost);
+        }
+        if (pointer.ghost) {
+          pointer.ghost.style.left = `${event.clientX}px`;
+          pointer.ghost.style.top = `${event.clientY}px`;
+        }
+      });
+
+      function finishPointer(event, cancelled = false) {
+        if (!pointer || event.pointerId !== pointer.id) return;
+        const current = pointer;
+        pointer = null;
+        if (current.ghost) current.ghost.remove();
+        if (cancelled) return;
+        const destination = position(document.elementFromPoint(event.clientX, event.clientY));
+        if (current.dragging) {
+          if (!move(current.origin, destination)) {
+            message.textContent = 'Escolha uma vaga livre na frente da prateleira.';
+            render();
+          }
+        } else if (destination) {
+          if (selected && move(selected, destination)) return;
+          selected = shelves[destination.shelf].front[destination.slot] ? destination : null;
+          message.textContent = selected ? 'Agora toque em uma vaga livre.' : 'Escolha um produto para mover.';
+          render();
+        }
+      }
+      board.addEventListener('pointerup', event => finishPointer(event));
+      board.addEventListener('pointercancel', event => finishPointer(event, true));
+      board.addEventListener('click', event => {
+        if (event.detail !== 0) return;
+        const destination = position(event.target);
+        if (!destination) return;
+        if (selected && move(selected, destination)) return;
+        selected = shelves[destination.shelf].front[destination.slot] ? destination : null;
+        render();
+      });
+      undo.addEventListener('click', () => {
+        if (!history.length) return;
+        shelves = history.pop();
+        completed = false;
+        selected = null;
+        message.textContent = 'Última jogada desfeita.';
+        render();
+      });
+      restart.addEventListener('click', () => {
+        if (history.length && !confirm('Recomeçar esta fase?')) return;
+        shelves = copy(initial);
+        history = [];
+        selected = null;
+        completed = false;
+        message.textContent = 'Os produtos escuros estão na fileira de trás.';
+        render();
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>
