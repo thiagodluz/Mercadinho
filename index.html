@@ -17,11 +17,14 @@
     .level { display: block; width: max-content; margin: auto; background: #fff9ed; border: 1px solid #e7cda4; border-radius: 999px; padding: 6px 17px; font-weight: 800; font-size: .85rem; }
     .instructions { margin: 14px auto 10px; max-width: 310px; font-size: .91rem; line-height: 1.4; color: #775b3c; }
     .board { position: relative; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 12px; border: 7px solid #a95e29; border-radius: 14px; background: linear-gradient(100deg,#c27b3b,#e6a65f 50%,#c27b3b); box-shadow: inset 0 3px 0 #f4c688, 0 8px 0 #8c4c24, 0 18px 28px #77532930; touch-action: none; user-select: none; }
-    /* A quarta fase usa uma disposição em cruz, mantendo a ordem das prateleiras. */
-    .board.board-cross { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .board-cross .shelf { grid-column: span 2; height: clamp(90px, 24vw, 125px); }
+    /* Os formatos alteram somente a posição visual dos compartimentos. */
+    .board.board-shaped { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .board-shaped .shelf { grid-column: span 2; height: clamp(90px, 24vw, 125px); }
     .board-cross .shelf:nth-child(1) { grid-column: 2 / span 2; }
     .board-cross .shelf:nth-child(6) { grid-column: 2 / span 2; }
+    .board-steps .shelf:nth-child(1), .board-steps .shelf:nth-child(4) { grid-column: 1 / span 2; }
+    .board-steps .shelf:nth-child(2), .board-steps .shelf:nth-child(5) { grid-column: 3 / span 2; }
+    .board-steps .shelf:nth-child(3), .board-steps .shelf:nth-child(6) { grid-column: 2 / span 2; }
     .shelf { position: relative; min-width: 0; height: clamp(105px, 29vw, 150px); display: flex; align-items: end; border: 4px solid #8e4d25; border-bottom: 10px solid #d69654; border-radius: 5px; background: linear-gradient(#865033, #a96939 73%, #c18a53 74%); box-shadow: inset 0 6px 12px #5a2f1c50; }
     .back-row, .front-row { position: absolute; inset: 0 3px 2px; display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; }
     .back-row { transform: translateY(-14%); opacity: .48; filter: brightness(.62); pointer-events: none; }
@@ -197,6 +200,22 @@
         const saved = Number(localStorage.getItem('mercadinho-unlocked'));
         if (Number.isInteger(saved) && saved >= 0) unlocked = Math.min(saved, levels.length);
       } catch {}
+      // A semente mantém o formato da fase ao reiniciar ou reabrir o jogo.
+      let layoutSeed;
+      try {
+        const savedSeed = localStorage.getItem('mercadinho-layout-seed');
+        if (savedSeed !== null && /^\d+$/.test(savedSeed) && Number(savedSeed) <= 4294967295) {
+          layoutSeed = Number(savedSeed);
+        } else {
+          layoutSeed = Math.floor(Math.random() * 4294967296);
+          localStorage.setItem('mercadinho-layout-seed', String(layoutSeed));
+        }
+      } catch { layoutSeed = Math.floor(Math.random() * 4294967296); }
+      function layoutForLevel(index) {
+        if (index < 3 || levels[index].shelves.length !== 6) return 'grid';
+        // Alterna os três modelos ao longo das fases elegíveis.
+        return ['cross', 'steps', 'grid'][(layoutSeed + index - 3) % 3];
+      }
       let currentLevel = Math.min(unlocked, levels.length - 1);
       let shelves = copy(levels[currentLevel].shelves);
       let history = [];
@@ -390,7 +409,10 @@
       }
 
       function render(matching = [], revealed = []) {
-        board.classList.toggle('board-cross', currentLevel === 3);
+        const layout = layoutForLevel(currentLevel);
+        board.classList.toggle('board-shaped', layout !== 'grid');
+        board.classList.toggle('board-cross', layout === 'cross');
+        board.classList.toggle('board-steps', layout === 'steps');
         if (!animating && !completed && !hasLegalMove()) {
           message.textContent = history.length
             ? 'Sem movimentos disponíveis. Desfaça uma jogada ou reinicie a fase.'
