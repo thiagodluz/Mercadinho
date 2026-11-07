@@ -55,7 +55,7 @@
     .win h2 { margin: 0 0 4px; font-size: 1.3rem; }
     .win p { margin: 0; }
     .win .control { margin-top: 12px; padding-inline: 22px; }
-    .level-nav { display: flex; justify-content: center; gap: 8px; margin-top: 9px; }
+    .level-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 9px; }
     .level-choice { border: 1px solid #dfc59e; background: #fff8eb; color: #705238; border-radius: 999px; padding: 5px 12px; font-size: .76rem; font-weight: 800; }
     .level-choice[aria-current="step"] { background: #79984b; color: white; border-color: #79984b; }
     .level-choice:disabled { opacity: .5; cursor: default; }
@@ -82,6 +82,7 @@
         <button id="level-one" class="level-choice" type="button" aria-current="step">Fase 1</button>
         <button id="level-two" class="level-choice" type="button" disabled>Fase 2 🔒</button>
         <button id="level-three" class="level-choice" type="button" disabled>Fase 3 🔒</button>
+        <button id="level-four" class="level-choice" type="button" disabled>Fase 4 🔒</button>
       </nav>
       <p id="instructions" class="instructions">Arraste os produtos e junte três iguais na mesma prateleira.</p>
     </header>
@@ -165,6 +166,18 @@
             { front: ['milk', 'milk', 'jam'], back: [], lock: { remaining: 1, order: 1 } },
             { front: ['milk', 'jam', 'jam'], back: [] }
           ]
+        },
+        {
+          instructions: 'Combine produtos, abra a corrente e organize os itens da caixa.',
+          hint: 'Dois trios abrem a corrente. Planeje as vagas para os produtos da caixa.',
+          shelves: [
+            { front: ['milk', 'milk', null], back: [['coffee', 'jam', null]] },
+            { front: ['coffee', 'coffee', 'milk'], back: [] },
+            { front: ['jam', 'jam', null], back: [] },
+            { type: 'dispenser', front: [null, 'milk', null], back: [], queue: ['coffee', 'jam'] },
+            { front: ['milk', 'coffee', 'jam'], back: [], lock: { remaining: 2, order: 0 } },
+            { front: ['milk', 'coffee', 'jam'], back: [] }
+          ]
         }
       ];
       const board = document.getElementById('board');
@@ -176,7 +189,7 @@
       const nextLevel = document.getElementById('next-level');
       const levelLabel = document.getElementById('level');
       const instructions = document.getElementById('instructions');
-      const levelButtons = [document.getElementById('level-one'), document.getElementById('level-two'), document.getElementById('level-three')];
+      const levelButtons = [document.getElementById('level-one'), document.getElementById('level-two'), document.getElementById('level-three'), document.getElementById('level-four')];
       const copy = value => JSON.parse(JSON.stringify(value));
       let unlocked = 0;
       try {
@@ -377,7 +390,7 @@
             return `<button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="${slotIndex}" aria-label="Prateleira ${shelfIndex + 1}, posição ${slotIndex + 1}: ${label}" ${completed || locked ? 'disabled' : ''}>${itemMarkup(item)}</button>`;
           }).join('');
           const effect = matching.includes(shelfIndex) ? 'matching' : revealed.includes(shelfIndex) ? 'revealed' : '';
-          const lock = locked ? `<div class="lock-overlay" role="img" aria-label="Prateleira ${shelfIndex + 1} bloqueada, ${shelf.lock.remaining} trio para abrir, ${shelf === activeLock ? 'abre primeiro' : 'abre depois'}"><span class="lock-badge">🔒 ${shelf.lock.remaining}</span><span class="lock-caption">${shelf === activeLock ? 'Abre primeiro' : 'Abre depois'}</span></div>` : '';
+          const lock = locked ? `<div class="lock-overlay" role="img" aria-label="Prateleira ${shelfIndex + 1} bloqueada, ${shelf.lock.remaining} ${shelf.lock.remaining === 1 ? 'trio' : 'trios'} para abrir, ${shelf === activeLock ? 'abre primeiro' : 'abre depois'}"><span class="lock-badge">🔒 ${shelf.lock.remaining}</span><span class="lock-caption">${shelf === activeLock ? 'Abre primeiro' : 'Abre depois'}</span></div>` : '';
           return `<div class="shelf ${effect}"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}</div>`;
         }).join('');
         undo.disabled = animating || history.length === 0;
