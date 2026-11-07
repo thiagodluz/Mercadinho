@@ -174,6 +174,27 @@
           art: '<rect x="10" y="19" width="36" height="65" rx="9" fill="#ae3041" stroke="#812536" stroke-width="2"/><rect x="8" y="13" width="40" height="13" rx="3" fill="#f0a29a" stroke="#bd6d67" stroke-width="2"/><path d="M9 18 H47" stroke="#f9d3c6" stroke-width="3" stroke-dasharray="5 3"/><rect x="13" y="37" width="30" height="30" rx="5" fill="#fff1d0"/><path d="M28 59 C15 53 21 44 28 48 C35 44 41 53 28 59 Z" fill="#d44853"/><path d="M28 48 L25 44 M28 48 L32 44" stroke="#689347" stroke-width="2"/><text x="28" y="75" text-anchor="middle" fill="#fff1d0" font-size="7" font-weight="bold">GELEIA</text>'
         }
       };
+      // Produtos fictícios com silhuetas, cores e rótulos próprios.
+      const extraProducts = [
+        ['rice','Arroz','#d7e5ed','AR'], ['beans','Feijão','#af754e','FE'],
+        ['pasta','Macarrão','#e1bb49','MA'], ['oil','Óleo','#e2b42e','OL'],
+        ['soda','Refrigerante','#bc4a54','RE'], ['juice','Suco','#ea843e','SU'],
+        ['cookies','Biscoito','#ce9252','BI'], ['chocolate','Chocolate','#765044','CH'],
+        ['flour','Farinha','#f0dfbb','FA'], ['sugar','Açúcar','#d59bb2','AC'],
+        ['salt','Sal','#81bbcf','SA'], ['cereal','Cereal','#d99342','CE'],
+        ['corn','Milho','#d2ad3a','MI'], ['sauce','Molho','#d45339','MO'],
+        ['yogurt','Iogurte','#b98ac5','IO'], ['water','Água','#6aa9db','AG']
+      ];
+      extraProducts.forEach(([id, name, color, label], index) => {
+        const shapes = [
+          '<path d="M12 18 L17 10 H39 L44 18 L47 80 Q28 86 9 80 Z"',
+          '<path d="M15 15 Q15 10 20 10 H36 Q41 10 41 15 L44 79 Q44 84 39 84 H17 Q12 84 12 79 Z"',
+          '<path d="M13 11 H43 L47 20 V82 H9 V20 Z"',
+          '<path d="M19 8 H37 V18 L42 25 V80 Q42 84 38 84 H18 Q14 84 14 80 V25 L19 18 Z"'
+        ];
+        const art = `${shapes[index % shapes.length]} fill="${color}" stroke="#684b37" stroke-width="2"/><rect x="13" y="33" width="30" height="31" rx="5" fill="#fff5dc"/><circle cx="28" cy="45" r="7" fill="${color}" stroke="#684b37" stroke-width="1"/><text x="28" y="61" text-anchor="middle" fill="#51351e" font-size="9" font-weight="bold">${label}</text><path d="M16 73 H40" stroke="#fff5dc" stroke-width="3"/>`;
+        products[id] = { name, art };
+      });
       const levels = [
         {
           instructions: 'Arraste os produtos e junte três iguais na mesma prateleira.',
@@ -298,6 +319,12 @@
           localStorage.setItem('mercadinho-layout-seed', String(layoutSeed));
         }
       } catch { layoutSeed = Math.floor(Math.random() * 4294967296); }
+      // Uma partida gerada pela versão anterior continua com seu gerador original.
+      let legacyLevelIndex = null;
+      try {
+        const previous = JSON.parse(localStorage.getItem('mercadinho-partida-v1') || 'null');
+        if (previous && previous.level === unlocked && previous.level >= levels.length && (previous.generator === undefined || previous.generator === 1)) legacyLevelIndex = previous.level;
+      } catch {}
       // Fases infinitas são variações de modelos já solucionáveis. A mesma
       // semente e o mesmo número sempre produzem exatamente o mesmo tabuleiro.
       function levelAt(index) {
@@ -316,6 +343,32 @@
             [items[i], items[j]] = [items[j], items[i]];
           }
           return items;
+        }
+        if (index !== legacyLevelIndex) {
+          const count = index < 12 ? 6 : index < 20 ? 7 : index < 30 ? 8 : index < 60 ? 10 : index < 100 ? 12 : 14;
+          const ids = shuffle(Object.keys(products)).slice(0, count);
+          const [a,b,c,d,e,f,g,h] = ids;
+          const normal = front => ({ front, back: [] });
+          const shelves = [
+            normal([a,a,null]), normal([b,b,c]), normal([c,c,d]),
+            normal([d,count >= 7 ? g : d,e]),
+            normal([e,f,count >= 8 ? h : f]),
+            { type:'dispenser', front:[null,a,null], back:[], queue:[] }
+          ];
+          if (index >= 12) shelves[4].lock = { remaining: 1, order: 0 };
+          if (index >= 20) shelves[0].back = [[b,b,b]];
+          for (let i = 8; i + 1 < count; i += 2) {
+            shelves.push(normal([ids[i],ids[i],ids[i+1]]), normal([ids[i+1],ids[i+1],null]));
+          }
+          const counts = Object.fromEntries(ids.map(id => [id, 0]));
+          for (const shelf of shelves) {
+            for (const item of shelf.front) if (item) counts[item]++;
+            for (const row of shelf.back) for (const item of row) if (item) counts[item]++;
+          }
+          // Completa cada tipo em múltiplos de três, mantendo fila determinística.
+          for (const id of ids) while (counts[id] % 3) { shelves[5].queue.push(id); counts[id]++; }
+          shuffle(shelves);
+          return { instructions:'Organize os produtos e encontre todos os trios.', hint:'Use as vagas para organizar produtos e revelar os próximos.', shelves };
         }
         // Primeiro os modelos mais simples, depois também os com mais produtos.
         const choices = index < 12 ? [3, 4, 5] : index < 20 ? [4, 5, 7] : [5, 7];
@@ -378,7 +431,7 @@
       function saveGame(pending = false) {
         try {
           if (completed) localStorage.removeItem(saveKey);
-          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, level: currentLevel, shelves, history: history.slice(-100), pending }));
+          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: currentLevel === legacyLevelIndex ? 1 : 2, level: currentLevel, shelves, history: history.slice(-100), pending }));
         } catch {}
       }
       let currentHint = null;
@@ -955,6 +1008,7 @@
           return;
         }
         unlocked = 0;
+        legacyLevelIndex = null;
         openLevel(0);
       });
       message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : restored ? 'Sua partida foi retomada.' : levelAt(currentLevel).hint;

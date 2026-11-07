@@ -1,0 +1,5 @@
+{
+  "mercadinho-unlocked": "8",
+  "mercadinho-layout-seed": "12345",
+  "mercadinho-partida-v1": "{\"version\":1,\"level\":8,\"shelves\":[{\"front\":[\"tea\",\"milk\",\"jam\"],\"back\":[]},{\"front\":[\"milk\",null,\"milk\"],\"back\":[]},{\"front\":[null,null,null],\"back\":[]},{\"front\":[\"jam\",\"milk\",\"tea\"],\"back\":[]},{\"front\":[null,\"jam\",\"jam\"],\"back\":[]},{\"type\":\"dispenser\",\"front\":[null,\"milk\",null],\"back\":[],\"queue\":[\"jam\",\"tea\",\"milk\",\"jam\"]}],\"history\":[[{\"front\":[\"tea\",\"milk\",\"jam\"],\"back\":[]},{\"front\":[\"milk\",null,\"milk\"],\"back\":[]},{\"front\":[\"tea\",null,\"tea\"],\"back\":[]},{\"front\":[\"jam\",\"milk\",\"tea\"],\"back\":[]},{\"front\":[null,\"jam\",\"jam\"],\"back\":[]},{\"type\":\"dispenser\",\"front\":[null,\"tea\",null],\"back\":[],\"queue\":[\"milk\",\"jam\",\"tea\",\"milk\",\"jam\"]}]],\"pending\":false}"
+}

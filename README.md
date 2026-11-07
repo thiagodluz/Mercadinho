@@ -16,9 +16,9 @@ O mockup acima apresenta a direção visual inicial. As ilustrações e alguns e
 
 ## Protótipo atual
 
-O protótipo começa com oito fases manuais. A partir da fase 9, gera fases continuamente a partir de variações de modelos com solução, com estas mecânicas:
+O protótipo começa com oito fases manuais. A partir da fase 9, gera fases continuamente com 6 a 14 tipos de produtos, a partir de tabuleiros com solução, com estas mecânicas:
 
-- **Trincas:** reúna três produtos iguais no mesmo compartimento para removê-los.
+- **Produtos:** catálogo de 20 mercadorias ilustradas provisórias.\n- **Trincas:** reúna três produtos iguais no mesmo compartimento para removê-los.
 - **Prateleiras em camadas:** organize os itens da frente para revelar os que estão atrás.
 - **Dispensador:** retire os produtos na ordem apresentada.
 - **Correntes:** complete trios para abrir compartimentos bloqueados.
