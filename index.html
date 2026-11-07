@@ -405,7 +405,7 @@
             { front: ['milk', 'milk', null], back: [['tea', 'tea', 'tea']] },
             { front: ['coffee', 'coffee', null], back: [] },
             { front: ['jam', 'jam', null], back: [] },
-            { type: 'dispenser', front: [null, 'milk', null], back: [], queue: ['coffee', 'jam', 'milk', 'coffee', 'jam', 'tea', 'tea', 'tea'] },
+            { type: 'dispenser', front: [null, 'milk', null], back: [], queue: ['coffee', 'jam', 'milk', 'tea', 'coffee', 'tea', 'jam', 'tea'] },
             { front: ['milk', 'coffee', 'jam'], back: [['milk', 'coffee', 'jam']], lock: { remaining: 2, order: 0 } },
             { front: [null, null, null], back: [] }
           ]
@@ -443,9 +443,15 @@
       } catch { layoutSeed = Math.floor(Math.random() * 4294967296); }
       // Uma partida gerada pela versão anterior continua com seu gerador original.
       let legacyLevelIndex = null;
+      let savedGeneratedLevel = null;
+      let savedGenerator = null;
       try {
         const previous = JSON.parse(localStorage.getItem('mercadinho-partida-v1') || 'null');
-        if (previous && previous.level === unlocked && previous.level >= levels.length && (previous.generator === undefined || previous.generator === 1)) legacyLevelIndex = previous.level;
+        if (previous && previous.level === unlocked && previous.level >= levels.length) {
+          savedGeneratedLevel = previous.level;
+          savedGenerator = previous.generator === undefined ? 1 : previous.generator;
+          if (savedGenerator === 1) legacyLevelIndex = previous.level;
+        }
       } catch {}
       // Fases infinitas são variações de modelos já solucionáveis. A mesma
       // semente e o mesmo número sempre produzem exatamente o mesmo tabuleiro.
@@ -478,7 +484,20 @@
             { type:'dispenser', front:[null,a,null], back:[], queue:[] }
           ];
           if (index >= 12) shelves[4].lock = { remaining: 1, order: 0 };
-          if (index >= 20) shelves[0].back = [[b,b,b]];
+          const oldGenerator = index === savedGeneratedLevel && savedGenerator === 2;
+          if (oldGenerator) {
+            if (index >= 20) shelves[0].back = [[b,b,b]];
+          } else {
+            // As duas fileiras misturadas introduzem três unidades de cada tipo.
+            const rows = [[b,b,c], [c,c,b]];
+            if (random() < 0.5) rows.reverse();
+            shelves[0].back = rows.map(row => shuffle(row));
+            if (index >= 20) {
+              const extraRows = [[d,d,e], [e,e,d]];
+              if (random() < 0.5) extraRows.reverse();
+              shelves[1].back = extraRows.map(row => shuffle(row));
+            }
+          }
           for (let i = 8; i + 1 < count; i += 2) {
             shelves.push(normal([ids[i],ids[i],ids[i+1]]), normal([ids[i+1],ids[i+1],null]));
           }
@@ -487,8 +506,22 @@
             for (const item of shelf.front) if (item) counts[item]++;
             for (const row of shelf.back) for (const item of row) if (item) counts[item]++;
           }
-          // Completa cada tipo em múltiplos de três, mantendo fila determinística.
-          for (const id of ids) while (counts[id] % 3) { shelves[5].queue.push(id); counts[id]++; }
+          // Completa cada tipo em múltiplos de três.
+          if (oldGenerator) {
+            for (const id of ids) while (counts[id] % 3) { shelves[5].queue.push(id); counts[id]++; }
+          } else {
+            const missing = ids.map(id => ({ id, count: (3 - counts[id] % 3) % 3 }));
+            let last = shelves[5].front[1];
+            while (missing.some(item => item.count > 0)) {
+              const available = missing.filter(item => item.count > 0 && item.id !== last);
+              const choices = available.length ? available : missing.filter(item => item.count > 0);
+              choices.sort((left, right) => right.count - left.count);
+              const next = choices[0];
+              shelves[5].queue.push(next.id);
+              next.count--;
+              last = next.id;
+            }
+          }
           shuffle(shelves);
           return { instructions:'Organize os produtos e encontre todos os trios.', hint:'Use as vagas para organizar produtos e revelar os próximos.', shelves };
         }
@@ -553,7 +586,7 @@
       function saveGame(pending = false) {
         try {
           if (completed) localStorage.removeItem(saveKey);
-          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: currentLevel === legacyLevelIndex ? 1 : 2, level: currentLevel, shelves, history: history.slice(-100), pending }));
+          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: currentLevel === savedGeneratedLevel ? savedGenerator : 3, level: currentLevel, shelves, history: history.slice(-100), pending }));
         } catch {}
       }
       let currentHint = null;
@@ -1157,6 +1190,8 @@
         }
         unlocked = 0;
         legacyLevelIndex = null;
+        savedGeneratedLevel = null;
+        savedGenerator = null;
         openLevel(0);
       });
       message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : restored ? 'Sua partida foi retomada.' : levelAt(currentLevel).hint;
