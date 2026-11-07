@@ -33,7 +33,7 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 - Fases projetadas manualmente no início, incluindo pelo menos uma solução verificada para cada fase.
 - Pontuação e feedback de combos opcionais para a experiência da campanha. A forma de contagem será definida e testada no protótipo.
 - Modo cronometrado como expansão posterior, depois de validar a campanha.
-- Motor proposto: Godot, por permitir desenvolver o jogo para Android e navegador a partir de um projeto compartilhado. A versão estável, a compatibilidade de exportação e o desempenho serão verificados quando a implementação começar.
+- Tecnologia inicial: HTML, CSS e JavaScript para a versão web. Avaliar Capacitor para empacotar a mesma base como aplicativo Android e testar as integrações no aparelho.
 
 ## Regras do protótipo
 
@@ -77,13 +77,13 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 
 ### 1. Preparação do projeto
 
-- [ ] Confirmar a versão do motor e configurar exportação Android e teste no navegador.
+- [ ] Preparar a execução no navegador e avaliar o empacotamento Android com Capacitor.
 - [ ] Definir estrutura do código, formatos de fase e organização dos recursos.
 - [ ] Criar repositório funcional com instruções de execução e compilação.
 - [ ] Definir padrão de nomes, resolução de referência e adaptação a telas verticais.
 - [ ] Preparar um fluxo simples de versões e verificação antes de integrar alterações.
 
-Entrega: projeto abre no ambiente de desenvolvimento e exibe uma tela inicial em Android e no navegador de teste.
+Entrega: projeto abre no navegador e o caminho de geração de uma versão Android está preparado.
 
 ### 2. Núcleo jogável
 
