@@ -59,6 +59,10 @@
     .item svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 2px #43291666); }
     .ghost { position: fixed; z-index: 20; pointer-events: none; opacity: .96; filter: drop-shadow(0 7px 5px #39210d55); }
     .ghost .item { width: 100%; height: 100%; min-height: 0; max-height: none; }
+    .shelf.unlocking { animation: unlock-glow .35s ease-out; }
+    @keyframes unlock-glow { 50% { filter: brightness(1.5); box-shadow: 0 0 18px #ffdd75; } }
+    .win:not([hidden]) { animation: victory-appear .35s ease-out; }
+    @keyframes victory-appear { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
     .matching .front-row .item { animation: match-pop .32s ease-in forwards; }
     .revealed .front-row .item { animation: reveal-row .28s ease-out both; }
     @keyframes match-pop { 35% { transform: translateY(-5px) scale(1.12); filter: brightness(1.25); } 100% { transform: translateY(-15px) scale(.15); opacity: 0; } }
@@ -82,7 +86,8 @@
     .setting-note { margin: 0; font-size: .77rem; line-height: 1.35; color: #806b51; }
     [hidden] { display: none !important; }
     @media (max-height: 650px) { h1 { padding: 6px 20px; margin: 4px 0 6px; } .instructions { margin: 8px auto; } .shelf { height: min(25vw, 110px); } .controls { margin-top: 18px; } }
-    @media (prefers-reduced-motion: reduce) { .matching .front-row .item, .revealed .front-row .item { animation-duration: .01ms; } }
+    .reduce-motion .matching .front-row .item, .reduce-motion .revealed .front-row .item, .reduce-motion .shelf.unlocking, .reduce-motion .win:not([hidden]) { animation-duration: .01ms; }
+    @media (prefers-reduced-motion: reduce) { .matching .front-row .item, .revealed .front-row .item, .shelf.unlocking, .win:not([hidden]) { animation-duration: .01ms; } }
   </style>
 </head>
 <body>
@@ -131,6 +136,16 @@
           <input id="vibration-enabled" type="checkbox">
         </div>
         <p class="setting-note">A música começa depois da primeira interação com o jogo.</p>
+      </div>
+    </details>
+    <details class="settings">
+      <summary>♿ Acessibilidade</summary>
+      <div class="settings-content">
+        <div class="setting-row">
+          <label for="motion-reduced">Reduzir animações</label>
+          <input id="motion-reduced" type="checkbox">
+        </div>
+        <p class="setting-note">A preferência de movimento reduzido do aparelho também é respeitada.</p>
       </div>
     </details>
     <dialog id="pause-dialog" class="pause-dialog" aria-labelledby="pause-title">
@@ -346,6 +361,19 @@
       let animating = false;
       let advanceTimer = null;
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const motionControl = document.getElementById('motion-reduced');
+      let userReducedMotion = false;
+      try { userReducedMotion = localStorage.getItem('mercadinho-reduced-motion') === 'true'; } catch {}
+      function updateMotion() {
+        motionControl.checked = userReducedMotion;
+        document.documentElement.classList.toggle('reduce-motion', userReducedMotion);
+      }
+      motionControl.addEventListener('change', () => {
+        userReducedMotion = motionControl.checked;
+        try { localStorage.setItem('mercadinho-reduced-motion', String(userReducedMotion)); } catch {}
+        updateMotion();
+      });
+      updateMotion();
       const audioSettings = { effects: true, music: false, vibration: false, effectsVolume: 65, musicVolume: 30 };
       try {
         const saved = JSON.parse(localStorage.getItem('mercadinho-audio') || '{}');
@@ -538,7 +566,7 @@
         return hasSource && hasDestination;
       }
 
-      function render(matching = [], revealed = []) {
+      function render(matching = [], revealed = [], unlocking = []) {
         const layout = layoutForLevel(currentLevel);
         board.classList.toggle('board-shaped', layout !== 'grid');
         board.classList.toggle('board-cross', layout === 'cross');
@@ -565,7 +593,7 @@
             const label = item ? products[item].name : 'Vaga livre';
             return `<button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="${slotIndex}" aria-label="Prateleira ${shelfIndex + 1}, posição ${slotIndex + 1}: ${label}" ${completed || locked ? 'disabled' : ''}>${itemMarkup(item)}</button>`;
           }).join('');
-          const effect = matching.includes(shelfIndex) ? 'matching' : revealed.includes(shelfIndex) ? 'revealed' : '';
+          const effect = [matching.includes(shelfIndex) && 'matching', revealed.includes(shelfIndex) && 'revealed', unlocking.includes(shelfIndex) && 'unlocking'].filter(Boolean).join(' ');
           const lock = locked ? `<div class="lock-overlay" role="img" aria-label="Prateleira ${shelfIndex + 1} bloqueada, ${shelf.lock.remaining} ${shelf.lock.remaining === 1 ? 'trio' : 'trios'} para abrir, ${shelf === activeLock ? 'abre primeiro' : 'abre depois'}"><span class="lock-badge">🔒 ${shelf.lock.remaining}</span><span class="lock-caption">${shelf === activeLock ? 'Abre primeiro' : 'Abre depois'}</span></div>` : '';
           return `<div class="shelf ${effect}"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}</div>`;
         }).join('');
@@ -692,13 +720,14 @@
       });
 
       function pause(milliseconds) {
-        return new Promise(resolve => setTimeout(resolve, reduceMotion.matches ? 0 : milliseconds));
+        return new Promise(resolve => setTimeout(resolve, (reduceMotion.matches || userReducedMotion) ? 0 : milliseconds));
       }
 
       async function settle() {
         while (true) {
           const matching = [];
           const revealed = [];
+          const unlocking = [];
           shelves.forEach((shelf, index) => {
             if ((!shelf.lock || shelf.lock.remaining === 0) && shelf.front[0] && shelf.front.every(item => item === shelf.front[0])) matching.push(index);
           });
@@ -712,9 +741,16 @@
               const activeLock = shelves.filter(shelf => shelf.lock && shelf.lock.remaining > 0).sort((a, b) => a.lock.order - b.lock.order)[0];
               if (activeLock) {
                 activeLock.lock.remaining -= 1;
-                if (activeLock.lock.remaining === 0) playEffect('unlock');
+                if (activeLock.lock.remaining === 0) {
+                  playEffect('unlock');
+                  unlocking.push(shelves.indexOf(activeLock));
+                }
               }
             }
+          }
+          if (unlocking.length) {
+            render([], [], unlocking);
+            await pause(350);
           }
           shelves.forEach((shelf, index) => {
             if ((!shelf.lock || shelf.lock.remaining === 0) && shelf.front.every(item => item === null) && shelf.back.length) {

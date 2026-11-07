@@ -12,7 +12,7 @@ O repositório contém um protótipo web publicado no GitHub Pages, com oito fas
 
 O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. As fases avançadas com seis compartimentos alternam formatos de prateleira, determinados por uma semente salva no navegador. Uma fase em andamento é retomada após recarregar, a partir da última jogada concluída; até 100 jogadas ficam disponíveis no histórico salvo. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
 
-O protótipo foi verificado no navegador e por testes pontuais da lógica. Os testes automatizados usados até agora não estão versionados no repositório. O toque, a vibração, o áudio e a retomada precisam ser verificados em um celular físico. Ainda é necessário criar o aplicativo Android e validar o funcionamento offline da versão web publicada.
+O protótipo foi verificado no navegador e por testes pontuais da lógica. O repositório inclui testes automatizados da lógica, das soluções das fases, da persistência, da pausa e da preferência de animações; a cobertura ainda precisa ser ampliada. O toque, a vibração, o áudio e a retomada precisam ser verificados em um celular físico. Ainda é necessário criar o aplicativo Android e validar o funcionamento offline da versão web publicada.
 
 ## Público e plataformas
 
@@ -56,7 +56,7 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 7. Quando três produtos iguais ocuparem a mesma fileira acessível de um compartimento comum, eles são removidos automaticamente.
 8. Uma movimentação inválida devolve o produto à origem. No protótipo, produtos não trocam diretamente de lugar ao serem soltos sobre vagas ocupadas.
 9. A vitória ocorre quando não restarem produtos acessíveis, escondidos ou em dispensadores, após o término das ações pendentes.
-10. Quando não houver movimentos legais e a fase não estiver concluída, o objetivo é mostrar opções de desfazer ou reiniciar. Essa detecção ainda precisa ser implementada. A ausência de solução futura, apesar de movimentos legais, é um caso separado que precisa de validação específica.
+10. Quando não houver movimentos legais e a fase não estiver concluída, o objetivo é mostrar opções de desfazer ou reiniciar. O jogo já identifica quando não há movimentos legais. A ausência de solução futura, apesar de movimentos legais, é um caso separado que precisa de validação específica.
 
 ### Dispensadores
 
@@ -79,7 +79,7 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 - Desfazer restaura integralmente a jogada anterior, incluindo produtos, camadas, dispensadores e correntes. Durante animações, aguardar o estado estável antes de aplicar a ação.
 - Reiniciar recompõe a configuração inicial da fase, mediante confirmação.
 - A dica procura uma sequência completa até a vitória e destaca a primeira jogada. A busca tem limites de tempo e estados; se não encontrar solução dentro desses limites, informa que não encontrou, sem concluir que a fase é impossível.
-- Já há controles separados de música e efeitos, vibração opcional em navegadores compatíveis e suporte à preferência de movimento reduzido do sistema. Há um menu de pausa na versão web, que interrompe a música e permite retomar a partida. Uma opção própria para reduzir animações ainda precisa ser implementada.
+- Já há controles separados de música e efeitos, vibração opcional em navegadores compatíveis e suporte à preferência de movimento reduzido do sistema. Há um menu de pausa na versão web, que interrompe a música e permite retomar a partida. Há uma opção própria para reduzir animações, respeitando também a preferência do sistema.
 
 ## Próximas prioridades
 
@@ -96,7 +96,7 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 - [x] Preparar a execução no navegador e publicar o protótipo web no GitHub Pages.
 - [ ] Definir estrutura do código, formatos de fase e organização dos recursos.
 - [x] Criar repositório funcional e hospedar o protótipo web.
-- [ ] Acrescentar instruções de execução local e testes da versão web.
+- [x] Acrescentar instruções de execução local e testes da versão web.
 - [ ] Definir padrão de nomes, resolução de referência e adaptação a telas verticais.
 - [ ] Preparar um fluxo simples de versões e verificação antes de integrar alterações.
 
@@ -109,9 +109,9 @@ Entrega: projeto abre no navegador, com estrutura e instruções para continuar 
 - [ ] Validar a precisão do toque e do arraste em celular físico.
 - [x] Implementar trios automáticos, múltiplos compartimentos e fileiras de fundo.
 - [x] Implementar remoção, avanço de fileira e condição de vitória com atualização ordenada.
-- [ ] Versionar testes que protejam a sequência de animações e mudanças de estado.
+- [ ] Ampliar os testes versionados para proteger mais sequências de animação e mudanças de estado.
 - [x] Criar uma fase curta com solução verificada.
-- [ ] Documentar ou automatizar a verificação das soluções.
+- [x] Automatizar a verificação das soluções das oito fases atuais.
 - [ ] Validar toque, estado do tabuleiro e reinício em aparelhos diferentes.
 
 Entrega: fase completa jogável, do início à vitória.

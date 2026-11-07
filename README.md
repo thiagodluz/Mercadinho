@@ -23,7 +23,7 @@ O protótipo publicado tem oito fases de demonstração, com progressão gradual
 - **Dispensador:** retire os produtos na ordem apresentada.
 - **Correntes:** complete trios para abrir compartimentos bloqueados.
 - **Dica:** procura uma sequência que conclua a fase e destaca a próxima jogada quando encontra uma solução.\n- **Controles de partida:** arraste ou selecione um produto, desfaça movimentos, pause a partida e reinicie a fase.
-- **Progresso local:** o navegador guarda a fase mais avançada, a partida em andamento e as preferências de áudio.
+- **Acessibilidade:** opção para reduzir animações, além da preferência do aparelho.\n- **Progresso local:** o navegador guarda a fase mais avançada, a partida em andamento e as preferências de áudio.
 
 O conteúdo ainda é um protótipo; número de fases, arte, áudio e regras podem mudar conforme os testes.
 
@@ -46,13 +46,23 @@ python3 -m http.server 8000
 
 Depois, acesse [http://localhost:8000](http://localhost:8000).
 
+## Testes da lógica
+
+Com o Node.js instalado, execute na pasta do projeto:
+
+```bash
+node tests/run.cjs
+```
+
+Os testes cobrem soluções das fases, salvamento, interrupções, pausa, acessibilidade e interações entre camadas, correntes e dispensadores. A verificação em aparelhos físicos continua necessária.
+
 ## Estrutura
 
 ```text
 .
 ├── assets/
 │   └── mockup.jpg
-├── index.html
+├── tests/\n├── index.html
 ├── PLANO-DE-DESENVOLVIMENTO.md
 └── README.md
 ```
