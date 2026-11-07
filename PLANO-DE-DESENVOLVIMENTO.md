@@ -8,9 +8,9 @@ O jogo será gratuito para instalar e jogar, sem anúncios, compras internas, as
 
 ## Estado atual — 7 de novembro de 2026
 
-O repositório contém um protótipo web publicado no GitHub Pages, com quatro fases jogáveis. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais e a quarta combina essas mecânicas. As fases usam produtos ilustrados provisórios, controles por arraste ou seleção, desfazer, reinício e tela de vitória.
+O repositório contém um protótipo web publicado no GitHub Pages, com seis fases jogáveis. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases usam produtos ilustrados provisórios, controles por arraste ou seleção, desfazer, reinício e tela de vitória.
 
-O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança em sequência depois da vitória. Uma fase em andamento começa novamente ao recarregar. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
+O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. As fases avançadas com seis compartimentos alternam formatos de prateleira, determinados por uma semente salva no navegador. Uma fase em andamento começa novamente ao recarregar. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
 
 O protótipo foi verificado no navegador e por testes pontuais da lógica. Os testes automatizados usados até agora não estão versionados no repositório. O toque, a vibração, o áudio e a retomada precisam ser verificados em um celular físico. Ainda é necessário criar o aplicativo Android e validar o funcionamento offline da versão web publicada.
 

@@ -183,6 +183,30 @@
             { front: ['milk', 'coffee', 'jam'], back: [], lock: { remaining: 2, order: 0 } },
             { front: ['milk', 'coffee', 'jam'], back: [] }
           ]
+        },
+        {
+          instructions: 'Organize os produtos da caixa e depois complete os trios das prateleiras.',
+          hint: 'A caixa tem mais produtos. Use as prateleiras livres para organizar os itens.',
+          shelves: [
+            { front: ['milk', 'milk', null], back: [] },
+            { front: ['coffee', 'coffee', null], back: [] },
+            { front: ['jam', 'jam', null], back: [] },
+            { type: 'dispenser', front: [null, 'milk', null], back: [], queue: ['coffee', 'jam', 'milk', 'coffee', 'jam'] },
+            { front: ['milk', 'coffee', 'jam'], back: [] },
+            { front: ['milk', 'coffee', 'jam'], back: [] }
+          ]
+        },
+        {
+          instructions: 'Abra a corrente e aproveite os produtos que aparecem atrás.',
+          hint: 'Cada trio ajuda a abrir a corrente, inclusive os que surgem na fileira de trás.',
+          shelves: [
+            { front: ['milk', 'milk', null], back: [['milk', 'milk', 'milk']] },
+            { front: ['coffee', 'coffee', null], back: [] },
+            { front: ['jam', 'jam', null], back: [] },
+            { type: 'dispenser', front: [null, 'milk', null], back: [], queue: ['coffee', 'jam', 'milk', 'coffee', 'jam'] },
+            { front: ['milk', 'coffee', 'jam'], back: [], lock: { remaining: 2, order: 0 } },
+            { front: ['milk', 'coffee', 'jam'], back: [] }
+          ]
         }
       ];
       const board = document.getElementById('board');

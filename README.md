@@ -16,7 +16,7 @@ O mockup acima apresenta a direção visual inicial. As ilustrações e alguns e
 
 ## Protótipo atual
 
-O protótipo publicado tem quatro fases de demonstração, com progressão gradual e estas mecânicas:
+O protótipo publicado tem seis fases de demonstração, com progressão gradual e estas mecânicas:
 
 - **Trincas:** reúna três produtos iguais no mesmo compartimento para removê-los.
 - **Prateleiras em camadas:** organize os itens da frente para revelar os que estão atrás.
