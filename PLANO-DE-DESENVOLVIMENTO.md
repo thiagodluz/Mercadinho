@@ -56,7 +56,7 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 7. Quando três produtos iguais ocuparem a mesma fileira acessível de um compartimento comum, eles são removidos automaticamente.
 8. Uma movimentação inválida devolve o produto à origem. No protótipo, produtos não trocam diretamente de lugar ao serem soltos sobre vagas ocupadas.
 9. A vitória ocorre quando não restarem produtos acessíveis, escondidos ou em dispensadores, após o término das ações pendentes.
-10. Quando não houver movimentos legais e a fase não estiver concluída, o objetivo é mostrar opções de desfazer ou reiniciar. O jogo já identifica quando não há movimentos legais. A ausência de solução futura, apesar de movimentos legais, é um caso separado que precisa de validação específica.
+10. Quando não houver movimentos legais e a fase não estiver concluída, o objetivo é mostrar opções de desfazer ou reiniciar. O jogo já identifica quando não há movimentos legais. Ao pedir uma dica, o jogo informa quando a busca esgotou as possibilidades e comprovou que a posição ficou sem solução.
 
 ### Dispensadores
 
@@ -78,12 +78,12 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 
 - Desfazer restaura integralmente a jogada anterior, incluindo produtos, camadas, dispensadores e correntes. Durante animações, aguardar o estado estável antes de aplicar a ação.
 - Reiniciar recompõe a configuração inicial da fase, mediante confirmação.
-- A dica procura uma sequência completa até a vitória e destaca a primeira jogada. A busca tem limites de tempo e estados; se não encontrar solução dentro desses limites, informa que não encontrou, sem concluir que a fase é impossível.
+- A dica procura uma sequência completa até a vitória e destaca a primeira jogada. A busca tem limites de tempo e estados. A interface distingue um limite atingido de uma posição comprovadamente sem solução.
 - Já há controles separados de música e efeitos, vibração opcional em navegadores compatíveis e suporte à preferência de movimento reduzido do sistema. Há um menu de pausa na versão web, que interrompe a música e permite retomar a partida. Há uma opção própria para reduzir animações, respeitando também a preferência do sistema.
 
 ## Próximas prioridades
 
-1. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. Aprimorar a identificação de situações sem solução e validar a dica em tabuleiros mais complexos.
+1. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. A matriz atual verifica 72 tabuleiros gerados em seis sementes, com até 14 tipos de produto. Ampliar a cobertura para posições intermediárias e avaliar a busca em celulares.
 2. **Criar mais conteúdo.** Ampliar a campanha gradualmente, projetar e validar uma solução para cada fase e avaliar a dificuldade com jogadores.
 3. **Refinar a apresentação.** Evoluir as ilustrações e as animações a partir do mockup e substituir ou aprovar a melodia provisória após escuta e testes.
 4. **Testar e finalizar a versão web.** Conferir arraste, encaixe, áudio, vibração, legibilidade, salvamento e retomada no navegador do computador e em um celular físico. Implementar e verificar o funcionamento offline pretendido.

@@ -1,1 +1,136 @@
-const fs=require('fs'),vm=require('vm'),assert=require('assert');let src=fs.readFileSync('index.html','utf8').match(/<script>([\s\S]*)<\/script>/)[1];src=src.replace('      updateAudioControls();\n\n      function itemMarkup',`      globalThis.testGame={level:i=>levelAt(i),path:async()=>{hintRequest++;return await findSolutionHint(shelves,hintRequest)}, start:i=>{unlocked=i;openLevel(i)}, move:(a,b,c,d)=>move({shelf:a,slot:b},{shelf:c,slot:d}), state:()=>({currentLevel,completed,animating,shelves,unlocked})};\n      updateAudioControls();\n\n      function itemMarkup`);function setup(saved,seed=12345,shared=null){let els={};const el=id=>els[id]??=({handlers:{},classList:{toggle(){}},addEventListener(k,f){this.handlers[k]=f},setAttribute(){},textContent:'',hidden:false});let mem=shared || {'mercadinho-unlocked':String(saved),'mercadinho-layout-seed':String(seed)};let ctx={document:{documentElement:{classList:{toggle(){}}},getElementById:el,addEventListener(){},hidden:false},window:{matchMedia:()=>({matches:true})},navigator:{},localStorage:{getItem:k=>mem[k]??null,setItem:(k,v)=>mem[k]=v},setTimeout,clearTimeout,setInterval,clearInterval,console,confirm:()=>true,Math};vm.createContext(ctx);vm.runInContext(src,ctx);return ctx.testGame};const delay=()=>new Promise(r=>setTimeout(r,30))  ;(async()=>{const legacy=JSON.parse(fs.readFileSync('tests/fixtures/legacy-level9.json','utf8')); const expected=JSON.parse(legacy['mercadinho-partida-v1']); const oldgame=setup(8,12345,legacy); assert.equal(JSON.stringify(oldgame.state().shelves),JSON.stringify(expected.shelves)); const game=setup(8,12345);assert.equal(game.state().currentLevel,8);assert.equal(game.state().completed,false);const same=setup(8,12345);const other=setup(8,54321);for(const i of [8,9,10,11,12,13,14,100,1000]){assert.deepEqual(JSON.stringify(game.level(i)),JSON.stringify(same.level(i)));}assert.notEqual(JSON.stringify(game.level(12)),JSON.stringify(other.level(12)));const saved={'mercadinho-unlocked':'8','mercadinho-layout-seed':'12345'}; const before=setup(8,12345,saved); const move=(await before.path())[0]; assert(before.move(move.from.shelf,move.from.slot,move.to.shelf,move.to.slot)); while(before.state().animating) await new Promise(r=>setTimeout(r,2)); const reloaded=setup(8,12345,saved); assert.deepEqual(JSON.stringify(reloaded.state().shelves),JSON.stringify(before.state().shelves)); assert.equal(reloaded.state().currentLevel,8); for(const [i,expected] of [[8,6],[12,7],[20,8],[30,10],[60,12],[100,14]]){const level=game.level(i);const visible=new Set(level.shelves.flatMap(s=>s.front.filter(Boolean)));assert.equal(visible.size,expected,`variedade fase ${i+1}`);} for(const i of [8,12,20,30,60,100]){game.start(i);const path=await game.path();assert(path && path.length,`solução fase ${i+1}`);for(const h of path){assert(game.move(h.from.shelf,h.from.slot,h.to.shelf,h.to.slot),`jogada fase ${i+1}`);while(game.state().animating) await new Promise(r=>setTimeout(r,2));}assert(game.state().completed,`vitória fase ${i+1}`);console.log('Fase gerada',i+1,'concluída em',path.length,'jogadas');}game.start(7); for(const h of await game.path()){ assert(game.move(h.from.shelf,h.from.slot,h.to.shelf,h.to.slot)); while(game.state().animating) await new Promise(r=>setTimeout(r,2)); } await new Promise(r=>setTimeout(r,1900)); assert.equal(game.state().currentLevel,8); assert.equal(game.state().completed,false); console.log('Sementes, variedade, partida antiga, retomada e transição verificadas.');})().catch(e=>{console.error(e);process.exitCode=1});
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+
+const script = fs.readFileSync('index.html', 'utf8').match(/<script>([\s\S]*)<\/script>/)[1];
+const marker = '      updateAudioControls();\n\n      function itemMarkup';
+assert(script.includes(marker));
+const source = script.replace(marker, `
+      globalThis.testGame = {
+        level: levelAt,
+        search: maxStates => findSolutionHint(shelves, ++hintRequest, maxStates),
+        start(index) { unlocked = index; openLevel(index); },
+        move: ({from, to}) => move(from, to),
+        state: () => ({ currentLevel, completed, animating, shelves, history }),
+        setBoard(state) {
+          shelves = copy(state);
+          history = [copy(state)];
+          hintPlan = [];
+          cancelHint();
+          render();
+        }
+      };
+${marker}`);
+
+function setup(index, seed = 12345, shared) {
+  const elements = new Map();
+  function element(id) {
+    if (!elements.has(id)) elements.set(id, {
+      handlers: {}, classList: { toggle() {} }, setAttribute() {}, querySelector() { return null; },
+      addEventListener(event, callback) { this.handlers[event] = callback; }
+    });
+    return elements.get(id);
+  }
+  const storage = shared || { 'mercadinho-unlocked': String(index), 'mercadinho-layout-seed': String(seed) };
+  let advance;
+  const context = vm.createContext({
+    document: { documentElement: element('html'), getElementById: element, addEventListener() {} },
+    window: { matchMedia: () => ({ matches: true }) },
+    navigator: {},
+    localStorage: {
+      getItem: key => storage[key] ?? null,
+      setItem: (key, value) => { storage[key] = value; },
+      removeItem: key => { delete storage[key]; }
+    },
+    setTimeout(callback, delay) {
+      if (delay !== 1800) return setTimeout(callback, delay);
+      advance = callback;
+      return 'advance';
+    },
+    clearTimeout(timer) {
+      if (timer === 'advance') advance = null;
+      else clearTimeout(timer);
+    }
+  });
+  vm.runInContext(source, context);
+  return { ...context.testGame, element, advance: () => advance() };
+}
+
+async function play(game, path, label) {
+  for (const step of path) {
+    assert(game.move(step), `Jogada inválida em ${label}`);
+    while (game.state().animating) await new Promise(resolve => setTimeout(resolve, 2));
+  }
+}
+
+async function main() {
+  const legacy = JSON.parse(fs.readFileSync('tests/fixtures/legacy-level9.json', 'utf8'));
+  const previous = JSON.parse(legacy['mercadinho-partida-v1']);
+  assert.equal(JSON.stringify(setup(8, 12345, legacy).state().shelves), JSON.stringify(previous.shelves));
+
+  const storage = { 'mercadinho-unlocked': '8', 'mercadinho-layout-seed': '12345' };
+  const game = setup(8, 12345, storage);
+  const start = await game.search();
+  assert.equal(start.status, 'solved');
+  await play(game, start.path.slice(0, 1), 'retomada');
+  const resumed = setup(8, 12345, storage);
+  assert.equal(JSON.stringify(resumed.state().shelves), JSON.stringify(game.state().shelves));
+  assert.equal((await resumed.search()).status, 'solved');
+
+  const tiers = [[8, 6], [11, 6], [12, 7], [19, 7], [20, 8], [29, 8], [30, 10], [59, 10], [60, 12], [99, 12], [100, 14], [999, 14]];
+  const seeds = [0, 1, 12345, 54321, 2147483648, 4294967295];
+  for (const seed of seeds) {
+    const player = setup(8, seed);
+    const again = setup(8, seed);
+    for (const [index, expected] of tiers) {
+      player.start(index);
+      const label = `fase ${index + 1}, semente ${seed}`;
+      const board = player.state().shelves;
+      assert.equal(JSON.stringify(board), JSON.stringify(again.level(index).shelves), label);
+      assert.equal(new Set(board.flatMap(shelf => shelf.front.filter(Boolean))).size, expected, label);
+      const result = await player.search();
+      assert.equal(result.status, 'solved', label);
+      await play(player, result.path, label);
+      assert(player.state().completed, `Sem vitória em ${label}`);
+    }
+  }
+
+  game.start(7);
+  await play(game, (await game.search()).path, 'transição da fase 8');
+  game.advance();
+  assert.equal(game.state().currentLevel, 8);
+  assert.equal(game.state().completed, false);
+
+  game.start(100);
+  await game.element('hint').handlers.click();
+  assert.match(game.element('message').textContent, /^Mova /);
+  assert.equal((await game.search(1)).status, 'limit');
+
+  game.start(8);
+  const firstBoard = game.state().shelves;
+  const dispenser = firstBoard.findIndex(shelf => shelf.type === 'dispenser');
+  const vacancy = firstBoard.findIndex(shelf => shelf.type !== 'dispenser' && shelf.front.includes(null));
+  const otherShelf = firstBoard.findIndex((shelf, index) => index !== dispenser && index !== vacancy);
+  await play(game, [
+    { from: { shelf: otherShelf, slot: 0 }, to: { shelf: vacancy, slot: firstBoard[vacancy].front.indexOf(null) } },
+    { from: { shelf: dispenser, slot: 1 }, to: { shelf: otherShelf, slot: 0 } }
+  ], 'impasse em fase gerada');
+  assert.match(game.element('message').textContent, /Sem movimentos disponíveis/);
+  game.element('undo').handlers.click();
+  assert.equal((await game.search()).status, 'solved');
+
+  game.setBoard([
+    { front: ['milk', 'coffee', null], back: [] },
+    { front: ['milk', 'coffee', null], back: [] },
+    { front: ['milk', 'coffee', 'tea'], back: [['tea', 'tea', null]], lock: { remaining: 1, order: 0 } }
+  ]);
+  assert.equal((await game.search()).status, 'dead-end');
+  await game.element('hint').handlers.click();
+  assert.match(game.element('message').textContent, /ficou sem solução.*Desfaça/);
+
+  game.setBoard([{ front: ['milk', 'coffee', 'tea'], back: [] }]);
+  assert.match(game.element('message').textContent, /Sem movimentos disponíveis/);
+  console.log(`${seeds.length * tiers.length} fases geradas concluídas. Retomada, dica, limite e impasses verificados.`);
+}
+
+main().catch(error => { console.error(error); process.exitCode = 1; });
