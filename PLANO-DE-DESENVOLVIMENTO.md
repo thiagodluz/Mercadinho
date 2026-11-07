@@ -8,9 +8,9 @@ O jogo será gratuito para instalar e jogar, sem anúncios, compras internas, as
 
 ## Estado atual — 7 de novembro de 2026
 
-O repositório contém um protótipo web publicado no GitHub Pages, com três fases jogáveis. A primeira apresenta camadas, a segunda apresenta um dispensador e a terceira apresenta correntes sequenciais. As fases usam produtos ilustrados provisórios, controles por arraste ou seleção, desfazer, reinício e tela de vitória.
+O repositório contém um protótipo web publicado no GitHub Pages, com quatro fases jogáveis. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais e a quarta combina essas mecânicas. As fases usam produtos ilustrados provisórios, controles por arraste ou seleção, desfazer, reinício e tela de vitória.
 
-O navegador guarda a fase desbloqueada, a fase selecionada e as preferências de áudio. Uma fase em andamento começa novamente ao recarregar. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
+O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança em sequência depois da vitória. Uma fase em andamento começa novamente ao recarregar. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
 
 O protótipo foi verificado no navegador e por testes pontuais da lógica. Os testes automatizados usados até agora não estão versionados no repositório. O toque, a vibração, o áudio e a retomada precisam ser verificados em um celular físico. Ainda é necessário criar o aplicativo Android e validar o funcionamento offline da versão web publicada.
 
@@ -147,10 +147,10 @@ Entrega: uma versão visualmente consistente e confortável de jogar.
 - [ ] Criar entre 20 e 30 fases manuais para a primeira versão de teste.
 - [ ] Introduzir cada mecânica de forma gradual e variar a dificuldade sem saltos bruscos.
 - [ ] Variar quantidade de vagas, tipos de produto, profundidade e posição dos obstáculos.
-- [x] Salvar a fase desbloqueada, a fase selecionada e as preferências de áudio no navegador.
+- [x] Salvar a fase mais avançada e as preferências de áudio no navegador.
 - [ ] Definir e implementar a persistência do estado da fase em andamento, se desejada.
 - [ ] Verificar a preservação dos dados em futuras atualizações da versão web e, posteriormente, na versão Android.
-- [x] Permitir voltar às fases desbloqueadas e preservar o desbloqueio ao recarregar o navegador.
+- [x] Avançar pelas fases em sequência, permitir reiniciar a fase atual e preservar o progresso ao recarregar o navegador.
 - [ ] Validar o comportamento após fechamento e atualização no aplicativo Android.
 - [ ] Validar solução e conclusão de cada fase. Automatizar verificações de tabuleiro e acrescentar testes manuais para situações não cobertas.
 
