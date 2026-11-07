@@ -22,7 +22,7 @@ O protótipo publicado tem oito fases de demonstração, com progressão gradual
 - **Prateleiras em camadas:** organize os itens da frente para revelar os que estão atrás.
 - **Dispensador:** retire os produtos na ordem apresentada.
 - **Correntes:** complete trios para abrir compartimentos bloqueados.
-- **Controles de partida:** arraste ou selecione um produto, desfaça movimentos e reinicie a fase.
+- **Controles de partida:** arraste ou selecione um produto, desfaça movimentos, pause a partida e reinicie a fase.
 - **Progresso local:** o navegador guarda a fase mais avançada, a partida em andamento e as preferências de áudio.
 
 O conteúdo ainda é um protótipo; número de fases, arte, áudio e regras podem mudar conforme os testes.

@@ -79,7 +79,7 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 - Desfazer restaura integralmente a jogada anterior, incluindo produtos, camadas, dispensadores e correntes. Durante animações, aguardar o estado estável antes de aplicar a ação.
 - Reiniciar recompõe a configuração inicial da fase, mediante confirmação.
 - A dica ainda precisa ser criada. Uma jogada legal isolada pode levar a um impasse, por isso a dica deve vir de uma solução verificada ou informar sua limitação.
-- Já há controles separados de música e efeitos, vibração opcional em navegadores compatíveis e suporte à preferência de movimento reduzido do sistema. O menu de pausa e uma opção própria para reduzir animações ainda precisam ser implementados.
+- Já há controles separados de música e efeitos, vibração opcional em navegadores compatíveis e suporte à preferência de movimento reduzido do sistema. Há um menu de pausa na versão web, que interrompe a música e permite retomar a partida. Uma opção própria para reduzir animações ainda precisa ser implementada.
 
 ## Próximas prioridades
 
@@ -121,7 +121,7 @@ Entrega: fase completa jogável, do início à vitória.
 - [x] Adicionar dispensadores e indicação da quantidade restante.
 - [x] Adicionar correntes, contador e sequência de desbloqueio.
 - [x] Adicionar desfazer, reiniciar e mensagem de vitória.
-- [ ] Adicionar pausa para a versão Android e possíveis modos cronometrados.
+- [x] Adicionar pausa à versão web; validar posteriormente no Android e em possíveis modos cronometrados.
 - [x] Criar três fases de demonstração, uma para camadas, uma para dispensadores e uma para correntes.
 - [ ] Verificar cada fase completa, desfazer em diferentes estados e reinício durante uso normal.
 

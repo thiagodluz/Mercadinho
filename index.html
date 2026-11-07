@@ -15,6 +15,13 @@
     .eyebrow { color: #78854b; font-size: .72rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
     h1 { display: inline-block; font-size: clamp(2rem, 9vw, 3rem); line-height: 1; margin: 8px 0 10px; padding: 12px 28px; color: #73421f; letter-spacing: -.05em; background: #fff2d4; border: 4px solid #bb783d; border-radius: 20px; box-shadow: inset 0 0 0 3px #f5d39d, 0 4px 0 #8c512a; }
     .level { display: block; width: max-content; margin: auto; background: #fff9ed; border: 1px solid #e7cda4; border-radius: 999px; padding: 6px 17px; font-weight: 800; font-size: .85rem; }
+    .pause-control { margin-top: 9px; border: 1px solid #d7bf98; border-radius: 999px; padding: 7px 16px; color: #705238; background: #fff8eb; font-weight: 800; }
+    .pause-control:disabled { opacity: .48; cursor: default; }
+    .pause-dialog { width: min(88vw, 320px); padding: 24px; border: 2px solid #c69155; border-radius: 18px; background: #fff8eb; color: #51351e; text-align: center; box-shadow: 0 12px 35px #38231366; }
+    .pause-dialog::backdrop { background: #382313aa; }
+    .pause-dialog h2 { margin: 0 0 8px; }
+    .pause-dialog p { margin: 0 0 18px; }
+    .pause-dialog .control { width: 100%; }
     .instructions { margin: 14px auto 10px; max-width: 310px; font-size: .91rem; line-height: 1.4; color: #775b3c; }
     .board { position: relative; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 12px; border: 7px solid #a95e29; border-radius: 14px; background: linear-gradient(100deg,#c27b3b,#e6a65f 50%,#c27b3b); box-shadow: inset 0 3px 0 #f4c688, 0 8px 0 #8c4c24, 0 18px 28px #77532930; touch-action: none; user-select: none; }
     /* Os formatos alteram somente a posição visual dos compartimentos. */
@@ -82,6 +89,7 @@
       <div class="eyebrow">Um jogo de organizar</div>
       <h1>Mercadinho</h1>
       <div id="level" class="level">Fase 1</div>
+      <button id="pause" class="pause-control" type="button">⏸ Pausar</button>
       <p id="instructions" class="instructions">Arraste os produtos e junte três iguais na mesma prateleira.</p>
     </header>
     <div id="board" class="board" aria-label="Prateleiras do jogo"></div>
@@ -122,6 +130,11 @@
         <p class="setting-note">A música começa depois da primeira interação com o jogo.</p>
       </div>
     </details>
+    <dialog id="pause-dialog" class="pause-dialog" aria-labelledby="pause-title">
+      <h2 id="pause-title">Jogo pausado</h2>
+      <p>Suas prateleiras estão esperando por você.</p>
+      <button id="resume" class="control" type="button">Continuar jogando</button>
+    </dialog>
   </main>
   <script>
     (() => {
@@ -238,6 +251,9 @@
         }
       ];
       const board = document.getElementById('board');
+      const pauseButton = document.getElementById('pause');
+      const pauseDialog = document.getElementById('pause-dialog');
+      const resumeButton = document.getElementById('resume');
       const undo = document.getElementById('undo');
       const restart = document.getElementById('restart');
       const resetProgress = document.getElementById('reset-progress');
@@ -318,6 +334,7 @@
           else localStorage.setItem(saveKey, JSON.stringify({ version: 1, level: currentLevel, shelves, history: history.slice(-100), pending }));
         } catch {}
       }
+      let paused = false;
       let animating = false;
       let advanceTimer = null;
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -362,7 +379,7 @@
       }
 
       async function activateAudio() {
-        if ((!audioSettings.effects && !audioSettings.music) || document.hidden) return null;
+        if (paused || (!audioSettings.effects && !audioSettings.music) || document.hidden) return null;
         try {
           const AudioEngine = window.AudioContext || window.webkitAudioContext;
           if (!AudioEngine) return null;
@@ -373,7 +390,7 @@
             updateAudioControls();
           }
           if (audioContext.state === 'suspended') await audioContext.resume();
-          return audioContext.state === 'running' ? audioContext : null;
+          return !paused && audioContext.state === 'running' ? audioContext : null;
         } catch {
           return null;
         }
@@ -411,7 +428,7 @@
       }
 
       function playMusicPhrase() {
-        if (!audioContext || audioContext.state !== 'running' || !audioSettings.music || document.hidden) return;
+        if (paused || !audioContext || audioContext.state !== 'running' || !audioSettings.music || document.hidden) return;
         const notes = [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23];
         notes.forEach((frequency, index) => tone(audioContext, frequency, audioContext.currentTime + index * 0.7, 0.8, 0.025, musicGain));
       }
@@ -422,9 +439,9 @@
       }
 
       async function startMusic() {
-        if (!audioSettings.music || document.hidden || musicTimer !== null) return;
+        if (paused || !audioSettings.music || document.hidden || musicTimer !== null) return;
         const context = await activateAudio();
-        if (!context || !audioSettings.music || document.hidden || musicTimer !== null) return;
+        if (paused || !context || !audioSettings.music || document.hidden || musicTimer !== null) return;
         playMusicPhrase();
         musicTimer = setInterval(playMusicPhrase, 5600);
       }
@@ -462,6 +479,20 @@
         saveAudioSettings();
         updateAudioControls();
         vibrate(15);
+      });
+      pauseButton.addEventListener('click', () => {
+        if (paused || animating || completed) return;
+        pauseDialog.showModal();
+        paused = true;
+        stopMusic();
+        if (audioContext && audioContext.state === 'running') audioContext.suspend().catch(() => {});
+        resumeButton.focus();
+      });
+      resumeButton.addEventListener('click', () => pauseDialog.close());
+      pauseDialog.addEventListener('close', () => {
+        paused = false;
+        if (audioSettings.music) startMusic();
+        pauseButton.focus();
       });
       function onInteraction() {
         activateAudio().then(() => startMusic());
@@ -527,6 +558,7 @@
           const lock = locked ? `<div class="lock-overlay" role="img" aria-label="Prateleira ${shelfIndex + 1} bloqueada, ${shelf.lock.remaining} ${shelf.lock.remaining === 1 ? 'trio' : 'trios'} para abrir, ${shelf === activeLock ? 'abre primeiro' : 'abre depois'}"><span class="lock-badge">🔒 ${shelf.lock.remaining}</span><span class="lock-caption">${shelf === activeLock ? 'Abre primeiro' : 'Abre depois'}</span></div>` : '';
           return `<div class="shelf ${effect}"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}</div>`;
         }).join('');
+        pauseButton.disabled = animating || completed;
         undo.disabled = animating || history.length === 0;
         restart.disabled = animating;
         resetProgress.disabled = animating;
