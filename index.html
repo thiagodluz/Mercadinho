@@ -272,6 +272,7 @@
         });
       }
       let restored = false;
+      let resumePending = false;
       if (!completed) {
         try {
           const saved = JSON.parse(localStorage.getItem(saveKey) || 'null');
@@ -279,13 +280,14 @@
             shelves = saved.shelves;
             history = saved.history;
             restored = true;
+            resumePending = saved.pending === true;
           }
         } catch {}
       }
-      function saveGame() {
+      function saveGame(pending = false) {
         try {
           if (completed) localStorage.removeItem(saveKey);
-          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, level: currentLevel, shelves, history: history.slice(-100) }));
+          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, level: currentLevel, shelves, history: history.slice(-100), pending }));
         } catch {}
       }
       let animating = false;
@@ -575,6 +577,8 @@
         history.push(copy(shelves));
         target[to.slot] = source[from.slot];
         source[from.slot] = sourceShelf.type === 'dispenser' ? (sourceShelf.queue.shift() || null) : null;
+        // Persiste a jogada antes das animações para poder terminá-la após reabrir.
+        saveGame(true);
         playEffect('place');
         vibrate(12);
         selected = null;
@@ -706,7 +710,13 @@
         openLevel(0);
       });
       message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : restored ? 'Sua partida foi retomada.' : levels[currentLevel].hint;
-      render();
+      if (resumePending) {
+        animating = true;
+        render();
+        settle();
+      } else {
+        render();
+      }
     })();
   </script>
 </body>
