@@ -372,7 +372,24 @@
         return `<span class="item ${id}"><svg viewBox="0 0 56 90" aria-hidden="true">${product.art}</svg></span>`;
       }
 
+      // Um movimento exige um produto acessível e uma vaga livre em uma
+      // prateleira desbloqueada. Vagas no mesmo compartimento são válidas.
+      function hasLegalMove() {
+        const hasSource = shelves.some(shelf =>
+          (!shelf.lock || shelf.lock.remaining === 0) && shelf.front.some(Boolean)
+        );
+        const hasDestination = shelves.some(shelf =>
+          shelf.type !== 'dispenser' && (!shelf.lock || shelf.lock.remaining === 0) && shelf.front.some(item => item === null)
+        );
+        return hasSource && hasDestination;
+      }
+
       function render(matching = [], revealed = []) {
+        if (!animating && !completed && !hasLegalMove()) {
+          message.textContent = history.length
+            ? 'Sem movimentos disponíveis. Desfaça uma jogada ou reinicie a fase.'
+            : 'Sem movimentos disponíveis. Reinicie a fase.';
+        }
         const activeLock = shelves.filter(shelf => shelf.lock && shelf.lock.remaining > 0).sort((a, b) => a.lock.order - b.lock.order)[0];
         board.innerHTML = shelves.map((shelf, shelfIndex) => {
           if (shelf.type === 'dispenser') {
