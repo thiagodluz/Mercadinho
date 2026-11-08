@@ -925,6 +925,52 @@
         }
         return { status: 'dead-end' };
       }
+      async function shortenHintPath(initial, path, request) {
+        let shortest = path;
+        let sliceEnd = Date.now() + 10;
+        for (let round = 0; round < 20; round++) {
+          // Guarda a última ocorrência de cada posição, ignorando a ordem das vagas.
+          const positions = new Map([[searchKey(initial), 0]]);
+          let state = initial;
+          for (const [index, step] of shortest.entries()) {
+            state = solveMove(state, step.from, step.to);
+            positions.set(searchKey(state), index + 1);
+            if (Date.now() >= sliceEnd) {
+              await pause(0);
+              if (request !== hintRequest) return shortest;
+              sliceEnd = Date.now() + 10;
+            }
+          }
+
+          const shorter = [];
+          state = initial;
+          while (!isSolved(state)) {
+            let bestIndex = positions.get(searchKey(state));
+            let bestMove, bestState;
+            // Recalcula jogadas válidas para as vagas reais da posição atual.
+            for (const step of possibleMoves(state)) {
+              const next = solveMove(state, step.from, step.to);
+              const index = positions.get(searchKey(next));
+              if (index !== undefined && index > bestIndex) {
+                bestIndex = index;
+                bestMove = step;
+                bestState = next;
+              }
+            }
+            if (!bestMove) return shortest;
+            shorter.push(bestMove);
+            state = bestState;
+            if (Date.now() >= sliceEnd) {
+              await pause(0);
+              if (request !== hintRequest) return shortest;
+              sliceEnd = Date.now() + 10;
+            }
+          }
+          if (shorter.length >= shortest.length) break;
+          shortest = shorter;
+        }
+        return shortest;
+      }
       function cancelHint() {
         hintRequest++;
         hintSearching = false;
@@ -950,8 +996,12 @@
         const knownPath = hintPlan.length ? hintPlan : initialHintPath();
         const result = knownPath.length ? { status: 'solved', path: knownPath } : await findSolutionHint(shelves, request);
         if (request !== hintRequest) return;
+        const path = !knownPath.length && result.status === 'solved'
+          ? await shortenHintPath(shelves, result.path, request)
+          : result.path;
+        if (request !== hintRequest) return;
         hintSearching = false;
-        hintPlan = result.path || [];
+        hintPlan = path || [];
         currentHint = hintPlan[0] || null;
         if (currentHint) {
           const item = shelves[currentHint.from.shelf].front[currentHint.from.slot];

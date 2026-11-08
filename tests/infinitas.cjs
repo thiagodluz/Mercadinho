@@ -11,6 +11,8 @@ const source = script.replace(marker, `
         level: levelAt,
         initialHintPath,
         search: maxStates => findSolutionHint(shelves, ++hintRequest, maxStates),
+        moves: () => possibleMoves(shelves),
+        hintPath: () => hintPlan,
         move: ({from, to}) => move(from, to),
         state: () => ({ currentLevel, completed, animating, shelves, history }),
         setBoard(state) {
@@ -126,6 +128,27 @@ async function main() {
 
   game.setBoard([{ front: ['milk', 'coffee', 'tea'], back: [] }]);
   assert.match(game.element('message').textContent, /Sem movimentos disponíveis/);
+
+  let shortened = false;
+  for (const level of [9, 50, 80]) {
+    const midGame = setup(level - 1);
+    for (let turn = 0; turn < 8; turn++) {
+      const moves = midGame.moves();
+      await play(midGame, [moves[(turn * 17 + 3) % moves.length]], `preparação da fase ${level}`);
+    }
+    assert.equal(midGame.initialHintPath().length, 0);
+    const original = await midGame.search();
+    assert.equal(original.status, 'solved', `Busca no meio da fase ${level}`);
+    await midGame.element('hint').handlers.click();
+    assert.match(midGame.element('message').textContent, /^Mova /);
+    const hint = midGame.hintPath().slice();
+    assert(hint.length <= original.path.length, `Dica maior na fase ${level}`);
+    if (hint.length < original.path.length) shortened = true;
+    await play(midGame, hint, `dica encurtada da fase ${level}`);
+    assert(midGame.state().completed, `Dica não concluiu a fase ${level}`);
+    console.log(`Dica no meio da fase ${level}: ${original.path.length} → ${hint.length} jogadas.`);
+  }
+  assert(shortened, 'Ao menos uma dica deve ficar mais curta');
 
   const endless = setup(207, 12345);
   await play(endless, endless.initialHintPath(), 'fase 208');
