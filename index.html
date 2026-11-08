@@ -448,28 +448,16 @@
           localStorage.setItem('mercadinho-layout-seed', String(layoutSeed));
         }
       } catch { layoutSeed = Math.floor(Math.random() * 4294967296); }
-      // Uma partida gerada pela versão anterior continua com seu gerador original.
       const campaign = globalThis.mercadinhoCampanha || [];
       const campaignVersion = 4;
-      let legacyLevelIndex = null;
-      let savedGeneratedLevel = null;
-      let savedGenerator = null;
-      try {
-        const previous = JSON.parse(localStorage.getItem('mercadinho-partida-v1') || 'null');
-        if (previous && previous.level === unlocked && previous.level >= levels.length) {
-          savedGeneratedLevel = previous.level;
-          savedGenerator = previous.generator === undefined ? 1 : previous.generator;
-          if (savedGenerator === 1) legacyLevelIndex = previous.level;
-        }
-      } catch {}
-      if (savedGenerator === campaignVersion && !campaign.length) {
-        message.textContent = 'Não foi possível carregar as fases. Recarregue a página para retomar sua partida.';
+      function canLoadLevel(index) {
+        if (index < levels.length || campaign.length) return true;
+        message.textContent = 'Não foi possível carregar as fases. Recarregue a página para continuar.';
+        return false;
+      }
+      if (!canLoadLevel(unlocked)) {
         for (const control of [pauseButton, undo, hintButton, restart, resetProgress]) control.disabled = true;
         return;
-      }
-      function generatorForLevel(index) {
-        if (index === savedGeneratedLevel && [1, 2, 3].includes(savedGenerator)) return savedGenerator;
-        return campaign.length ? campaignVersion : 3;
       }
       // A campanha é fixa. Depois dela, a semente troca os produtos dos modelos finais.
       function levelAt(index) {
@@ -489,104 +477,32 @@
           }
           return items;
         }
-        if (generatorForLevel(index) === campaignVersion) {
-          const offset = index - levels.length;
-          const replayCount = Math.min(50, campaign.length);
-          const model = campaign[offset] || campaign[campaign.length - replayCount + (offset - campaign.length) % replayCount];
-          let shelves = model.shelves;
-          if (offset >= campaign.length) {
-            const ids = Object.keys(products);
-            const shuffled = shuffle(ids.slice());
-            const mapping = Object.fromEntries(ids.map((id, i) => [id, shuffled[i]]));
-            const remap = item => item === null ? null : mapping[item];
-            shelves = model.shelves.map(shelf => ({
-              ...shelf,
-              front: shelf.front.map(remap),
-              back: shelf.back.map(row => row.map(remap)),
-              ...(shelf.queue ? { queue: shelf.queue.map(remap) } : {})
-            }));
-          }
-          return {
-            layout: model.layout,
-            shelves,
-            instructions: 'Organize os produtos e encontre todos os trios.',
-            hint: 'Use as vagas para organizar produtos e revelar as fileiras de trás.',
-            solution: model.hint
-          };
+        const offset = index - levels.length;
+        const replayCount = Math.min(50, campaign.length);
+        const model = campaign[offset] || campaign[campaign.length - replayCount + (offset - campaign.length) % replayCount];
+        let shelves = model.shelves;
+        if (offset >= campaign.length) {
+          const ids = Object.keys(products);
+          const shuffled = shuffle(ids.slice());
+          const mapping = Object.fromEntries(ids.map((id, i) => [id, shuffled[i]]));
+          const remap = item => item === null ? null : mapping[item];
+          shelves = model.shelves.map(shelf => ({
+            ...shelf,
+            front: shelf.front.map(remap),
+            back: shelf.back.map(row => row.map(remap)),
+            ...(shelf.queue ? { queue: shelf.queue.map(remap) } : {})
+          }));
         }
-        if (index !== legacyLevelIndex) {
-          const count = index < 12 ? 6 : index < 20 ? 7 : index < 30 ? 8 : index < 60 ? 10 : index < 100 ? 12 : 14;
-          const ids = shuffle(Object.keys(products)).slice(0, count);
-          const [a,b,c,d,e,f,g,h] = ids;
-          const normal = front => ({ front, back: [] });
-          const shelves = [
-            normal([a,a,null]), normal([b,b,c]), normal([c,c,d]),
-            normal([d,count >= 7 ? g : d,e]),
-            normal([e,f,count >= 8 ? h : f]),
-            { type:'dispenser', front:[null,a,null], back:[], queue:[] }
-          ];
-          if (index >= 12) shelves[4].lock = { remaining: 1, order: 0 };
-          const oldGenerator = index === savedGeneratedLevel && savedGenerator === 2;
-          if (oldGenerator) {
-            if (index >= 20) shelves[0].back = [[b,b,b]];
-          } else {
-            // As duas fileiras misturadas introduzem três unidades de cada tipo.
-            const rows = [[b,b,c], [c,c,b]];
-            if (random() < 0.5) rows.reverse();
-            shelves[0].back = rows.map(row => shuffle(row));
-            if (index >= 20) {
-              const extraRows = [[d,d,e], [e,e,d]];
-              if (random() < 0.5) extraRows.reverse();
-              shelves[1].back = extraRows.map(row => shuffle(row));
-            }
-          }
-          for (let i = 8; i + 1 < count; i += 2) {
-            shelves.push(normal([ids[i],ids[i],ids[i+1]]), normal([ids[i+1],ids[i+1],null]));
-          }
-          const counts = Object.fromEntries(ids.map(id => [id, 0]));
-          for (const shelf of shelves) {
-            for (const item of shelf.front) if (item) counts[item]++;
-            for (const row of shelf.back) for (const item of row) if (item) counts[item]++;
-          }
-          // Completa cada tipo em múltiplos de três.
-          if (oldGenerator) {
-            for (const id of ids) while (counts[id] % 3) { shelves[5].queue.push(id); counts[id]++; }
-          } else {
-            const missing = ids.map(id => ({ id, count: (3 - counts[id] % 3) % 3 }));
-            let last = shelves[5].front[1];
-            while (missing.some(item => item.count > 0)) {
-              const available = missing.filter(item => item.count > 0 && item.id !== last);
-              const choices = available.length ? available : missing.filter(item => item.count > 0);
-              choices.sort((left, right) => right.count - left.count);
-              const next = choices[0];
-              shelves[5].queue.push(next.id);
-              next.count--;
-              last = next.id;
-            }
-          }
-          shuffle(shelves);
-          return { instructions:'Organize os produtos e encontre todos os trios.', hint:'Use as vagas para organizar produtos e revelar os próximos.', shelves };
-        }
-        // Primeiro os modelos mais simples, depois também os com mais produtos.
-        const choices = index < 12 ? [3, 4, 5] : index < 20 ? [4, 5, 7] : [5, 7];
-        const level = copy(levels[choices[Math.floor(random() * choices.length)]]);
-        const ids = ['milk', 'coffee', 'jam', 'tea'];
-        const permuted = shuffle(ids.slice());
-        const mapping = Object.fromEntries(ids.map((id, i) => [id, permuted[i]]));
-        const remap = item => item === null ? null : mapping[item];
-        for (const shelf of level.shelves) {
-          shelf.front = shelf.front.map(remap);
-          if (shelf.type !== 'dispenser') shuffle(shelf.front);
-          shelf.back = shelf.back.map(row => shuffle(row.map(remap)));
-          if (shelf.queue) shelf.queue = shelf.queue.map(remap);
-        }
-        shuffle(level.shelves);
-        level.instructions = 'Organize os produtos e encontre todos os trios.';
-        level.hint = 'Observe as camadas, a caixa e as correntes antes de mover.';
-        return level;
+        return {
+          layout: model.layout,
+          shelves,
+          instructions: 'Organize os produtos e encontre todos os trios.',
+          hint: 'Use as vagas para organizar produtos e revelar as fileiras de trás.',
+          solution: model.hint
+        };
       }
-      function layoutForLevel(index) {
-        if (index < 3 || levelDefinition.shelves.length !== 6) return 'grid';
+      function tutorialLayout(index) {
+        if (index < 3 || levels[index].shelves.length !== 6) return 'grid';
         return ['cross', 'steps', 'grid'][(layoutSeed + index - 3) % 3];
       }
       let currentLevel = unlocked;
@@ -596,7 +512,7 @@
       let selected = null;
       let pointer = null;
       let completed = false;
-      // Salva apenas estados já estabilizados, incluindo o histórico para desfazer.
+      // Salva a jogada antes da animação e registra quando ela termina.
       const saveKey = 'mercadinho-partida-v1';
       function validSnapshot(value, level) {
         if (!Array.isArray(value) || value.length !== level.shelves.length) return false;
@@ -618,7 +534,8 @@
       if (!completed) {
         try {
           const saved = JSON.parse(localStorage.getItem(saveKey) || 'null');
-          if (saved && saved.version === 1 && saved.level === currentLevel && validSnapshot(saved.shelves, levelDefinition) && Array.isArray(saved.history) && saved.history.length <= 100 && saved.history.every(state => validSnapshot(state, levelDefinition))) {
+          const sameCampaign = currentLevel < levels.length || saved?.generator === campaignVersion;
+          if (saved && saved.version === 1 && saved.level === currentLevel && sameCampaign && validSnapshot(saved.shelves, levelDefinition) && Array.isArray(saved.history) && saved.history.length <= 100 && saved.history.every(state => validSnapshot(state, levelDefinition))) {
             shelves = saved.shelves;
             history = saved.history;
             restored = true;
@@ -629,7 +546,7 @@
       function saveGame(pending = false) {
         try {
           if (completed) localStorage.removeItem(saveKey);
-          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: generatorForLevel(currentLevel), level: currentLevel, shelves, history: history.slice(-100), pending }));
+          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: campaignVersion, level: currentLevel, shelves, history: history.slice(-100), pending }));
         } catch {}
       }
       let currentHint = null;
@@ -847,7 +764,7 @@
 
       function render(matching = [], revealed = [], unlocking = []) {
         const rows = levelDefinition.layout;
-        const layout = rows ? 'campaign' : layoutForLevel(currentLevel);
+        const layout = rows ? 'campaign' : tutorialLayout(currentLevel);
         const columns = rows?.flatMap(count => Array.from({ length: count }, (_, i) => 4 - count + i * 2));
         board.classList.toggle('board-campaign', Boolean(rows));
         board.classList.toggle('board-four-rows', rows?.length === 4);
@@ -1224,6 +1141,7 @@
       });
       function openLevel(index) {
         if (animating || !Number.isSafeInteger(index) || index > unlocked || index < 0) return;
+        if (!canLoadLevel(index)) return;
         hintPlan = [];
         cancelHint();
         clearTimeout(advanceTimer);
@@ -1251,9 +1169,6 @@
           return;
         }
         unlocked = 0;
-        legacyLevelIndex = null;
-        savedGeneratedLevel = null;
-        savedGenerator = null;
         openLevel(0);
       });
       message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : restored ? 'Sua partida foi retomada.' : levelDefinition.hint;

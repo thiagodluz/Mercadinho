@@ -1,5 +1,0 @@
-{
-  "mercadinho-unlocked": "8",
-  "mercadinho-layout-seed": "12345",
-  "mercadinho-partida-v1": "{\"version\":1,\"generator\":2,\"level\":8,\"shelves\":[{\"front\":[\"cereal\",\"jam\",\"jam\"],\"back\":[]},{\"front\":[null,null,null],\"back\":[]},{\"front\":[\"rice\",\"rice\",\"cereal\"],\"back\":[]},{\"front\":[\"coffee\",\"coffee\",\"milk\"],\"back\":[]},{\"front\":[\"milk\",\"milk\",\"rice\"],\"back\":[]},{\"type\":\"dispenser\",\"front\":[null,\"coffee\",null],\"back\":[],\"queue\":[\"cereal\",\"jam\"]}],\"history\":[[{\"front\":[\"cereal\",\"jam\",\"jam\"],\"back\":[]},{\"front\":[\"flour\",\"flour\",null],\"back\":[]},{\"front\":[\"rice\",\"rice\",\"cereal\"],\"back\":[]},{\"front\":[\"coffee\",\"coffee\",\"milk\"],\"back\":[]},{\"front\":[\"milk\",\"milk\",\"rice\"],\"back\":[]},{\"type\":\"dispenser\",\"front\":[null,\"flour\",null],\"back\":[],\"queue\":[\"coffee\",\"cereal\",\"jam\"]}]],\"pending\":false}"
-}

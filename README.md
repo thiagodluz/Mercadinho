@@ -57,7 +57,7 @@ Com o Node.js instalado, execute na pasta do projeto:
 node tests/run.cjs
 ```
 
-Os testes cobrem as oito fases iniciais, os 200 tabuleiros da campanha, amostras de versões anteriores, retomada, interrupções, pausa, acessibilidade e interações entre as mecânicas. Para medir novamente a curva com o jogador simulado, execute `node tests/campanha.cjs --dificuldade`.
+Os testes cobrem as oito fases iniciais, os 200 tabuleiros da campanha, continuação após a fase 208, retomada, interrupções, pausa, acessibilidade e interações entre as mecânicas. Para medir novamente a curva com o jogador simulado, execute `node tests/campanha.cjs --dificuldade`.
 
 ## Estrutura
 
@@ -73,7 +73,7 @@ Os testes cobrem as oito fases iniciais, os 200 tabuleiros da campanha, amostras
 └── README.md
 ```
 
-A lógica do jogo fica em `index.html`, e `fases.js` contém os tabuleiros e as soluções pré-calculadas. O gerador em `tools/fases/` usa as regras do jogo e roda apenas no computador de desenvolvimento. `node tools/fases/campanha.cjs index.html` monta e grava um novo banco em `fases.js`. Alterar o banco publicado exige uma nova versão do gerador e um plano de compatibilidade para partidas salvas.
+A lógica do jogo fica em `index.html`, e `fases.js` contém os tabuleiros e as soluções pré-calculadas. O gerador em `tools/fases/` usa as regras do jogo e roda apenas no computador de desenvolvimento. `node tools/fases/campanha.cjs index.html` monta e grava um novo banco em `fases.js`. Ao substituir o banco publicado, atualize a versão da campanha para que o jogo reinicie os tabuleiros incompatíveis na mesma fase.
 
 ## Próximas etapas
 
