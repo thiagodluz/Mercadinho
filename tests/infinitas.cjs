@@ -70,7 +70,39 @@ async function play(game, path, label) {
   }
 }
 
+async function checkTutorialCues() {
+  const intro = setup(0);
+  const instructions = intro.element('instructions');
+  const milk = { from: { shelf: 1, slot: 2 }, to: { shelf: 0, slot: 2 } };
+  const coffee = { from: { shelf: 0, slot: 0 }, to: { shelf: 1, slot: 2 } };
+  const jam = { from: { shelf: 0, slot: 1 }, to: { shelf: 2, slot: 0 } };
+  const finish = { from: jam.to, to: { shelf: 0, slot: 2 } };
+  assert.match(instructions.textContent, /toque no leite e depois na vaga/);
+  await play(intro, [milk, coffee], 'trios iniciais');
+  assert.match(instructions.textContent, /Mova a última geleia/);
+  assert.equal(intro.state().shelves[0].back.length, 1);
+  await play(intro, [jam], 'revelação sem trio');
+  assert.match(instructions.textContent, /As duas geleias apareceram/);
+  assert.deepEqual(Array.from(intro.state().shelves[0].front), ['jam', 'jam', null]);
+  intro.element('undo').handlers.click();
+  assert.match(instructions.textContent, /Mova a última geleia/);
+  await play(intro, [jam, finish], 'último trio do tutorial');
+  assert.equal(intro.state().completed, true);
+
+  const box = setup(4);
+  const takeBoxItem = shelf => ({ from: { shelf: 3, slot: 1 }, to: { shelf, slot: 2 } });
+  await play(box, [takeBoxItem(1), takeBoxItem(2)], 'última vaga sem trio');
+  assert.match(box.element('instructions').textContent, /Antes de tirar da caixa/);
+  assert.equal(box.element('recover-undo').hidden, true);
+  box.element('undo').handlers.click();
+  await play(box, [takeBoxItem(0)], 'última vaga com trio possível');
+  assert.match(box.element('instructions').textContent, /O produto da caixa completa um trio/);
+  await play(box, [takeBoxItem(2)], 'trio que devolve espaço');
+  assert.doesNotMatch(box.element('instructions').textContent, /Resta uma vaga/);
+}
+
 async function main() {
+  await checkTutorialCues();
   const saveKey = 'mercadinho-partida-v1';
   const storage = { 'mercadinho-unlocked': '7', 'mercadinho-layout-seed': '12345' };
   const game = setup(7, 12345, storage);

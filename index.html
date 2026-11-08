@@ -324,7 +324,7 @@
         <h1 class="sign"><img src="assets/detalhes/placa.webp" alt="Mercadinho" width="650" height="279"></h1>
         <div class="level-badge"><span aria-hidden="true">★ ★</span><div id="level" class="level">Fase 1</div><span aria-hidden="true">★ ★</span></div>
         <button id="pause" class="pause-control" type="button" aria-label="Pausar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="4" y="3" width="6" height="18" rx="2"/><rect x="14" y="3" width="6" height="18" rx="2"/></svg></button>
-        <p id="instructions" class="instructions">Arraste os produtos e junte três iguais na mesma prateleira.</p>
+        <p id="instructions" class="instructions" aria-live="polite">Arraste os produtos e junte três iguais na mesma prateleira.</p>
       </header>
       <div class="board-stage">
         <div id="board" class="board" aria-label="Prateleiras do jogo"></div>
@@ -437,10 +437,16 @@
         {
           instructions: 'Arraste os produtos e junte três iguais na mesma prateleira.',
           hint: 'A fileira de trás avança quando você esvazia toda a frente.',
+          lesson: [
+            { from: { shelf: 1, slot: 2 }, to: { shelf: 0, slot: 2 }, text: 'Arraste o leite destacado até os outros dois ou toque no leite e depois na vaga.' },
+            { from: { shelf: 0, slot: 0 }, to: { shelf: 1, slot: 2 }, text: 'A fileira de trás avançou. Junte o café aos outros dois.' },
+            { from: { shelf: 0, slot: 1 }, to: { shelf: 2, slot: 0 }, text: 'Mova a última geleia da frente para a vaga marcada. A próxima fileira vai avançar.' },
+            { from: { shelf: 2, slot: 0 }, to: { shelf: 0, slot: 2 }, text: 'As duas geleias apareceram. Traga a geleia de volta para completar o trio.' }
+          ],
           shelves: [
-            { front: ['milk', 'milk', null], back: [['coffee', 'jam', null]] },
+            { front: ['milk', 'milk', null], back: [['coffee', 'jam', null], ['jam', 'jam', null]] },
             { front: ['coffee', 'coffee', 'milk'], back: [] },
-            { front: ['jam', 'jam', null], back: [] },
+            { front: [null, null, null], back: [] },
             { front: [null, null, null], back: [] }
           ]
         },
@@ -946,9 +952,39 @@
         return `<span class="item"><img src="assets/produtos/${id}.webp" alt="" draggable="false"></span>`;
       }
 
+      function tutorialCue() {
+        if (currentLevel >= levels.length) return null;
+        if (levelDefinition.lesson) {
+          const current = JSON.stringify(shelves);
+          let expected = levelDefinition.shelves;
+          for (const step of levelDefinition.lesson) {
+            if (current === JSON.stringify(expected)) return step;
+            expected = solveMove(expected, step.from, step.to);
+          }
+        }
+        const dispenser = shelves.find(shelf => shelf.type === 'dispenser' && !shelf.lock?.remaining && shelf.front[1]);
+        if (!dispenser) return null;
+        const openShelves = shelves.filter(shelf => shelf.type !== 'dispenser' && !shelf.lock?.remaining);
+        const freeSlots = openShelves.flatMap(shelf => shelf.front.filter(item => item === null).map(() => shelf));
+        if (freeSlots.length !== 1) return null;
+        const matches = freeSlots[0].front.filter(item => item === dispenser.front[1]).length === 2;
+        return {
+          text: matches
+            ? 'Resta uma vaga. O produto da caixa completa um trio e libera espaço.'
+            : 'Resta uma vaga. Antes de tirar da caixa, use as prateleiras para abrir mais espaço.'
+        };
+      }
+
       function render(matching = [], revealed = [], unlocking = [], landing = null) {
         // Mudar um produto de vaga na mesma prateleira não abre caminho para um trio.
         const stalled = !animating && !completed && possibleMoves(shelves).length === 0;
+        const cue = !animating && !completed && !stalled && !hintSearching && !currentHint ? tutorialCue() : null;
+        const highlight = currentHint || (cue?.from ? cue : null);
+        function highlightClass(shelf, slot) {
+          if (highlight?.from.shelf === shelf && highlight.from.slot === slot) return 'hint-origin';
+          if (highlight?.to.shelf === shelf && highlight.to.slot === slot) return 'hint-destination';
+          return '';
+        }
         turnStatus.classList.toggle('stalled', stalled);
         recoverUndo.hidden = !stalled || !history.length;
         if (stalled) {
@@ -975,7 +1011,7 @@
             return `<div class="shelf dispenser"><div class="shelf-interior">
               <div class="dispenser-case">
                 <img src="assets/detalhes/caixa.webp" alt="" width="280" height="223" draggable="false">
-                <button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="1" aria-label="${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button>
+                <button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''} ${highlightClass(shelfIndex, 1)}" data-shelf="${shelfIndex}" data-slot="1" aria-label="${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button>
                 <span class="dispenser-count" aria-hidden="true">${count}</span>
               </div>
             </div></div>`;
@@ -989,7 +1025,7 @@
             const active = selected && selected.shelf === shelfIndex && selected.slot === slotIndex;
             const landed = landing?.shelf === shelfIndex && landing.slot === slotIndex;
             const label = item ? products[item].name : 'Vaga livre';
-            return `<button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''} ${landed ? 'landed' : ''}" data-shelf="${shelfIndex}" data-slot="${slotIndex}" aria-label="Prateleira ${shelfIndex + 1}, posição ${slotIndex + 1}: ${label}" ${completed || locked ? 'disabled' : ''}>${itemMarkup(item)}</button>`;
+            return `<button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''} ${landed ? 'landed' : ''} ${highlightClass(shelfIndex, slotIndex)}" data-shelf="${shelfIndex}" data-slot="${slotIndex}" aria-label="Prateleira ${shelfIndex + 1}, posição ${slotIndex + 1}: ${label}" ${completed || locked ? 'disabled' : ''}>${itemMarkup(item)}</button>`;
           }).join('');
           const opening = unlocking.includes(shelfIndex);
           const effect = [matching.includes(shelfIndex) && 'matching', revealed.includes(shelfIndex) && 'revealed', opening && 'unlocking'].filter(Boolean).join(' ');
@@ -1011,12 +1047,6 @@
           rowStart += count;
           return `<div class="shelf-row" style="--shelf-count:${count}">${row}</div>`;
         }).join('') : compartments.join('');
-        if (currentHint) {
-          for (const [pos, cls] of [[currentHint.from, 'hint-origin'], [currentHint.to, 'hint-destination']]) {
-            const el = board.querySelector(`[data-shelf="${pos.shelf}"][data-slot="${pos.slot}"]`);
-            if (el) el.classList.add(cls);
-          }
-        }
         hintButton.disabled = animating || completed || hintSearching || stalled;
         pauseButton.disabled = animating || completed;
         undo.disabled = animating || history.length === 0;
@@ -1024,7 +1054,8 @@
         resetProgress.disabled = animating;
         board.setAttribute('aria-busy', String(animating));
         levelLabel.textContent = `Fase ${currentLevel + 1}${testMode ? ' · Teste' : ''}`;
-        instructions.textContent = levelDefinition.instructions;
+        const instructionText = cue?.text || levelDefinition.instructions;
+        if (instructions.textContent !== instructionText) instructions.textContent = instructionText;
         if (completed) {
           winTitle.textContent = `Fase ${currentLevel + 1} concluída!`;
           winMessage.textContent = testMode
