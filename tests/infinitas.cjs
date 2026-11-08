@@ -155,10 +155,54 @@ async function checkExtraShelf() {
   assert.equal(JSON.stringify(blocked.state().shelves), impossible);
 }
 
+async function checkSoldOutShelf() {
+  const storage = { 'mercadinho-unlocked': '19', 'mercadinho-layout-seed': '12345' };
+  const campaignGame = setup(19, 12345, storage);
+  await play(campaignGame, campaignGame.initialHintPath().slice(0, 1), 'partida da campanha antes do teste');
+  const savedCampaign = { ...storage };
+  const experiment = setup(19, 12345, storage, true, '?teste=esgotada');
+  const board = experiment.element('board');
+  const milk = { from: { shelf: 1, slot: 0 }, to: { shelf: 0, slot: 2 } };
+  const lastCoffee = { from: { shelf: 0, slot: 0 }, to: { shelf: 3, slot: 0 } };
+  assert.match(board.innerHTML, /Fecha ao esvaziar/);
+
+  await play(experiment, [milk], 'revelação do café na prateleira que fecha');
+  assert.equal(experiment.state().shelves[0].front[0], 'coffee');
+  assert.match(board.innerHTML, /Fecha ao esvaziar/);
+  const beforeClosing = JSON.stringify(experiment.state().shelves);
+  await play(experiment, [lastCoffee], 'retirada do último produto');
+  assert.match(board.innerHTML, /aria-label="Prateleira 1 esgotada"/);
+  assert.match(experiment.element('message').textContent, /Prateleira esgotada/);
+  assert.equal(experiment.move({ from: lastCoffee.to, to: lastCoffee.from }), false);
+  assert.equal(experiment.moves().some(move => move.to.shelf === 0), false);
+
+  experiment.element('undo').handlers.click();
+  assert.equal(JSON.stringify(experiment.state().shelves), beforeClosing);
+  assert.match(board.innerHTML, /Fecha ao esvaziar/);
+  await play(experiment, [lastCoffee], 'fechamento após desfazer');
+  await experiment.element('hint').handlers.click();
+  const route = experiment.hintPath().slice();
+  assert(route.length);
+  await play(experiment, route, 'solução com a prateleira esgotada');
+  assert.equal(experiment.state().completed, true);
+  assert.equal(experiment.canAdvance(), false);
+
+  experiment.element('restart').handlers.click();
+  assert.match(board.innerHTML, /Fecha ao esvaziar/);
+  await play(experiment, [
+    milk,
+    { from: { shelf: 1, slot: 1 }, to: { shelf: 0, slot: 1 } },
+    { from: { shelf: 2, slot: 0 }, to: { shelf: 0, slot: 2 } }
+  ], 'fechamento por um trio');
+  assert.match(board.innerHTML, /aria-label="Prateleira 1 esgotada"/);
+  assert.deepEqual(storage, savedCampaign);
+}
+
 async function main() {
   await checkTutorialCues();
   await checkCascade();
   await checkExtraShelf();
+  await checkSoldOutShelf();
   const saveKey = 'mercadinho-partida-v1';
   const storage = { 'mercadinho-unlocked': '7', 'mercadinho-layout-seed': '12345' };
   const game = setup(7, 12345, storage);
