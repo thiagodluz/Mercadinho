@@ -29,7 +29,7 @@ function setup(index, seed = 12345, shared, campaign = true, search = '') {
   const elements = new Map();
   function element(id) {
     if (!elements.has(id)) elements.set(id, {
-      handlers: {}, classList: { toggle() {} }, setAttribute() {}, querySelector() { return null; },
+      handlers: {}, classList: { toggle() {} }, setAttribute() {}, querySelector() { return null; }, focus() {},
       addEventListener(event, callback) { this.handlers[event] = callback; }
     });
     return elements.get(id);
@@ -128,8 +128,44 @@ async function main() {
   await game.element('hint').handlers.click();
   assert.match(game.element('message').textContent, /ficou sem solução.*Desfaça/);
 
-  game.setBoard([{ front: ['milk', 'coffee', 'tea'], back: [] }]);
+  game.setBoard([{ front: ['milk', 'coffee', null], back: [] }]);
   assert.match(game.element('message').textContent, /Sem movimentos disponíveis/);
+  assert.equal(game.element('hint').disabled, true, 'Trocar de vaga na mesma prateleira não resolve o impasse');
+
+  const stalledStorage = { 'mercadinho-unlocked': '29', 'mercadinho-layout-seed': '12345' };
+  const phase30 = setup(29, 12345, stalledStorage);
+  const beforeStall = JSON.stringify(phase30.state().shelves);
+  const stallMove = { from: { shelf: 8, slot: 1 }, to: { shelf: 4, slot: 1 } };
+  assert.equal(phase30.element('recover-undo').hidden, true);
+  await play(phase30, [stallMove], 'última vaga livre na fase 30');
+  assert.equal(phase30.element('recover-undo').hidden, false);
+  assert.equal(phase30.state().shelves[8].front[1], 'tea');
+  const resumedStall = setup(29, 12345, stalledStorage);
+  assert.match(resumedStall.element('message').textContent, /Desfaça a última jogada/);
+  assert.equal(resumedStall.element('recover-undo').hidden, false);
+  resumedStall.element('recover-undo').handlers.click();
+  assert.equal(JSON.stringify(resumedStall.state().shelves), beforeStall);
+  assert.equal(resumedStall.element('recover-undo').hidden, true);
+  assert.equal(resumedStall.element('hint').disabled, false);
+
+  const dispenserStalls = [
+    { level: 20, dispenser: 1, destinations: [[4, 2], [5, 0]] },
+    { level: 29, dispenser: 3, destinations: [[2, 2], [4, 1]] }
+  ];
+  for (const { level, dispenser, destinations } of dispenserStalls) {
+    const trial = setup(level - 1);
+    const path = destinations.map(([shelf, slot]) => ({
+      from: { shelf: dispenser, slot: 1 }, to: { shelf, slot }
+    }));
+    await play(trial, path.slice(0, 1), `primeira retirada da fase ${level}`);
+    assert.equal(trial.element('recover-undo').hidden, true);
+    const beforeLastMove = JSON.stringify(trial.state().shelves);
+    await play(trial, path.slice(1), `segunda retirada da fase ${level}`);
+    assert.equal(trial.element('recover-undo').hidden, false);
+    trial.element('recover-undo').handlers.click();
+    assert.equal(JSON.stringify(trial.state().shelves), beforeLastMove);
+    assert.equal(trial.element('recover-undo').hidden, true);
+  }
 
   let shortened = false;
   for (const level of [9, 50, 80]) {

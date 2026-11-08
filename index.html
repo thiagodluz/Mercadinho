@@ -251,6 +251,13 @@
     .controls #hint { background: linear-gradient(#ffa81f, #d96608); box-shadow: inset 0 1px #ffdf80, 0 3px #a65525, 0 5px 9px #79503543; text-shadow: 0 1px #9b4508; }
     .controls svg { width: 27px; height: 27px; }
     .message { min-height: 2.6em; text-align: center; color: #70563a; font-size: .86rem; margin: 17px 0 0; }
+    .turn-status { width: 100%; }
+    .turn-status.stalled {
+      display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 9px 10px 11px;
+      border: 1px solid #b7773a; border-radius: 12px; background: #fff3da;
+    }
+    .turn-status.stalled .message { flex: 1; min-height: 0; margin: 0; color: #694222; text-align: left; line-height: 1.35; }
+    .recover-undo { flex: 0 0 auto; min-height: 44px; background: #537135; box-shadow: 0 3px #3c5326; font-size: .85rem; }
     .board-stage {
       position: relative; isolation: isolate;
       margin-inline: calc(2px - var(--side-space));
@@ -334,7 +341,10 @@
         <button id="restart" class="control" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M25 11a11 11 0 1 0 1 12M26 4v9h-9"/></svg>Reiniciar</button>
       </div>
     </div>
-    <p id="message" class="message" aria-live="polite">Os produtos escuros estão na fileira de trás.</p>
+    <div id="turn-status" class="turn-status">
+      <p id="message" class="message" role="status">A fileira de trás avança quando você esvazia toda a frente.</p>
+      <button id="recover-undo" class="control recover-undo" type="button" hidden>Desfazer</button>
+    </div>
     <nav id="playtest" class="playtest" aria-label="Fases de teste" hidden>
       <p>Partida de teste separada da campanha.</p>
       <a href="?teste=20">Fase 20</a>
@@ -426,7 +436,7 @@
       const levels = [
         {
           instructions: 'Arraste os produtos e junte três iguais na mesma prateleira.',
-          hint: 'Os produtos escuros estão na fileira de trás.',
+          hint: 'A fileira de trás avança quando você esvazia toda a frente.',
           shelves: [
             { front: ['milk', 'milk', null], back: [['coffee', 'jam', null]] },
             { front: ['coffee', 'coffee', 'milk'], back: [] },
@@ -470,7 +480,7 @@
         },
         {
           instructions: 'Organize os produtos da caixa e depois complete os trios das prateleiras.',
-          hint: 'A caixa tem mais produtos. Use as prateleiras livres para organizar os itens.',
+          hint: 'Guarde uma vaga para reorganizar os produtos antes de pegar outro da caixa.',
           shelves: [
             { front: ['milk', 'milk', null], back: [] },
             { front: ['coffee', 'coffee', null], back: [] },
@@ -522,6 +532,8 @@
       const pauseDialog = document.getElementById('pause-dialog');
       const resumeButton = document.getElementById('resume');
       const undo = document.getElementById('undo');
+      const recoverUndo = document.getElementById('recover-undo');
+      const turnStatus = document.getElementById('turn-status');
       const hintButton = document.getElementById('hint');
       const restart = document.getElementById('restart');
       const resetProgress = document.getElementById('reset-progress');
@@ -934,19 +946,17 @@
         return `<span class="item"><img src="assets/produtos/${id}.webp" alt="" draggable="false"></span>`;
       }
 
-      // Um movimento exige um produto acessível e uma vaga livre em uma
-      // prateleira desbloqueada. Vagas no mesmo compartimento são válidas.
-      function hasLegalMove() {
-        const hasSource = shelves.some(shelf =>
-          (!shelf.lock || shelf.lock.remaining === 0) && shelf.front.some(Boolean)
-        );
-        const hasDestination = shelves.some(shelf =>
-          shelf.type !== 'dispenser' && (!shelf.lock || shelf.lock.remaining === 0) && shelf.front.some(item => item === null)
-        );
-        return hasSource && hasDestination;
-      }
-
       function render(matching = [], revealed = [], unlocking = [], landing = null) {
+        // Mudar um produto de vaga na mesma prateleira não abre caminho para um trio.
+        const stalled = !animating && !completed && possibleMoves(shelves).length === 0;
+        turnStatus.classList.toggle('stalled', stalled);
+        recoverUndo.hidden = !stalled || !history.length;
+        if (stalled) {
+          const warning = history.length
+            ? 'Sem movimentos disponíveis. Desfaça a última jogada ou reinicie a fase.'
+            : 'Sem movimentos disponíveis. Reinicie a fase.';
+          if (message.textContent !== warning) message.textContent = warning;
+        }
         const rows = levelDefinition.layout;
         const layout = rows ? 'campaign' : tutorialLayout(currentLevel);
         board.classList.toggle('board-campaign', Boolean(rows));
@@ -955,11 +965,6 @@
         board.classList.toggle('board-dense', layout === 'grid' && shelves.length >= 6);
         board.classList.toggle('board-cross', layout === 'cross');
         board.classList.toggle('board-steps', layout === 'steps');
-        if (!animating && !completed && !hasLegalMove()) {
-          message.textContent = history.length
-            ? 'Sem movimentos disponíveis. Desfaça uma jogada ou reinicie a fase.'
-            : 'Sem movimentos disponíveis. Reinicie a fase.';
-        }
         const activeLock = firstActiveLock(shelves);
         const compartments = shelves.map((shelf, shelfIndex) => {
           if (shelf.type === 'dispenser') {
@@ -1012,7 +1017,7 @@
             if (el) el.classList.add(cls);
           }
         }
-        hintButton.disabled = animating || completed || hintSearching;
+        hintButton.disabled = animating || completed || hintSearching || stalled;
         pauseButton.disabled = animating || completed;
         undo.disabled = animating || history.length === 0;
         restart.disabled = animating;
@@ -1191,7 +1196,7 @@
         }));
       }
       hintButton.addEventListener('click', async () => {
-        if (animating || completed || paused || hintSearching) return;
+        if (hintButton.disabled || paused) return;
         const request = ++hintRequest;
         hintSearching = true;
         currentHint = null;
@@ -1381,8 +1386,8 @@
         selected = shelves[destination.shelf].front[destination.slot] ? destination : null;
         render();
       });
-      undo.addEventListener('click', () => {
-        if (!history.length) return;
+      function undoMove() {
+        if (!history.length || animating || paused) return;
         hintPlan = [];
         cancelHint();
         clearTimeout(advanceTimer);
@@ -1398,6 +1403,11 @@
         message.textContent = 'Última jogada desfeita.';
         saveGame();
         render();
+      }
+      undo.addEventListener('click', undoMove);
+      recoverUndo.addEventListener('click', () => {
+        undoMove();
+        if (recoverUndo.hidden) (hintButton.disabled ? restart : hintButton).focus();
       });
       function openLevel(index) {
         if (animating || !Number.isSafeInteger(index) || index > unlocked || index < 0) return;
