@@ -12,6 +12,7 @@
       color: #573019;
       background: #f2dcb3;
     }
+    :root:not(.android-game) { overscroll-behavior-x: none; }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100dvh; background: radial-gradient(ellipse at top, #fff3d9, #e3bd86); }
     button { font: inherit; cursor: pointer; }
@@ -284,6 +285,14 @@
     .setting-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #78984b; }
     .setting-row input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: #78984b; }
     .setting-note { margin: 0; font-size: .77rem; line-height: 1.35; color: #806b51; }
+    .web-gesture-option { display: none; }
+    @media (any-pointer: coarse) and (max-width: 568px) {
+      :root:not(.android-game) .web-gesture-option { display: grid; gap: 8px; }
+      :root:not(.android-game):has(#gesture-margin:checked) .board-stage {
+        margin-left: calc(max(24px, env(safe-area-inset-left, 0px)) - var(--side-space));
+        margin-right: calc(max(24px, env(safe-area-inset-right, 0px)) - var(--side-space));
+      }
+    }
     [hidden] { display: none !important; }
     @media (max-height: 650px) { .instructions { margin: 7px auto; } .shelf { height: clamp(83px, 24vw, 110px); } }
     .reduce-motion .matching .front-row::before, .reduce-motion .slot.landed::before,
@@ -372,6 +381,13 @@
           <input id="motion-reduced" type="checkbox">
         </div>
         <p class="setting-note">A preferência de movimento reduzido do aparelho também é respeitada.</p>
+        <div class="web-gesture-option">
+          <div class="setting-row">
+            <label for="gesture-margin">Afastar tabuleiro das bordas</label>
+            <input id="gesture-margin" type="checkbox" aria-describedby="gesture-margin-note">
+          </div>
+          <p class="setting-note" id="gesture-margin-note">Dá mais espaço para arrastar sem acionar o gesto de voltar do aparelho.</p>
+        </div>
       </div>
     </details>
     <dialog id="pause-dialog" class="pause-dialog" aria-labelledby="pause-title">
@@ -663,6 +679,11 @@
         updateMotion();
       });
       updateMotion();
+      const gestureMargin = document.getElementById('gesture-margin');
+      try { gestureMargin.checked = localStorage.getItem('mercadinho-gesture-margin') === 'true'; } catch {}
+      gestureMargin.addEventListener('change', () => {
+        try { localStorage.setItem('mercadinho-gesture-margin', String(gestureMargin.checked)); } catch {}
+      });
       const audioSettings = { effects: true, music: false, vibration: false, effectsVolume: 65, musicVolume: 30 };
       try {
         const saved = JSON.parse(localStorage.getItem('mercadinho-audio') || '{}');
