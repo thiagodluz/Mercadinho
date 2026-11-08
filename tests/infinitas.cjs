@@ -153,8 +153,13 @@ async function main() {
   assert(shortened, 'Ao menos uma dica deve ficar mais curta');
 
   const endless = setup(207, 12345);
+  assert.equal(endless.element('win').hidden, true);
   await play(endless, endless.initialHintPath(), 'fase 208');
+  assert.equal(endless.element('win').hidden, false);
+  assert.equal(endless.element('win-title').textContent, 'Fase 208 concluída!');
+  assert.match(endless.element('win-message').textContent, /fase 209 começa em instantes/);
   endless.advance();
+  assert.equal(endless.element('win').hidden, true);
   assert.equal(endless.state().currentLevel, 208);
   assert.equal(JSON.stringify(endless.state().shelves), JSON.stringify(setup(208, 12345).state().shelves));
   assert.notEqual(JSON.stringify(endless.state().shelves), JSON.stringify(setup(208, 1).state().shelves));
@@ -176,9 +181,12 @@ async function main() {
     await play(trial, trial.initialHintPath(), `teste da fase ${number}`);
     assert(trial.state().completed);
     assert(!trial.canAdvance());
+    assert.equal(trial.element('win').hidden, false);
+    assert.match(trial.element('win-message').textContent, /escolha outra fase de teste/);
     trial.element('restart').handlers.click();
     assert.equal(trial.state().currentLevel, number - 1);
     assert(!trial.state().completed);
+    assert.equal(trial.element('win').hidden, true);
     trial.element('reset-progress').handlers.click();
     assert.deepEqual(testStorage, originalStorage);
   }

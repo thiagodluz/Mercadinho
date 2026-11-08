@@ -188,7 +188,7 @@
     .item img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 2px 1px #3013069c); }
     .ghost { position: fixed; z-index: 20; pointer-events: none; opacity: .96; filter: drop-shadow(0 7px 5px #39210d55); will-change: transform; }
     .ghost .item { width: 100%; height: 100%; min-height: 0; max-height: none; }
-    .win:not([hidden]) { animation: victory-appear .35s ease-out; }
+    .win:not([hidden]) .win-card { animation: victory-appear .22s ease-out; }
     @keyframes victory-appear { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
     .slot.landed .item { animation: product-land .15s ease-out; }
     .matching .front-row .item { animation: match-pop .28s ease-in both; }
@@ -234,10 +234,19 @@
     .controls #hint { background: linear-gradient(#ffa81f, #d96608); box-shadow: inset 0 1px #ffdf80, 0 3px #a65525, 0 5px 9px #79503543; text-shadow: 0 1px #9b4508; }
     .controls svg { width: 27px; height: 27px; }
     .message { min-height: 2.6em; text-align: center; color: #70563a; font-size: .86rem; margin: 17px 0 0; }
-    .win { margin-top: 10px; text-align: center; background: #fff7e4; border: 2px solid #e0bd77; padding: 16px; border-radius: 14px; width: 100%; }
-    .win h2 { margin: 0 0 4px; font-size: 1.3rem; }
-    .win p { margin: 0; }
-    .win .control { margin-top: 12px; padding-inline: 22px; }
+    .board-stage { position: relative; isolation: isolate; }
+    .win {
+      position: absolute; inset: 0; z-index: 4; display: grid; place-items: center;
+      border-radius: 6px; background: #30190d80; pointer-events: none;
+    }
+    .win-card {
+      width: min(90%, 300px); padding: 13px 16px; text-align: center; color: #673619;
+      border: 2px solid #e4a846; border-radius: 16px;
+      background: linear-gradient(#fff7e2, #ffdda1);
+      box-shadow: inset 0 0 0 2px #fff1cb, 0 3px #a86424, 0 8px 18px #371b0f80;
+    }
+    .win h2 { margin: 0 0 4px; font-size: 1.22rem; line-height: 1.15; }
+    .win p { margin: 0; font-size: .86rem; line-height: 1.35; }
     .playtest { width: 100%; text-align: center; color: #705238; font-size: .82rem; }
     .playtest p { margin: 0 0 5px; }
     .playtest a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: #693e1e; font-weight: 800; }
@@ -253,11 +262,11 @@
     @media (max-height: 650px) { .instructions { margin: 7px auto; } .shelf { height: clamp(83px, 24vw, 110px); } }
     .reduce-motion .matching .front-row::before,
     .reduce-motion :is(.slot.landed .item, .matching .item, .revealed .item,
-      .unlocking .lock-overlay, .unlocking .chain-art, .win:not([hidden])) { animation-duration: .01ms; }
+      .unlocking .lock-overlay, .unlocking .chain-art, .win-card) { animation-duration: .01ms; }
     @media (prefers-reduced-motion: reduce) {
       .matching .front-row::before,
       :is(.slot.landed .item, .matching .item, .revealed .item,
-        .unlocking .lock-overlay, .unlocking .chain-art, .win:not([hidden])) { animation-duration: .01ms; }
+        .unlocking .lock-overlay, .unlocking .chain-art, .win-card) { animation-duration: .01ms; }
     }
   </style>
 </head>
@@ -275,7 +284,15 @@
         <button id="pause" class="pause-control" type="button" aria-label="Pausar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="4" y="3" width="6" height="18" rx="2"/><rect x="14" y="3" width="6" height="18" rx="2"/></svg></button>
         <p id="instructions" class="instructions">Arraste os produtos e junte três iguais na mesma prateleira.</p>
       </header>
-      <div id="board" class="board" aria-label="Prateleiras do jogo"></div>
+      <div class="board-stage">
+        <div id="board" class="board" aria-label="Prateleiras do jogo"></div>
+        <section id="win" class="win" aria-labelledby="win-title" hidden>
+          <div class="win-card">
+            <h2 id="win-title"></h2>
+            <p id="win-message"></p>
+          </div>
+        </section>
+      </div>
       <div class="controls">
         <button id="undo" class="control secondary" type="button" disabled><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m13 6-8 8 8 8M6 14h13a7 7 0 0 1 0 14h-5"/></svg>Desfazer</button>
         <button id="hint" class="control secondary" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 21c0-3-3-3-3-8a8 8 0 0 1 16 0c0 5-3 5-3 8l-1 3h-8ZM14 28h4M16 1v1M4 5l2 2M1 14h3M26 7l2-2M28 14h3"/></svg>Dica</button>
@@ -283,7 +300,6 @@
       </div>
     </div>
     <p id="message" class="message" aria-live="polite">Os produtos escuros estão na fileira de trás.</p>
-    <section id="win" class="win" hidden aria-live="polite"><h2>Prateleiras organizadas!</h2><p id="win-message"></p></section>
     <nav id="playtest" class="playtest" aria-label="Fases de teste" hidden>
       <p>Partida de teste separada da campanha.</p>
       <a href="?teste=20">Fase 20</a>
@@ -468,6 +484,7 @@
       const resetProgress = document.getElementById('reset-progress');
       const message = document.getElementById('message');
       const win = document.getElementById('win');
+      const winTitle = document.getElementById('win-title');
       const winMessage = document.getElementById('win-message');
       const levelLabel = document.getElementById('level');
       const instructions = document.getElementById('instructions');
@@ -885,12 +902,15 @@
         restart.disabled = animating;
         resetProgress.disabled = animating;
         board.setAttribute('aria-busy', String(animating));
-        win.hidden = !completed;
         levelLabel.textContent = `Fase ${currentLevel + 1}${testMode ? ' · Teste' : ''}`;
         instructions.textContent = levelDefinition.instructions;
-        winMessage.textContent = testMode
-          ? `Você concluiu a fase ${currentLevel + 1}. Use Reiniciar para tentar de novo ou escolha outra fase de teste.`
-          : `Você concluiu a fase ${currentLevel + 1}. A próxima fase já vai começar! ✨`;
+        if (completed) {
+          winTitle.textContent = `Fase ${currentLevel + 1} concluída!`;
+          winMessage.textContent = testMode
+            ? 'Use Reiniciar para jogar de novo ou escolha outra fase de teste.'
+            : `A fase ${currentLevel + 2} começa em instantes.`;
+        }
+        win.hidden = !completed;
       }
 
       function placeProduct(state, from, to) {
