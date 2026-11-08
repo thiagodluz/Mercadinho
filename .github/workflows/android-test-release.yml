@@ -1,0 +1,57 @@
+name: Pré-release Android do Mercadinho
+
+on:
+  push:
+    branches: [android/primeiro-apk]
+    paths: [.github/workflows/android-test-release.yml]
+
+jobs:
+  release:
+    if: github.repository == 'thiagodluz/Mercadinho'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: a6f77dad18c5794f1aa252998d1df8d7beb363f7
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Preparar o Android SDK
+        run: |
+          sdkmanager --licenses < <(yes) >/dev/null
+          sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
+      - name: Testar e compilar
+        run: |
+          npm ci
+          npm test
+          npm run android:debug
+      - name: Verificar assinatura e conteúdo
+        run: |
+          apk=android/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$apk"
+          unzip -tq "$apk"
+          unzip -p "$apk" assets/public/index.html > /dev/null
+          unzip -p "$apk" assets/public/fases.js > /dev/null
+          cp "$apk" Mercadinho-0.1.0-teste.apk
+      - name: Publicar o APK de teste
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<'NOTES'
+          Primeiro APK de teste do Mercadinho. A campanha e os recursos visuais vêm no aplicativo para jogar offline, com progresso separado da versão web.
+
+          Para testar o feedback tátil, ative **Som e vibração → Vibração** e faça um encaixe simples e um trio.
+
+          Este é um APK de depuração assinado com um certificado de teste do Android. A vibração ainda precisa ser validada no aparelho.
+          NOTES
+          gh release create v0.1.0-teste Mercadinho-0.1.0-teste.apk \
+            --target a6f77dad18c5794f1aa252998d1df8d7beb363f7 --prerelease --latest=false \
+            --title "Mercadinho 0.1.0 — APK de teste" --notes-file release-notes.md
