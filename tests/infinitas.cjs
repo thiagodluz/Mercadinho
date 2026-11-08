@@ -164,9 +164,28 @@ async function main() {
   assert.match(game.element('message').textContent, /Sem movimentos disponíveis/);
   assert.equal(game.element('hint').disabled, true, 'Trocar de vaga na mesma prateleira não resolve o impasse');
 
-  const stalledStorage = { 'mercadinho-unlocked': '29', 'mercadinho-layout-seed': '12345' };
+  const originalPhase30 = [
+    { front: ['coffee', 'water', 'coffee'], back: [] },
+    { front: ['cookies', 'tea', 'water'], back: [], lock: { remaining: 2, order: 0 } },
+    { front: ['flour', 'coffee', 'milk'], back: [['milk', 'coffee', null], ['coffee', 'coffee', 'tea']] },
+    { front: ['coffee', 'tea', 'milk'], back: [['tea', 'sauce', 'sauce'], ['cookies', 'coffee', 'coffee']] },
+    { front: ['tea', null, 'tea'], back: [['flour', 'cookies', 'coffee']] },
+    { front: ['water', 'sauce', 'coffee'], back: [] },
+    { front: ['cookies', 'tea', 'coffee'], back: [] },
+    { front: ['flour', null, 'tea'], back: [], lock: { remaining: 1, order: 1 } },
+    { type: 'dispenser', front: [null, 'cookies', null], back: [], queue: ['tea', 'cookies'] }
+  ];
+  const stalledStorage = {
+    'mercadinho-unlocked': '29',
+    'mercadinho-layout-seed': '12345',
+    [saveKey]: JSON.stringify({ version: 1, generator: 4, level: 29, shelves: originalPhase30, history: [] })
+  };
   const phase30 = setup(29, 12345, stalledStorage);
   const beforeStall = JSON.stringify(phase30.state().shelves);
+  assert.equal(beforeStall, JSON.stringify(originalPhase30));
+  assert.equal(phase30.initialHintPath().length, 0, 'A dica pré-calculada é exclusiva do tabuleiro novo');
+  await phase30.element('hint').handlers.click();
+  assert.match(phase30.element('message').textContent, /^Mova /);
   const stallMove = { from: { shelf: 8, slot: 1 }, to: { shelf: 4, slot: 1 } };
   assert.equal(phase30.element('recover-undo').hidden, true);
   await play(phase30, [stallMove], 'última vaga livre na fase 30');
@@ -179,6 +198,14 @@ async function main() {
   assert.equal(JSON.stringify(resumedStall.state().shelves), beforeStall);
   assert.equal(resumedStall.element('recover-undo').hidden, true);
   assert.equal(resumedStall.element('hint').disabled, false);
+  resumedStall.element('restart').handlers.click();
+  assert.notEqual(JSON.stringify(resumedStall.state().shelves), beforeStall);
+  assert(resumedStall.initialHintPath().length, 'Reiniciar carrega o tabuleiro novo e sua dica');
+  for (const opening of resumedStall.moves()) {
+    const freshPhase30 = setup(29);
+    await play(freshPhase30, [opening], 'primeiro lance na fase 30 revisada');
+    assert.equal(freshPhase30.element('recover-undo').hidden, true, 'Nenhum primeiro lance fecha a fase 30');
+  }
 
   const dispenserStalls = [
     { level: 20, dispenser: 1, destinations: [[4, 2], [5, 0]] },

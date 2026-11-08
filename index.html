@@ -1218,6 +1218,8 @@
       }
       function initialHintPath() {
         if (history.length || !levelDefinition.solution) return [];
+        // Um tabuleiro salvo pode pertencer a uma configuração anterior da mesma fase.
+        if (JSON.stringify(shelves) !== JSON.stringify(levelDefinition.shelves)) return [];
         const position = digit => {
           const index = parseInt(digit, 36);
           return { shelf: Math.floor(index / 3), slot: index % 3 };
