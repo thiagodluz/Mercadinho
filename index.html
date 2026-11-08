@@ -234,10 +234,13 @@
     .controls #hint { background: linear-gradient(#ffa81f, #d96608); box-shadow: inset 0 1px #ffdf80, 0 3px #a65525, 0 5px 9px #79503543; text-shadow: 0 1px #9b4508; }
     .controls svg { width: 27px; height: 27px; }
     .message { min-height: 2.6em; text-align: center; color: #70563a; font-size: .86rem; margin: 17px 0 0; }
-    .board-stage { position: relative; isolation: isolate; }
+    .board-stage {
+      position: relative; isolation: isolate;
+      margin-inline: calc(2px - var(--side-space));
+    }
     .android-game .board-stage {
-      margin-left: max(0px, calc(var(--android-gesture-left, 24px) + 2px - var(--side-space)));
-      margin-right: max(0px, calc(var(--android-gesture-right, 24px) + 2px - var(--side-space)));
+      margin-left: calc(max(2px, var(--android-gesture-left, 24px) - 5px) - var(--side-space));
+      margin-right: calc(max(2px, var(--android-gesture-right, 24px) - 5px) - var(--side-space));
     }
     .win {
       position: absolute; inset: 0; z-index: 4; display: grid; place-items: center;
