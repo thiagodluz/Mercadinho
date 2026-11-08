@@ -84,21 +84,19 @@
       --post: clamp(5px, 1.6vw, 8px);
       --post-art: url("assets/prateleira/montante.webp");
       --rail-art: url("assets/prateleira/travessa.webp");
-      position: relative; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      position: relative; width: calc(100% * 2 / 3); margin-inline: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
       touch-action: none; user-select: none;
     }
-    @media (min-width: 360px) {
-      .board.board-dense { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    }
+    .board.board-dense { width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
     /* Os formatos alteram somente a posição visual dos compartimentos. */
     .board.board-shaped { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .board-shaped .shelf { grid-column: span 2; height: clamp(90px, 24vw, 125px); }
+    .board-shaped .shelf { grid-column: span 2; }
     .board-cross .shelf:nth-child(1) { grid-column: 2 / span 2; }
     .board-cross .shelf:nth-child(6) { grid-column: 2 / span 2; }
     .board-steps .shelf:nth-child(1), .board-steps .shelf:nth-child(4) { grid-column: 1 / span 2; }
     .board-steps .shelf:nth-child(2), .board-steps .shelf:nth-child(5) { grid-column: 3 / span 2; }
     .board-steps .shelf:nth-child(3), .board-steps .shelf:nth-child(6) { grid-column: 2 / span 2; }
-    .board.board-campaign { grid-template-columns: minmax(0, 1fr); }
+    .board.board-campaign { width: 100%; grid-template-columns: minmax(0, 1fr); }
     .shelf-row {
       position: relative; display: grid; grid-template-columns: repeat(var(--shelf-count), minmax(0, 1fr));
       width: calc(100% * var(--shelf-count) / 3); justify-self: center;
@@ -106,7 +104,7 @@
     }
     .shelf-row + .shelf-row { margin-top: -3px; }
     .shelf {
-      position: relative; min-width: 0; height: clamp(94px, 27vw, 135px);
+      position: relative; min-width: 0; height: clamp(74px, 22vw, 106px);
     }
     .shelf-row .shelf { height: clamp(74px, 22vw, 106px); }
     @media (max-height: 740px) {
