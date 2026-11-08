@@ -654,6 +654,7 @@
       const musicValue = document.getElementById('music-value');
       const vibrationEnabled = document.getElementById('vibration-enabled');
       const vibrationRow = document.getElementById('vibration-row');
+      const nativeHaptics = globalThis.mercadinhoHaptics;
       let audioContext = null;
       let musicGain = null;
       let musicTimer = null;
@@ -670,7 +671,7 @@
         musicVolume.value = audioSettings.musicVolume;
         musicValue.textContent = `${audioSettings.musicVolume}%`;
         vibrationEnabled.checked = audioSettings.vibration;
-        vibrationRow.hidden = typeof navigator.vibrate !== 'function';
+        vibrationRow.hidden = !nativeHaptics && typeof navigator.vibrate !== 'function';
         if (musicGain && audioContext) {
           musicGain.gain.setTargetAtTime(audioSettings.music ? audioSettings.musicVolume / 100 : 0, audioContext.currentTime, 0.02);
         }
@@ -747,9 +748,14 @@
         musicTimer = setInterval(playMusicPhrase, 5600);
       }
 
-      function vibrate(duration) {
-        if (!audioSettings.vibration || typeof navigator.vibrate !== 'function') return;
-        try { navigator.vibrate(duration); } catch {}
+      function vibrate(kind) {
+        if (!audioSettings.vibration) return;
+        if (nativeHaptics) {
+          nativeHaptics(kind).catch(() => {});
+          return;
+        }
+        const duration = { place: 12, match: 30, preview: 15 }[kind];
+        try { navigator.vibrate?.(duration); } catch {}
       }
 
       effectsEnabled.addEventListener('change', () => {
@@ -779,7 +785,7 @@
         audioSettings.vibration = vibrationEnabled.checked;
         saveAudioSettings();
         updateAudioControls();
-        vibrate(15);
+        vibrate('preview');
       });
       pauseButton.addEventListener('click', () => {
         if (paused || animating || completed) return;
@@ -1117,7 +1123,7 @@
             landing = null;
             render(matching);
             playEffect('match');
-            vibrate(30);
+            vibrate('match');
             await pause(280);
             matching.forEach(index => { shelves[index].front = [null, null, null]; });
             for (const index of matching) {
@@ -1132,7 +1138,7 @@
           }
           const revealed = revealBackRows(shelves);
           if (landing) {
-            vibrate(12);
+            vibrate('place');
             if (!revealed.length) playEffect('place');
           }
           if (unlocking.length || revealed.length) {
