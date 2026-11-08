@@ -166,6 +166,7 @@ Entrega: campanha inicial completa e jogável offline.
 - [ ] Validar vitória, impasse, desfazer e reinício em fases com camadas, dispensadores e correntes.
 - [ ] Avaliar fluidez, consumo de bateria, tamanho dos recursos e legibilidade na versão web.
 - [ ] Fazer testes com jogadores e registrar onde ficam confusos ou presos.
+- [ ] Priorizar as fases 20, 29 e 30 no teste humano das primeiras 30 fases. Na simulação com 200 partidas por fase, elas tiveram as menores taxas de vitória.
 - [ ] Corrigir falhas e ajustar a dificuldade antes da publicação.
 
 Entrega: versão candidata com fases verificadas e desempenho aceitável nos aparelhos testados.
@@ -175,6 +176,7 @@ Entrega: versão candidata com fases verificadas e desempenho aceitável nos apa
 - [ ] Criar nome final, ícone, capturas de tela e descrição coerentes com o jogo.
 - [ ] Revisar direitos de uso dos recursos artísticos, fontes, sons e bibliotecas.
 - [ ] Com a versão web pronta e testada, avaliar e integrar o Capacitor e gerar um APK de teste.
+- [ ] Integrar feedback tátil nativo no APK. No teste em Android, a versão web permaneceu sem vibração com a opção ligada. Validar em um aparelho físico o pulso leve ao encaixar e o pulso de confirmação ao formar um trio, com a opção do jogo ligada e desligada e respeitando os ajustes do sistema.
 - [ ] Verificar o aplicativo em celular físico, incluindo tela cheia, áreas seguras, salvamento, áudio, vibração, interrupções e funcionamento offline.
 - [ ] Preparar versão Android assinada, documentar a compilação e proteger a chave de assinatura.
 - [ ] Conferir os requisitos vigentes da Google Play, incluindo testes, compatibilidade, segurança de dados e políticas aplicáveis.
