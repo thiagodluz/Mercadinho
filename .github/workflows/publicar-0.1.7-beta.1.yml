@@ -1,0 +1,43 @@
+name: Publicar Mercadinho 0.1.7 beta
+on:
+  push:
+    branches: [release/publicar-0.1.7-beta.1]
+    paths: [.github/workflows/publicar-0.1.7-beta.1.yml]
+jobs:
+  publicar:
+    if: github.repository == 'thiagodluz/Mercadinho'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Reunir e verificar o APK entregue
+        run: |
+          cat release-staging/parte-0 release-staging/parte-1 release-staging/parte-2 release-staging/parte-3 release-staging/parte-4 > Mercadinho-0.1.7-beta.1.apk
+          printf '%s  %s\n' 72a46c9c3d0e4ddef113eca17708cb7331ce8e06599f53ad107a455e6ecc124c Mercadinho-0.1.7-beta.1.apk | sha256sum -c -
+          unzip -tq Mercadinho-0.1.7-beta.1.apk
+      - name: Verificar assinatura e versão Android
+        run: |
+          sdk_manager=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f -print -quit)
+          test -n "$sdk_manager"
+          "$sdk_manager" --licenses < <(yes) >/dev/null
+          "$sdk_manager" 'build-tools;35.0.0'
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Mercadinho-0.1.7-beta.1.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Mercadinho-0.1.7-beta.1.apk | head -1 > dados-apk.txt
+          grep -F "name='br.com.thiagodluz.mercadinho.beta'" dados-apk.txt
+          grep -F "versionName='0.1.7-beta.1'" dados-apk.txt
+      - name: Publicar beta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<'NOTES'
+          Versão beta de teste do Mercadinho com melhorias de tutorial, recuperação de impasses, cascatas e ajustes nas fases 20, 29 e 30. Inclui o tabuleiro experimental Prateleira Esgotada no menu Testes.
+
+          Este APK tem assinatura de teste e identificador próprio. Ele instala ao lado da versão 0.1.6 e usa progresso separado. Ainda precisa de validação em aparelho Android físico.
+
+          Consulte a [auditoria da beta](https://github.com/thiagodluz/Mercadinho/blob/5f7782bb95a6332a58eae0f72bea3bc7a0d4cf44/docs/AUDITORIA-BETA.md) para cenários de teste e informações técnicas.
+          NOTES
+          gh release create v0.1.7-beta.1 Mercadinho-0.1.7-beta.1.apk --target 5f7782bb95a6332a58eae0f72bea3bc7a0d4cf44 --prerelease --latest=false --title "Mercadinho 0.1.7 beta.1" --notes-file release-notes.md
