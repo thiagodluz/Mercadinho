@@ -81,6 +81,8 @@ A lógica do jogo fica em `index.html`, e `fases.js` contém os tabuleiros e as 
 
 Para testar a dificuldade, abra a [fase 20](https://thiagodluz.github.io/Mercadinho/?teste=20), a [fase 29](https://thiagodluz.github.io/Mercadinho/?teste=29) ou a [fase 30](https://thiagodluz.github.io/Mercadinho/?teste=30). Esses atalhos abrem partidas de teste sem alterar seu avanço na campanha.
 
+O atalho **Prateleira esgotada** no menu das fases de teste abre um tabuleiro separado. Também é possível acessá-lo acrescentando `?teste=esgotada` ao endereço do jogo. A prateleira marcada fecha quando fica vazia na frente e no fundo. Use as prateleiras abertas para completar os trios restantes.
+
 Envie seu relato a quem convidou você para jogar. Informe o aparelho, o navegador e a fase, se souber, e conte:
 
 - O que demorou para entender ou ficou confuso?
