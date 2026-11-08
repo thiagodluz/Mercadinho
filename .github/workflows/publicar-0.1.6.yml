@@ -1,0 +1,47 @@
+name: Publicar Mercadinho 0.1.6
+on:
+  push:
+    branches: [release/publicar-0.1.6]
+    paths: [.github/workflows/publicar-0.1.6.yml]
+jobs:
+  release:
+    if: github.repository == 'thiagodluz/Mercadinho'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Preparar verificador Android
+        run: |
+          sdk_manager=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f -print -quit)
+          test -n "$sdk_manager"
+          "$sdk_manager" --licenses < <(yes) >/dev/null
+          "$sdk_manager" 'build-tools;35.0.0'
+      - name: Verificar APK aprovado
+        run: |
+          apk=release-staging/Mercadinho-0.1.6.apk
+          printf '%s  %s\n' 9103d5f6e03fe99e2230c85ba656c0c5f456229f8cdc04101ac63e679760127a "$apk" | sha256sum -c -
+          verifier="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          "$verifier" verify --verbose "$apk"
+          cert=$("$verifier" verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | tr '[:lower:]' '[:upper:]')
+          test "$cert" = C86E47B3A2A07CF21E7BEB971F0168BC516CA834FA0940A070C7570E66D20869
+          unzip -tq "$apk"
+          cp "$apk" Mercadinho-0.1.6.apk
+      - name: Publicar versão de teste
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<'NOTES'
+          Versão de teste do Mercadinho para Android, assinada com o mesmo certificado das versões 0.1.3 a 0.1.5.
+
+          A prateleira ocupa mais espaço na tela, com arraste protegido nas laterais em modo imersivo. A vibração e o arraste foram confirmados em aparelho físico.
+
+          O APK pode atualizar a instalação assinada da versão 0.1.5, preservando o progresso.
+          NOTES
+          gh release create v0.1.6 Mercadinho-0.1.6.apk --target c9681374b3245d1ca28e5d55e5a7fa5459fdd687 --prerelease --latest=false --title "Mercadinho 0.1.6 — teste Android" --notes-file release-notes.md
