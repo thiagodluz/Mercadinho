@@ -65,6 +65,8 @@
     .level-badge { display: flex; align-items: center; gap: 8px; width: max-content; margin: 1px auto 0; padding: 2px 10px; border-radius: 999px; background: #fff0cb; box-shadow: inset 0 1px #fff9df, 0 3px 7px #94551f36; }
     .level-badge span { color: #b96109; font-size: .82rem; text-shadow: 0 1px #ffde86; }
     .level { padding: 3px 12px; border: 1px solid #e6bd79; border-radius: 999px; background: linear-gradient(#fff4d9, #f6d59b); font-weight: 900; font-size: .9rem; }
+    .level-badge .cascade-note { padding: 3px 7px; border-radius: 999px; background: #567339; color: #fff8e2; font-size: .72rem; font-weight: 850; text-shadow: none; white-space: nowrap; animation: cascade-in .24s ease-out; }
+    @keyframes cascade-in { from { opacity: 0; transform: scale(.88); } }
     .pause-control {
       position: absolute; top: 14px; right: 0; display: grid; place-items: center;
       width: 44px; height: 44px; border: 3px solid #fff2ce; border-radius: 42%; color: #fff7dd;
@@ -104,6 +106,10 @@
       padding: var(--crown) calc(var(--post) / 2) var(--rail);
     }
     .shelf-row + .shelf-row { margin-top: -3px; }
+    .board .extra-row { grid-column: 1 / -1; margin-top: 10px; }
+    .board:not(.board-campaign):not(.board-dense) .extra-row { width: 50%; }
+    .board-shaped .extra-row .shelf { grid-column: 1; }
+    .extra-label { position: absolute; top: 2px; left: 5px; z-index: 2; padding: 1px 4px; border-radius: 5px; background: #e7edbf; color: #3a5225; font-size: .62rem; font-weight: 900; pointer-events: none; }
     .shelf {
       position: relative; min-width: 0; height: clamp(84px, 25vw, 120px);
     }
@@ -253,11 +259,12 @@
     .message { min-height: 2.6em; text-align: center; color: #70563a; font-size: .86rem; margin: 17px 0 0; }
     .turn-status { width: 100%; }
     .turn-status.stalled {
-      display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 9px 10px 11px;
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; padding: 9px 10px 11px;
       border: 1px solid #b7773a; border-radius: 12px; background: #fff3da;
     }
-    .turn-status.stalled .message { flex: 1; min-height: 0; margin: 0; color: #694222; text-align: left; line-height: 1.35; }
-    .recover-undo { flex: 0 0 auto; min-height: 44px; background: #537135; box-shadow: 0 3px #3c5326; font-size: .85rem; }
+    .turn-status.stalled .message { flex: 0 0 100%; min-height: 0; margin: 0; color: #694222; line-height: 1.35; }
+    .recover-undo, .recover-shelf { min-height: 44px; font-size: .85rem; }
+    .recover-undo { background: #537135; box-shadow: 0 3px #3c5326; }
     .board-stage {
       position: relative; isolation: isolate;
       margin-inline: calc(2px - var(--side-space));
@@ -304,11 +311,11 @@
     @media (max-height: 650px) { .instructions { margin: 7px auto; } .shelf { height: clamp(83px, 24vw, 110px); } }
     .reduce-motion .matching .front-row::before, .reduce-motion .slot.landed::before,
     .reduce-motion :is(.slot.landed .item, .matching .item, .revealed .item,
-      .unlocking .lock-overlay, .unlocking .chain-art, .win-card) { animation-duration: .01ms; }
+      .unlocking .lock-overlay, .unlocking .chain-art, .win-card, .cascade-note) { animation-duration: .01ms; }
     @media (prefers-reduced-motion: reduce) {
       .matching .front-row::before, .slot.landed::before,
       :is(.slot.landed .item, .matching .item, .revealed .item,
-        .unlocking .lock-overlay, .unlocking .chain-art, .win-card) { animation-duration: .01ms; }
+        .unlocking .lock-overlay, .unlocking .chain-art, .win-card, .cascade-note) { animation-duration: .01ms; }
     }
   </style>
 </head>
@@ -322,7 +329,7 @@
     <div class="shop-stage">
       <header>
         <h1 class="sign"><img src="assets/detalhes/placa.webp" alt="Mercadinho" width="650" height="279"></h1>
-        <div class="level-badge"><span aria-hidden="true">★ ★</span><div id="level" class="level">Fase 1</div><span aria-hidden="true">★ ★</span></div>
+        <div class="level-badge"><span aria-hidden="true">★ ★</span><div id="level" class="level">Fase 1</div><span aria-hidden="true">★ ★</span><span id="cascade-note" class="cascade-note" role="status" hidden></span></div>
         <button id="pause" class="pause-control" type="button" aria-label="Pausar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="4" y="3" width="6" height="18" rx="2"/><rect x="14" y="3" width="6" height="18" rx="2"/></svg></button>
         <p id="instructions" class="instructions" aria-live="polite">Arraste os produtos e junte três iguais na mesma prateleira.</p>
       </header>
@@ -344,6 +351,7 @@
     <div id="turn-status" class="turn-status">
       <p id="message" class="message" role="status">A fileira de trás avança quando você esvazia toda a frente.</p>
       <button id="recover-undo" class="control recover-undo" type="button" hidden>Desfazer</button>
+      <button id="recover-shelf" class="control secondary recover-shelf" type="button" hidden>Prateleira extra</button>
     </div>
     <nav id="playtest" class="playtest" aria-label="Fases de teste" hidden>
       <p>Partida de teste separada da campanha.</p>
@@ -539,6 +547,7 @@
       const resumeButton = document.getElementById('resume');
       const undo = document.getElementById('undo');
       const recoverUndo = document.getElementById('recover-undo');
+      const recoverShelf = document.getElementById('recover-shelf');
       const turnStatus = document.getElementById('turn-status');
       const hintButton = document.getElementById('hint');
       const restart = document.getElementById('restart');
@@ -548,6 +557,7 @@
       const winTitle = document.getElementById('win-title');
       const winMessage = document.getElementById('win-message');
       const levelLabel = document.getElementById('level');
+      const cascadeNote = document.getElementById('cascade-note');
       const instructions = document.getElementById('instructions');
       const copy = value => JSON.parse(JSON.stringify(value));
       const search = globalThis.location?.search;
@@ -638,13 +648,15 @@
       let selected = null;
       let pointer = null;
       let completed = false;
+      const extraShelf = { type: 'extra', front: [null, null, null], back: [] };
       // Salva a jogada antes da animação e registra quando ela termina.
       const saveKey = 'mercadinho-partida-v1';
       function validSnapshot(value, level) {
-        if (!Array.isArray(value) || value.length !== level.shelves.length) return false;
+        const count = level.shelves.length;
+        if (!Array.isArray(value) || value.length < count || value.length > count + 1) return false;
         const validRow = row => Array.isArray(row) && row.length === 3 && row.every(item => item === null || Object.hasOwn(products, item));
         return value.every((shelf, i) => {
-          const original = level.shelves[i];
+          const original = level.shelves[i] || extraShelf;
           if (!shelf || shelf.type !== original.type || !validRow(shelf.front) || !Array.isArray(shelf.back) || shelf.back.length > original.back.length || !shelf.back.every(validRow)) return false;
           if (original.type === 'dispenser') {
             if (!Array.isArray(shelf.queue) || shelf.queue.length > original.queue.length || !shelf.queue.every(item => Object.hasOwn(products, item)) || shelf.front[0] !== null || shelf.front[2] !== null) return false;
@@ -661,7 +673,9 @@
         try {
           const saved = JSON.parse(localStorage.getItem(saveKey) || 'null');
           const sameCampaign = currentLevel < levels.length || saved?.generator === campaignVersion;
-          if (saved && saved.version === 1 && saved.level === currentLevel && sameCampaign && validSnapshot(saved.shelves, levelDefinition) && Array.isArray(saved.history) && saved.history.length <= 100 && saved.history.every(state => validSnapshot(state, levelDefinition))) {
+          if (saved && saved.version === 1 && saved.level === currentLevel && sameCampaign &&
+            validSnapshot(saved.shelves, levelDefinition) && Array.isArray(saved.history) && saved.history.length <= 100 &&
+            saved.history.every(state => validSnapshot(state, levelDefinition) && state.length === saved.shelves.length)) {
             shelves = saved.shelves;
             history = saved.history;
             restored = true;
@@ -680,6 +694,7 @@
       let hintPlan = [];
       let hintSearching = false;
       let hintRequest = 0;
+      let recoveryStatus = null;
       let paused = false;
       let animating = false;
       let advanceTimer = null;
@@ -978,6 +993,7 @@
       function render(matching = [], revealed = [], unlocking = [], landing = null) {
         // Mudar um produto de vaga na mesma prateleira não abre caminho para um trio.
         const stalled = !animating && !completed && possibleMoves(shelves).length === 0;
+        const hasExtraShelf = shelves.length > levelDefinition.shelves.length;
         const cue = !animating && !completed && !stalled && !hintSearching && !currentHint ? tutorialCue() : null;
         const highlight = currentHint || (cue?.from ? cue : null);
         function highlightClass(shelf, slot) {
@@ -987,10 +1003,16 @@
         }
         turnStatus.classList.toggle('stalled', stalled);
         recoverUndo.hidden = !stalled || !history.length;
+        recoverShelf.hidden = !stalled || hasExtraShelf;
+        recoverShelf.disabled = recoveryStatus !== null;
         if (stalled) {
-          const warning = history.length
-            ? 'Sem movimentos disponíveis. Desfaça a última jogada ou reinicie a fase.'
-            : 'Sem movimentos disponíveis. Reinicie a fase.';
+          const recoveryAdvice = history.length ? 'Desfaça a última jogada ou reinicie a fase.' : 'Reinicie a fase.';
+          const warnings = {
+            checking: 'Procurando uma solução com as três vagas extras…',
+            'dead-end': `As três vagas extras ainda não resolvem esta posição. ${recoveryAdvice}`,
+            limit: `A busca atingiu o limite ao verificar as vagas extras. ${recoveryAdvice}`
+          };
+          const warning = warnings[recoveryStatus] || `Sem movimentos disponíveis. ${recoveryAdvice}`;
           if (message.textContent !== warning) message.textContent = warning;
         }
         const rows = levelDefinition.layout;
@@ -1017,6 +1039,8 @@
             </div></div>`;
           }
           const behind = shelf.back[0] || [null, null, null];
+          const shelfName = shelf.type === 'extra' ? 'Prateleira extra' : `Prateleira ${shelfIndex + 1}`;
+          const extraLabel = shelf.type === 'extra' ? '<span class="extra-label" aria-hidden="true">Extra</span>' : '';
           const extra = shelf.back.length - 1;
           const layers = extra > 0 ? `<span class="back-count" role="img" aria-label="Prateleira ${shelfIndex + 1}, ${extra} ${extra === 1 ? 'fileira adicional' : 'fileiras adicionais'} no fundo">+${extra}</span>` : '';
           const locked = shelf.lock && shelf.lock.remaining > 0;
@@ -1025,7 +1049,7 @@
             const active = selected && selected.shelf === shelfIndex && selected.slot === slotIndex;
             const landed = landing?.shelf === shelfIndex && landing.slot === slotIndex;
             const label = item ? products[item].name : 'Vaga livre';
-            return `<button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''} ${landed ? 'landed' : ''} ${highlightClass(shelfIndex, slotIndex)}" data-shelf="${shelfIndex}" data-slot="${slotIndex}" aria-label="Prateleira ${shelfIndex + 1}, posição ${slotIndex + 1}: ${label}" ${completed || locked ? 'disabled' : ''}>${itemMarkup(item)}</button>`;
+            return `<button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''} ${landed ? 'landed' : ''} ${highlightClass(shelfIndex, slotIndex)}" data-shelf="${shelfIndex}" data-slot="${slotIndex}" aria-label="${shelfName}, posição ${slotIndex + 1}: ${label}" ${completed || locked ? 'disabled' : ''}>${itemMarkup(item)}</button>`;
           }).join('');
           const opening = unlocking.includes(shelfIndex);
           const effect = [matching.includes(shelfIndex) && 'matching', revealed.includes(shelfIndex) && 'revealed', opening && 'unlocking'].filter(Boolean).join(' ');
@@ -1039,14 +1063,17 @@
               <text class="lock-number" x="180" y="171" dominant-baseline="central">${locked ? shelf.lock.remaining : ''}</text>
             </svg>
             ${locked ? `<span class="lock-caption">${lockStatus}</span>` : ''}</div>` : '';
-          return `<div class="shelf ${effect}"><div class="shelf-interior"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}${layers}</div></div>`;
+          return `<div class="shelf ${effect}"><div class="shelf-interior"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}${layers}${extraLabel}</div></div>`;
         });
+        const extraRow = hasExtraShelf
+          ? `<div class="shelf-row extra-row" style="--shelf-count:1">${compartments.pop()}</div>` : '';
         let rowStart = 0;
-        board.innerHTML = rows ? rows.map(count => {
+        const mainRows = rows ? rows.map(count => {
           const row = compartments.slice(rowStart, rowStart + count).join('');
           rowStart += count;
           return `<div class="shelf-row" style="--shelf-count:${count}">${row}</div>`;
         }).join('') : compartments.join('');
+        board.innerHTML = mainRows + extraRow;
         hintButton.disabled = animating || completed || hintSearching || stalled;
         pauseButton.disabled = animating || completed;
         undo.disabled = animating || history.length === 0;
@@ -1215,6 +1242,7 @@
         hintRequest++;
         hintSearching = false;
         currentHint = null;
+        recoveryStatus = null;
       }
       function initialHintPath() {
         if (history.length || !levelDefinition.solution) return [];
@@ -1247,8 +1275,8 @@
         currentHint = hintPlan[0] || null;
         if (currentHint) {
           const item = shelves[currentHint.from.shelf].front[currentHint.from.slot];
-          const origin = shelves[currentHint.from.shelf].type === 'dispenser' ? 'caixa de produtos' : `prateleira ${currentHint.from.shelf + 1}, posição ${currentHint.from.slot + 1}`;
-          message.textContent = `Mova ${products[item].name} da ${origin} para a prateleira ${currentHint.to.shelf + 1}, posição ${currentHint.to.slot + 1}.`;
+          const origin = shelves[currentHint.from.shelf].type === 'dispenser' ? 'caixa de produtos' : describePosition(currentHint.from);
+          message.textContent = `Mova ${products[item].name} da ${origin} para a ${describePosition(currentHint.to)}.`;
         } else if (result.status === 'dead-end') {
           message.textContent = history.length
             ? 'Esta posição ficou sem solução. Desfaça uma jogada ou reinicie a fase.'
@@ -1259,15 +1287,50 @@
         render();
       });
 
+      function describePosition({ shelf, slot }) {
+        const name = shelves[shelf].type === 'extra' ? 'prateleira extra' : `prateleira ${shelf + 1}`;
+        return `${name}, posição ${slot + 1}`;
+      }
+
+      recoverShelf.addEventListener('click', async () => {
+        if (recoverShelf.hidden || recoverShelf.disabled || paused) return;
+        const expanded = [...shelves, copy(extraShelf)];
+        const request = ++hintRequest;
+        recoveryStatus = 'checking';
+        render();
+        const result = await findSolutionHint(expanded, request);
+        if (request !== hintRequest) return;
+        if (result.status !== 'solved') {
+          recoveryStatus = result.status;
+          render();
+          return;
+        }
+        const path = await shortenHintPath(expanded, result.path, request);
+        if (request !== hintRequest) return;
+
+        recoveryStatus = null;
+        shelves = expanded;
+        // A prateleira dura a tentativa inteira, inclusive ao desfazer lances anteriores.
+        for (const state of history) state.push(copy(extraShelf));
+        hintPlan = path;
+        selected = null;
+        message.textContent = 'Prateleira extra liberada. Use Dica se quiser ver a próxima jogada.';
+        saveGame();
+        render();
+        board.querySelector(`[data-shelf="${shelves.length - 1}"][data-slot="0"]`)?.focus();
+      });
+
       function pause(milliseconds) {
         return new Promise(resolve => setTimeout(resolve, (reduceMotion.matches || userReducedMotion) ? 0 : milliseconds));
       }
 
       async function settle(landing = null) {
+        let trios = 0;
         while (true) {
           const matching = matchingShelves(shelves);
           const unlocking = [];
           if (matching.length) {
+            trios += matching.length;
             landing = null;
             render(matching);
             playEffect('match');
@@ -1303,6 +1366,8 @@
           try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
         }
         if (completed) playEffect('win');
+        cascadeNote.hidden = trios < 2;
+        cascadeNote.textContent = trios > 1 ? `Cascata ×${trios}` : '';
         animating = false;
         saveGame();
         message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : 'Continue organizando os produtos.';
@@ -1329,6 +1394,7 @@
           else hintPlan = [];
         }
         cancelHint();
+        cascadeNote.hidden = true;
         history.push(copy(shelves));
         placeProduct(shelves, from, to);
         // Persiste a jogada antes das animações para poder terminá-la após reabrir.
@@ -1423,6 +1489,7 @@
         if (!history.length || animating || paused) return;
         hintPlan = [];
         cancelHint();
+        cascadeNote.hidden = true;
         clearTimeout(advanceTimer);
         advanceTimer = null;
         if (!testMode && completed && unlocked === currentLevel + 1) {
@@ -1447,6 +1514,7 @@
         if (!canLoadLevel(index)) return;
         hintPlan = [];
         cancelHint();
+        cascadeNote.hidden = true;
         clearTimeout(advanceTimer);
         advanceTimer = null;
         currentLevel = index;

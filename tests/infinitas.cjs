@@ -101,8 +101,64 @@ async function checkTutorialCues() {
   assert.doesNotMatch(box.element('instructions').textContent, /Resta uma vaga/);
 }
 
+async function checkCascade() {
+  const game = setup(5);
+  const before = JSON.stringify(game.state().shelves);
+  const badge = game.element('cascade-note');
+  await play(game, [{ from: { shelf: 3, slot: 1 }, to: { shelf: 0, slot: 2 } }], 'trio que revela outro trio');
+  assert.equal(badge.hidden, false);
+  assert.equal(badge.textContent, 'Cascata ×2');
+  assert.equal(game.state().history.length, 1);
+  assert.equal(game.state().shelves[4].lock.remaining, 0);
+  game.element('undo').handlers.click();
+  assert.equal(badge.hidden, true);
+  assert.equal(JSON.stringify(game.state().shelves), before);
+}
+
+async function checkExtraShelf() {
+  const storage = { 'mercadinho-unlocked': '28', 'mercadinho-layout-seed': '12345' };
+  const game = setup(28, 12345, storage);
+  const take = (shelf, slot) => ({ from: { shelf: 3, slot: 1 }, to: { shelf, slot } });
+  assert.equal(game.element('recover-shelf').hidden, true);
+  await play(game, [take(2, 2)], 'primeira retirada da fase 29');
+  const beforeStall = JSON.stringify(game.state().shelves);
+  await play(game, [take(4, 1)], 'segunda retirada da fase 29');
+  const stalled = JSON.stringify(game.state().shelves);
+  assert.equal(game.element('recover-shelf').hidden, false);
+  await game.element('recover-shelf').handlers.click();
+  assert.equal(game.element('recover-shelf').hidden, true);
+  assert.match(game.element('board').innerHTML, /Prateleira extra, posição 3: Vaga livre/);
+  assert.equal(JSON.stringify(game.state().shelves.slice(0, -1)), stalled);
+  assert.equal(game.state().shelves.at(-1).type, 'extra');
+  assert.equal(game.state().history.length, 2);
+
+  const resumed = setup(28, 12345, storage);
+  assert.equal(JSON.stringify(resumed.state().shelves), JSON.stringify(game.state().shelves));
+  await resumed.element('hint').handlers.click();
+  assert.match(resumed.element('message').textContent, /prateleira extra/);
+  const solution = resumed.hintPath().slice();
+  assert(solution.length);
+  await play(resumed, solution, 'fase 29 recuperada com a prateleira extra');
+  assert.equal(resumed.state().completed, true);
+
+  game.element('undo').handlers.click();
+  assert.equal(JSON.stringify(game.state().shelves.slice(0, -1)), beforeStall);
+  assert.equal(game.state().shelves.at(-1).type, 'extra');
+  game.element('restart').handlers.click();
+  assert.equal(game.state().shelves.some(shelf => shelf.type === 'extra'), false);
+
+  const blocked = setup(2);
+  blocked.setBoard([{ front: ['tea', 'tea', 'tea'], back: [], lock: { remaining: 1, order: 0 } }]);
+  const impossible = JSON.stringify(blocked.state().shelves);
+  await blocked.element('recover-shelf').handlers.click();
+  assert.match(blocked.element('message').textContent, /ainda não resolvem/);
+  assert.equal(JSON.stringify(blocked.state().shelves), impossible);
+}
+
 async function main() {
   await checkTutorialCues();
+  await checkCascade();
+  await checkExtraShelf();
   const saveKey = 'mercadinho-partida-v1';
   const storage = { 'mercadinho-unlocked': '7', 'mercadinho-layout-seed': '12345' };
   const game = setup(7, 12345, storage);
@@ -221,7 +277,9 @@ async function main() {
     const beforeLastMove = JSON.stringify(trial.state().shelves);
     await play(trial, path.slice(1), `segunda retirada da fase ${level}`);
     assert.equal(trial.element('recover-undo').hidden, false);
+    const recovery = trial.element('recover-shelf').handlers.click();
     trial.element('recover-undo').handlers.click();
+    await recovery;
     assert.equal(JSON.stringify(trial.state().shelves), beforeLastMove);
     assert.equal(trial.element('recover-undo').hidden, true);
   }
