@@ -238,6 +238,9 @@
     .win h2 { margin: 0 0 4px; font-size: 1.3rem; }
     .win p { margin: 0; }
     .win .control { margin-top: 12px; padding-inline: 22px; }
+    .playtest { width: 100%; text-align: center; color: #705238; font-size: .82rem; }
+    .playtest p { margin: 0 0 5px; }
+    .playtest a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: #693e1e; font-weight: 800; }
     .settings { width: 100%; margin-top: 14px; border: 1px solid #e2cba8; border-radius: 12px; background: #fff8eb; color: #705238; }
     .settings summary { padding: 11px 14px; cursor: pointer; font-weight: 800; }
     .settings-content { display: grid; gap: 12px; padding: 0 14px 15px; }
@@ -281,7 +284,14 @@
     </div>
     <p id="message" class="message" aria-live="polite">Os produtos escuros estão na fileira de trás.</p>
     <section id="win" class="win" hidden aria-live="polite"><h2>Prateleiras organizadas!</h2><p id="win-message"></p></section>
-    <details class="settings">
+    <nav id="playtest" class="playtest" aria-label="Fases de teste" hidden>
+      <p>Partida de teste separada da campanha.</p>
+      <a href="?teste=20">Fase 20</a>
+      <a href="?teste=29">Fase 29</a>
+      <a href="?teste=30">Fase 30</a>
+      <a href="index.html">Voltar à campanha</a>
+    </nav>
+    <details id="progress" class="settings">
       <summary>Progresso</summary>
       <div class="settings-content">
         <p class="setting-note">Para jogar desde o começo, reinicie o progresso das fases.</p>
@@ -462,22 +472,30 @@
       const levelLabel = document.getElementById('level');
       const instructions = document.getElementById('instructions');
       const copy = value => JSON.parse(JSON.stringify(value));
-      let unlocked = 0;
-      try {
-        const saved = Number(localStorage.getItem('mercadinho-unlocked'));
-        if (Number.isSafeInteger(saved) && saved >= 0 && saved < Number.MAX_SAFE_INTEGER) unlocked = saved;
-      } catch {}
+      const search = globalThis.location?.search;
+      const requestedTest = search ? new URLSearchParams(search).get('teste') : null;
+      const testMode = ['20', '29', '30'].includes(requestedTest);
+      let unlocked = testMode ? Number(requestedTest) - 1 : 0;
       // A semente mantém o formato da fase ao reiniciar ou reabrir o jogo.
-      let layoutSeed;
-      try {
-        const savedSeed = localStorage.getItem('mercadinho-layout-seed');
-        if (savedSeed !== null && /^\d+$/.test(savedSeed) && Number(savedSeed) <= 4294967295) {
-          layoutSeed = Number(savedSeed);
-        } else {
-          layoutSeed = Math.floor(Math.random() * 4294967296);
-          localStorage.setItem('mercadinho-layout-seed', String(layoutSeed));
-        }
-      } catch { layoutSeed = Math.floor(Math.random() * 4294967296); }
+      let layoutSeed = 0;
+      if (testMode) {
+        document.getElementById('playtest').hidden = false;
+        document.getElementById('progress').hidden = true;
+      } else {
+        try {
+          const saved = Number(localStorage.getItem('mercadinho-unlocked'));
+          if (Number.isSafeInteger(saved) && saved >= 0 && saved < Number.MAX_SAFE_INTEGER) unlocked = saved;
+        } catch {}
+        try {
+          const savedSeed = localStorage.getItem('mercadinho-layout-seed');
+          if (savedSeed !== null && /^\d+$/.test(savedSeed) && Number(savedSeed) <= 4294967295) {
+            layoutSeed = Number(savedSeed);
+          } else {
+            layoutSeed = Math.floor(Math.random() * 4294967296);
+            localStorage.setItem('mercadinho-layout-seed', String(layoutSeed));
+          }
+        } catch { layoutSeed = Math.floor(Math.random() * 4294967296); }
+      }
       const campaign = globalThis.mercadinhoCampanha || [];
       const campaignVersion = 4;
       function canLoadLevel(index) {
@@ -561,7 +579,7 @@
       }
       let restored = false;
       let resumePending = false;
-      if (!completed) {
+      if (!testMode) {
         try {
           const saved = JSON.parse(localStorage.getItem(saveKey) || 'null');
           const sameCampaign = currentLevel < levels.length || saved?.generator === campaignVersion;
@@ -574,6 +592,7 @@
         } catch {}
       }
       function saveGame(pending = false) {
+        if (testMode) return;
         try {
           if (completed) localStorage.removeItem(saveKey);
           else localStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: campaignVersion, level: currentLevel, shelves, history: history.slice(-100), pending }));
@@ -867,9 +886,11 @@
         resetProgress.disabled = animating;
         board.setAttribute('aria-busy', String(animating));
         win.hidden = !completed;
-        levelLabel.textContent = `Fase ${currentLevel + 1}`;
+        levelLabel.textContent = `Fase ${currentLevel + 1}${testMode ? ' · Teste' : ''}`;
         instructions.textContent = levelDefinition.instructions;
-        winMessage.textContent = `Você concluiu a fase ${currentLevel + 1}. A próxima fase já vai começar! ✨`;
+        winMessage.textContent = testMode
+          ? `Você concluiu a fase ${currentLevel + 1}. Use Reiniciar para tentar de novo ou escolha outra fase de teste.`
+          : `Você concluiu a fase ${currentLevel + 1}. A próxima fase já vai começar! ✨`;
       }
 
       function placeProduct(state, from, to) {
@@ -1103,7 +1124,7 @@
           if (!matching.length && !revealed.length) break;
         }
         completed = isSolved(shelves);
-        if (completed) {
+        if (completed && !testMode) {
           unlocked = Math.max(unlocked, currentLevel + 1);
           try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
         }
@@ -1112,7 +1133,7 @@
         saveGame();
         message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : 'Continue organizando os produtos.';
         render([], [], [], landing);
-        if (completed) {
+        if (completed && !testMode) {
           const finishedLevel = currentLevel;
           advanceTimer = setTimeout(() => {
             advanceTimer = null;
@@ -1230,7 +1251,7 @@
         cancelHint();
         clearTimeout(advanceTimer);
         advanceTimer = null;
-        if (completed && unlocked === currentLevel + 1) {
+        if (!testMode && completed && unlocked === currentLevel + 1) {
           unlocked = currentLevel;
           try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
         }
@@ -1264,7 +1285,7 @@
         openLevel(currentLevel);
       });
       resetProgress.addEventListener('click', () => {
-        if (animating || !confirm('Recomeçar da fase 1? O avanço das fases será apagado neste navegador.')) return;
+        if (testMode || animating || !confirm('Recomeçar da fase 1? O avanço das fases será apagado neste navegador.')) return;
         try {
           localStorage.setItem('mercadinho-unlocked', '0');
         } catch {

@@ -25,7 +25,7 @@ const source = script.replace(marker, `
       };
 ${marker}`);
 
-function setup(index, seed = 12345, shared, campaign = true) {
+function setup(index, seed = 12345, shared, campaign = true, search = '') {
   const elements = new Map();
   function element(id) {
     if (!elements.has(id)) elements.set(id, {
@@ -39,6 +39,8 @@ function setup(index, seed = 12345, shared, campaign = true) {
   const context = vm.createContext({
     document: { documentElement: element('html'), getElementById: element, addEventListener() {} },
     window: { matchMedia: () => ({ matches: true }) },
+    location: { search },
+    URLSearchParams,
     navigator: {},
     confirm: () => true,
     localStorage: {
@@ -58,7 +60,7 @@ function setup(index, seed = 12345, shared, campaign = true) {
   });
   if (campaign) vm.runInContext(campaignScript, context);
   vm.runInContext(source, context);
-  return { ...context.testGame, element, advance: () => advance() };
+  return { ...context.testGame, element, advance: () => advance(), canAdvance: () => Boolean(advance) };
 }
 
 async function play(game, path, label) {
@@ -160,6 +162,29 @@ async function main() {
   await play(endless, endless.initialHintPath(), 'fase 209');
   assert(endless.state().completed);
   console.log('Transições das fases 8 e 208, reinício de tabuleiros antigos, retomada, dicas e impasses verificados.');
+
+  const testStorage = { 'mercadinho-unlocked': '19', 'mercadinho-layout-seed': '12345' };
+  const normal = setup(19, 12345, testStorage);
+  await play(normal, normal.initialHintPath().slice(0, 1), 'campanha antes do teste');
+  const normalBoard = JSON.stringify(normal.state().shelves);
+  const originalStorage = { ...testStorage };
+  for (const number of [20, 29, 30]) {
+    const trial = setup(19, 12345, testStorage, true, `?teste=${number}`);
+    assert.equal(trial.state().currentLevel, number - 1);
+    assert.equal(trial.state().history.length, 0);
+    assert.equal(JSON.stringify(trial.state().shelves), JSON.stringify(trial.level(number - 1).shelves));
+    await play(trial, trial.initialHintPath(), `teste da fase ${number}`);
+    assert(trial.state().completed);
+    assert(!trial.canAdvance());
+    trial.element('restart').handlers.click();
+    assert.equal(trial.state().currentLevel, number - 1);
+    assert(!trial.state().completed);
+    trial.element('reset-progress').handlers.click();
+    assert.deepEqual(testStorage, originalStorage);
+  }
+  const resumedCampaign = setup(19, 12345, testStorage, true, '?teste=999');
+  assert.equal(JSON.stringify(resumedCampaign.state().shelves), normalBoard);
+  console.log('Fases de teste abertas, concluídas e reiniciadas sem alterar o progresso salvo.');
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1; });
