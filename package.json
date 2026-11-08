@@ -1,6 +1,6 @@
 {
   "name": "mercadinho",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "test": "node tests/run.cjs",
@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.2",
     "@capacitor/core": "8.6.0"
   },
   "devDependencies": {

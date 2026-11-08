@@ -76,6 +76,7 @@
     .pause-dialog h2 { margin: 0 0 8px; }
     .pause-dialog p { margin: 0 0 18px; }
     .pause-dialog .control { width: 100%; }
+    .pause-dialog .control + .control { margin-top: 10px; }
     .instructions { margin: 9px auto 10px; max-width: 340px; font-size: .86rem; line-height: 1.4; color: #6e482b; text-shadow: 0 1px 3px #fff2ce; }
     .board {
       --crown: clamp(6px, 1.9vw, 10px);
@@ -352,6 +353,7 @@
       <h2 id="pause-title">Jogo pausado</h2>
       <p>Suas prateleiras estão esperando por você.</p>
       <button id="resume" class="control" type="button">Continuar jogando</button>
+      <button id="exit-app" class="control secondary" type="button" hidden>Sair do jogo</button>
     </dialog>
   </main>
   <script src="fases.js"></script>
@@ -787,7 +789,7 @@
         updateAudioControls();
         vibrate('preview');
       });
-      pauseButton.addEventListener('click', () => {
+      function openPause() {
         if (paused || animating || completed) return;
         if (hintSearching) message.textContent = levelDefinition.hint;
         cancelHint();
@@ -797,7 +799,18 @@
         stopMusic();
         if (audioContext && audioContext.state === 'running') audioContext.suspend().catch(() => {});
         resumeButton.focus();
-      });
+      }
+      pauseButton.addEventListener('click', openPause);
+      const exitApp = globalThis.mercadinhoExit;
+      if (exitApp) {
+        const exitButton = document.getElementById('exit-app');
+        exitButton.hidden = false;
+        exitButton.addEventListener('click', () => exitApp().catch(console.error));
+        document.addEventListener('mercadinho-android-back', () => {
+          if (paused) pauseDialog.close();
+          else openPause();
+        });
+      }
       resumeButton.addEventListener('click', () => pauseDialog.close());
       pauseDialog.addEventListener('close', () => {
         paused = false;

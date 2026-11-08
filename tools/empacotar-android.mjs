@@ -11,12 +11,12 @@ const gameScripts = '<script src="fases.js"></script>';
 if (!index.includes(gameScripts)) throw new Error('Ponto de entrada das fases não encontrado.');
 
 await Promise.all([
-  writeFile(source('www/index.html'), index.replace(gameScripts, '<script src="android-haptics.js"></script>\n  ' + gameScripts)),
+  writeFile(source('www/index.html'), index.replace(gameScripts, '<script src="android-bridge.js"></script>\n  ' + gameScripts)),
   cp(source('fases.js'), source('www/fases.js')),
   cp(source('assets/'), source('www/assets/'), { recursive: true }),
   build({
-    entryPoints: [fileURLToPath(source('tools/android-haptics.mjs'))],
-    outfile: fileURLToPath(source('www/android-haptics.js')),
+    entryPoints: [fileURLToPath(source('tools/android-bridge.mjs'))],
+    outfile: fileURLToPath(source('www/android-bridge.js')),
     bundle: true,
     minify: true,
     format: 'iife',
