@@ -39,7 +39,13 @@ npm run android:beta
 
 A suíte verificou as oito fases iniciais, 200 tabuleiros gerados, 43 formatos, retomada, continuidade após a fase 208 e as novas mecânicas. O modo de dificuldade é uma simulação. A aprovação da beta web foi registrada pelo jogador antes do empacotamento Android.
 
-O último comando requer Node.js 22+, JDK 21 e SDK Android com a plataforma 36 e Build Tools 36.0.0. O APK fica em `android/app/build/outputs/apk/beta/app-beta.apk`. A variante usa o identificador `br.com.thiagodluz.mercadinho.beta`, código 8 e uma assinatura de teste. Instala ao lado da 0.1.6 com progresso próprio. O conteúdo jogável é a página versionada em `beta/index.html` acrescida da ponte nativa do Capacitor para vibração, arraste e ciclo do aplicativo.
+O último comando requer Node.js 22+, JDK 21 e SDK Android com a plataforma 36, Platform-Tools e Build Tools 35.0.0 e 36.0.0. Instale os componentes e aceite as licenças pelo SDK Manager antes de compilar. O APK fica em `android/app/build/outputs/apk/beta/app-beta.apk`. A variante usa o identificador `br.com.thiagodluz.mercadinho.beta`, código 8 e uma assinatura de teste. Instala ao lado da 0.1.6 com progresso próprio. O conteúdo jogável é a página versionada em `beta/index.html` acrescida da ponte nativa do Capacitor para vibração, arraste e ciclo do aplicativo.
+
+A compilação passou no lint do Android. O APK entregue teve a assinatura v2 e a integridade verificadas. Os testes sobre o HTML extraído confirmaram os atalhos, a cascata, o impasse e a recuperação. SHA-256 do arquivo entregue `Mercadinho-0.1.7-beta.1.apk`
+
+```text
+72a46c9c3d0e4ddef113eca17708cb7331ce8e06599f53ad107a455e6ecc124c
+```
 
 Para atualizar o HTML autônomo depois de editar o jogo ou as fases, execute `python3 tools/empacotar-beta-web.py` e revise também o diff de `beta/index.html`.
 
