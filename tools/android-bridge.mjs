@@ -7,8 +7,24 @@ if (Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('Mercad
 }
 
 if (Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('App')) {
-  App.addListener('backButton', () => {
-    document.dispatchEvent(new Event('mercadinho-android-back'));
-  }).catch(console.error);
   globalThis.mercadinhoExit = () => App.exitApp();
+}
+
+if (Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('MercadinhoGestures')) {
+  const root = document.documentElement;
+  const gestures = registerPlugin('MercadinhoGestures');
+  root.classList.add('android-game');
+
+  async function updateGestureInsets() {
+    const { left, right } = await gestures.readInsets();
+    if (Number.isFinite(left) && Number.isFinite(right)) {
+      root.style.setProperty('--android-gesture-left', `${left}px`);
+      root.style.setProperty('--android-gesture-right', `${right}px`);
+    }
+  }
+
+  const refreshInsets = () => updateGestureInsets().catch(console.error);
+  refreshInsets();
+  window.addEventListener('resize', refreshInsets);
+  App.addListener('resume', refreshInsets).catch(console.error);
 }
