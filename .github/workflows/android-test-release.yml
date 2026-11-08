@@ -26,8 +26,10 @@ jobs:
           java-version: '21'
       - name: Preparar o Android SDK
         run: |
-          sdkmanager --licenses < <(yes) >/dev/null
-          sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
+          sdk_manager=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f -print -quit)
+          test -n "$sdk_manager"
+          "$sdk_manager" --licenses < <(yes) >/dev/null
+          "$sdk_manager" 'platforms;android-36' 'build-tools;35.0.0'
       - name: Testar e compilar
         run: |
           npm ci
