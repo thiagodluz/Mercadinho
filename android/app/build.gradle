@@ -7,8 +7,8 @@ android {
         applicationId "br.com.thiagodluz.mercadinho"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 7
-        versionName "0.1.6"
+        versionCode 8
+        versionName "0.1.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -29,6 +29,13 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix ".arraste"
+        }
+        beta {
+            initWith debug
+            applicationIdSuffix ".beta"
+            versionNameSuffix "-beta.1"
+            debuggable false
+            matchingFallbacks = ['debug']
         }
         release {
             signingConfig signingConfigs.release

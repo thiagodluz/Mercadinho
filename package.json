@@ -1,11 +1,12 @@
 {
   "name": "mercadinho",
-  "version": "0.1.6",
+  "version": "0.1.7-beta.1",
   "private": true,
   "scripts": {
     "test": "node tests/run.cjs",
     "android:sync": "node tools/empacotar-android.mjs && cap sync android",
-    "android:debug": "npm run android:sync && cd android && ./gradlew assembleDebug"
+    "android:debug": "npm run android:sync && cd android && ./gradlew assembleDebug",
+    "android:beta": "node tools/empacotar-android.mjs --beta && cap sync android && cd android && ./gradlew assembleBeta"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

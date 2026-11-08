@@ -6,7 +6,7 @@
   <img src="assets/mockup.jpg" alt="Mockup visual do jogo Mercadinho" width="420">
 </p>
 
-**[Jogar no navegador](https://thiagodluz.github.io/Mercadinho/)** · **[Plano de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md)**
+**[Jogar no navegador](https://thiagodluz.github.io/Mercadinho/)** · **[Plano de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md)** · **[Auditoria da beta](docs/AUDITORIA-BETA.md)**
 
 ## Sobre o projeto
 
@@ -77,7 +77,7 @@ A lógica do jogo fica em `index.html`, e `fases.js` contém os tabuleiros e as 
 
 ## Teste beta no navegador
 
-[Abra o Mercadinho no celular](https://thiagodluz.github.io/Mercadinho/) e jogue de três a cinco fases. Você pode começar direto, sem instalar nada. Experimente tanto arrastar quanto tocar no produto e depois na vaga. Em **Som e vibração**, a música ambiente pode ser ativada para ouvir durante a partida.
+[Abra a beta web no celular](https://thiagodluz.github.io/Mercadinho/beta/) e use **Testes** para acessar a campanha e os tabuleiros de demonstração. Você pode começar direto, sem instalar nada. Experimente tanto arrastar quanto tocar no produto e depois na vaga. Em **Som e vibração**, a música ambiente pode ser ativada para ouvir durante a partida.
 
 Para testar a dificuldade, abra a [fase 20](https://thiagodluz.github.io/Mercadinho/?teste=20), a [fase 29](https://thiagodluz.github.io/Mercadinho/?teste=29) ou a [fase 30](https://thiagodluz.github.io/Mercadinho/?teste=30). Esses atalhos abrem partidas de teste sem alterar seu avanço na campanha.
 
@@ -93,7 +93,7 @@ Se o gesto de voltar do Android atrapalhar ao arrastar, experimente **Acessibili
 
 ## Próximas etapas
 
-Reunir relatos da beta, corrigir as falhas que atrapalham jogar e ajustar os pontos de dificuldade que aparecerem no teste. Depois, empacotar as melhorias em um único APK de teste.
+Reunir relatos da beta, corrigir as falhas que atrapalham jogar e ajustar os pontos de dificuldade que aparecerem no teste. O [roteiro de auditoria](docs/AUDITORIA-BETA.md#como-reproduzir) lista os cenários da beta para navegador e Android.
 
 Veja o [plano completo de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md) para acompanhar os próximos passos.
 
@@ -106,7 +106,7 @@ Para compilar, use Node.js 22 ou superior, JDK 21 e o Android SDK com a platafor
 ```sh
 npm ci
 npm test
-npm run android:debug
+npm run android:beta
 ```
 
-O APK de depuração fica em `android/app/build/outputs/apk/debug/app-debug.apk`. No aparelho, ative **Som e vibração → Vibração** e teste o encaixe de um produto e a formação de um trio. O feedback respeita os ajustes de toque do Android.
+O APK da beta 0.1.7-beta.1 fica em `android/app/build/outputs/apk/beta/app-beta.apk`. Ele aparece como **Mercadinho Beta** e instala ao lado da 0.1.6 com progresso separado. Para empacotar a página normal na variante de depuração, use `npm run android:debug`. No aparelho, ative **Som e vibração → Vibração** e teste o encaixe de um produto e a formação de um trio. O feedback respeita os ajustes de toque do Android.

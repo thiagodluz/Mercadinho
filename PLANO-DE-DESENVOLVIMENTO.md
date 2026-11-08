@@ -83,6 +83,8 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 - As fases da nova campanha têm uma solução inicial encurtada e verificada. Ao sair da sequência sugerida, a dica procura um caminho para a posição atual dentro dos limites de tempo e estados. A interface distingue um limite atingido de uma posição comprovadamente sem solução.
 - Já há controles separados de música e efeitos, vibração opcional em navegadores compatíveis e suporte à preferência de movimento reduzido do sistema. Há um menu de pausa na versão web, que interrompe a música e permite retomar a partida. Há uma opção própria para reduzir animações, respeitando também a preferência do sistema.
 
+A beta 0.1.7-beta.1 acrescenta orientação nas primeiras fases, recuperação de impasse, ajustes nas fases 20, 29 e 30, feedback de cascata e um tabuleiro separado de prateleira esgotada. A [auditoria da beta](docs/AUDITORIA-BETA.md) registra a motivação, os commits, os cenários de verificação e a compilação do APK.
+
 ## Próximas prioridades
 
 1. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. A matriz atual verifica os 200 tabuleiros da campanha e a continuação após a fase 208. Ampliar a cobertura para posições intermediárias e repetir a validação da busca em outros celulares.
