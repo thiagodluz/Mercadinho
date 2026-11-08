@@ -34,7 +34,14 @@ jobs:
         run: |
           npm ci
           npm test
-          npm run android:debug
+          npm run android:sync
+          gradle_zip="$RUNNER_TEMP/gradle-8.14.3-bin.zip"
+          curl -fLsS --retry 2 --max-time 120 -H 'Accept: application/octet-stream' \
+            'https://api.github.com/repos/gradle/gradle-distributions/releases/assets/269969095?download=1' -o "$gradle_zip"
+          sha=$(sed -n 's/^distributionSha256Sum=//p' android/gradle/wrapper/gradle-wrapper.properties)
+          printf '%s  %s\n' "$sha" "$gradle_zip" | sha256sum -c -
+          unzip -q "$gradle_zip" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/gradle-8.14.3/bin/gradle" -p android :app:assembleDebug --no-daemon
       - name: Verificar assinatura e conteúdo
         run: |
           apk=android/app/build/outputs/apk/debug/app-debug.apk
