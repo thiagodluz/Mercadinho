@@ -50,15 +50,17 @@
     }
     .awning span { border-radius: 0 0 42% 42%; background: linear-gradient(90deg, #85a63a, #a5bf55 45%, #688b29); box-shadow: 0 4px 5px #7c411c40; }
     .awning span:nth-child(even) { background: linear-gradient(90deg, #f0d9a4, #fff0c5 45%, #e9c892); }
-    .vine { position: absolute; z-index: 3; width: clamp(41px, 14vw, 82px); height: auto; top: 0; left: 0; pointer-events: none; filter: drop-shadow(1px 3px 2px #46381643); }
-    header { position: relative; text-align: center; width: 100%; }
-    .sign { position: relative; width: min(74%, 344px); margin: -8px auto 0; filter: drop-shadow(0 5px 4px #7b431c66); }
-    .sign-art { display: block; width: 100%; }
-    h1 {
-      position: absolute; inset: 43% 0 auto; margin: 0; color: #773512;
-      font-size: clamp(1.65rem, 7.4vw, 2.9rem); line-height: 1; font-weight: 950; letter-spacing: -.055em;
-      text-shadow: 0 1px #fff1c7; transform: rotate(-2deg);
+    .vine {
+      position: absolute; z-index: 3; width: clamp(52px, 17vw, 92px); height: auto; top: -2px; left: -3px;
+      pointer-events: none; filter: drop-shadow(2px 4px 3px #34401166);
     }
+    header { position: relative; text-align: center; width: 100%; }
+    .sign { position: relative; width: min(74%, 344px); margin: -3px auto 3px; filter: drop-shadow(0 5px 4px #7b431c66); }
+    .sign::before {
+      content: ''; position: absolute; inset: -13px 24% auto; height: 42%;
+      border-inline: 5px solid #7c4020; border-radius: 5px; pointer-events: none;
+    }
+    .sign img { position: relative; display: block; width: 100%; height: auto; }
     .level-badge { display: flex; align-items: center; gap: 8px; width: max-content; margin: 1px auto 0; padding: 2px 10px; border-radius: 999px; background: #fff0cb; box-shadow: inset 0 1px #fff9df, 0 3px 7px #94551f36; }
     .level-badge span { color: #b96109; font-size: .82rem; text-shadow: 0 1px #ffde86; }
     .level { padding: 3px 12px; border: 1px solid #e6bd79; border-radius: 999px; background: linear-gradient(#fff4d9, #f6d59b); font-weight: 900; font-size: .9rem; }
@@ -158,40 +160,29 @@
     .slot.selected { background: #ffdf7255; box-shadow: inset 0 0 0 2px #ffdf72; }
     .slot.drop-target { background: #c9ec8055; box-shadow: inset 0 0 0 3px #d8f795, 0 0 12px #e4ffb8; }
     .slot.drag-origin .item { opacity: .25; }
-    .dispenser .front-row {
-      display: flex; justify-content: center; inset: 8% 5% 5%; padding: 12px 0 6px;
-      border: 3px solid #ffdc9d; border-radius: 10px 10px 5px 5px;
-      background: radial-gradient(ellipse at bottom, #ac633688, #3b200fb3);
-      box-shadow: 0 2px 3px #3d1c0e99, inset 0 1px 5px #3d1c0ecc;
+    .dispenser .shelf-interior {
+      container-type: size; display: grid; place-items: end center; padding-bottom: 2px;
     }
-    .dispenser .slot { width: 56%; max-width: 58px; height: 100%; }
-    .dispenser-awning {
-      position: absolute; z-index: 2; inset: 4% 4% auto; height: clamp(12px, 3.9vw, 19px);
-      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
-      border-radius: 7px 7px 5px 5px; box-shadow: 0 3px 3px #51271077; pointer-events: none;
+    .dispenser-case { position: relative; width: min(94cqw, 119cqh); }
+    .dispenser-case > img {
+      display: block; width: 100%; height: auto; pointer-events: none; filter: drop-shadow(0 2px 2px #411b0c99);
     }
-    .dispenser-awning span {
-      border-radius: 0 0 44% 44%; background: linear-gradient(#ffb733, #f28b08 72%, #d76b10);
-      box-shadow: inset 0 1px #fff0ab, inset 0 -1px #ffca58;
+    .dispenser .slot { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; }
+    .dispenser .slot .item {
+      position: absolute; inset: 25% 0 30%; width: 46%; height: auto; margin-inline: auto;
     }
-    .dispenser-awning span:nth-child(even) { background: linear-gradient(#fff4cc, #f4c991); }
-    .dispenser-awning span:first-child { border-top-left-radius: 7px; }
-    .dispenser-awning span:last-child { border-top-right-radius: 7px; }
+    .dispenser .slot.empty::after { display: none; }
     .dispenser-count {
-      position: absolute; z-index: 2; bottom: 2%; left: 50%; transform: translateX(-50%); white-space: nowrap;
-      padding: 1px 6px; border: 1px solid #e89d3c; border-radius: 6px;
-      background: linear-gradient(#fff3cc, #ffd890); box-shadow: 0 1px 2px #5c290e88;
-      color: #6e3416; font-size: .65rem; font-weight: 900; pointer-events: none;
+      position: absolute; bottom: 5%; inset-inline: 20%; text-align: center;
+      color: #663310; font-size: clamp(10px, 15cqh, 18px); line-height: 1; font-weight: 950; pointer-events: none;
     }
-    .lock-overlay { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; pointer-events: none; background: #38231377; }
-    .chain-art { position: absolute; width: 110%; height: 66%; inset: 5% -5% auto; filter: drop-shadow(0 2px 1px #351709); }
-    .lock-badge {
-      position: relative; z-index: 1; margin-top: 12px; min-width: 27px; padding: 2px 6px;
-      border: 2px solid #b06a1d; border-radius: 6px; background: linear-gradient(#ffe48f, #e9a13c);
-      color: #563014; font-size: .86rem; font-weight: 950; text-align: center; box-shadow: inset 0 1px #fff2b0, 0 2px 4px #34200e77;
+    .lock-overlay {
+      position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center;
+      overflow: hidden; pointer-events: none; background: radial-gradient(ellipse at 50% 42%, #44281036, #2c170f91);
     }
-    .lock-badge::before { content: ''; position: absolute; inset: -10px 19% auto; height: 9px; border: 3px solid #f7c660; border-bottom: 0; border-radius: 10px 10px 0 0; }
-    .lock-caption { position: absolute; bottom: 3px; z-index: 1; padding: 2px 5px; border-radius: 5px; background: #4a301fe8; color: #fff3d7; font-size: .65rem; font-weight: 800; }
+    .chain-art { width: 102%; height: calc(100% - 16px); margin-top: 2px; filter: drop-shadow(0 2px 1px #351709bb); }
+    .lock-number { fill: #633111; font-size: 52px; font-weight: 950; text-anchor: middle; }
+    .lock-caption { position: absolute; bottom: 2px; padding: 1px 5px; border-radius: 5px; background: #4a301fe8; color: #fff3d7; font-size: .61rem; font-weight: 800; white-space: nowrap; }
     .item { width: min(100%, 65px); height: 100%; max-height: 107px; display: flex; align-items: end; justify-content: center; user-select: none; pointer-events: none; transform-origin: bottom center; }
     .item img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 2px 1px #3013069c); }
     .ghost { position: fixed; z-index: 20; pointer-events: none; opacity: .96; filter: drop-shadow(0 7px 5px #39210d55); }
@@ -241,34 +232,10 @@
       <span></span><span></span><span></span><span></span><span></span>
       <span></span><span></span><span></span><span></span><span></span>
     </div>
-    <svg class="vine" viewBox="0 0 76 158" aria-hidden="true">
-      <defs><linearGradient id="leaf" x2="1" y2="1"><stop stop-color="#b5c95c"/><stop offset=".5" stop-color="#659b34"/><stop offset="1" stop-color="#3b681e"/></linearGradient></defs>
-      <path d="M27 -8 Q59 24 30 53 Q8 85 31 115 Q41 135 19 158 M11 -9 Q5 26 15 65 M50 -6 Q53 19 66 36" fill="none" stroke="#466e27" stroke-width="3"/>
-      <g fill="url(#leaf)" stroke="#507f27" stroke-width="1">
-        <path d="M26 18 Q2 22 0 2 Q19 -4 26 18Z"/><path d="M35 26 Q31 4 54 1 Q65 20 35 26Z"/>
-        <path d="M36 44 Q52 25 73 34 Q73 54 36 44Z"/><path d="M22 59 Q3 56 3 34 Q26 34 22 59Z"/>
-        <path d="M26 79 Q30 55 53 57 Q59 76 26 79Z"/><path d="M19 100 Q-1 99 1 80 Q21 77 19 100Z"/>
-        <path d="M32 120 Q40 101 58 108 Q57 125 32 120Z"/><path d="M29 136 Q7 137 4 119 Q25 114 29 136Z"/>
-      </g>
-      <path d="m33 44 29-5m-36 40 19-14m-16 71-18-12M22 59 8 43" fill="none" stroke="#d0db72" stroke-opacity=".55" stroke-width="1.2"/>
-    </svg>
+    <img class="vine" src="assets/detalhes/planta.webp" alt="" width="180" height="310">
     <div class="shop-stage">
       <header>
-        <div class="sign">
-          <svg class="sign-art" viewBox="0 0 380 148" aria-hidden="true">
-            <defs>
-              <linearGradient id="sign-edge" x2="0" y2="1"><stop stop-color="#ffc477"/><stop offset="1" stop-color="#c66a2c"/></linearGradient>
-              <linearGradient id="sign-face" x2="0" y2="1"><stop stop-color="#fff1c5"/><stop offset="1" stop-color="#f9ce8a"/></linearGradient>
-            </defs>
-            <path d="M73 127 Q28 137 8 110 Q37 105 57 114 Q21 103 24 78 Q50 83 66 113 M310 127 Q355 137 374 110 Q345 105 322 114 Q357 103 355 78 Q330 83 314 113" fill="#5b8d2e" stroke="#40701f" stroke-width="2"/>
-            <path d="M77 39 V0 M303 39 V0" stroke="#7b3b1d" stroke-width="10"/>
-            <path d="M33 53 Q82 38 139 37 Q149 5 190 5 Q231 5 241 37 Q300 39 347 53 Q363 58 359 72 L345 124 Q341 141 325 137 Q190 119 55 137 Q38 140 34 125 L20 72 Q17 58 33 53Z" fill="url(#sign-edge)" stroke="#98501f" stroke-width="5"/>
-            <path d="M40 58 Q87 45 145 44 Q155 12 190 12 Q226 12 235 44 Q294 45 340 58 Q351 61 348 72 L336 119 Q334 129 322 127 Q190 110 58 127 Q47 130 44 119 L32 72 Q30 62 40 58Z" fill="url(#sign-face)" stroke="#efac60" stroke-width="3"/>
-            <path d="M174 35 H206 L201 53 H179 Z M182 35 Q184 19 193 19 Q198 19 198 23 M186 40 V48 M194 40 V48" fill="none" stroke="#85431c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M124 114 Q190 97 256 114" fill="none" stroke="#e98b30" stroke-width="6" stroke-linecap="round"/>
-          </svg>
-          <h1>Mercadinho</h1>
-        </div>
+        <h1 class="sign"><img src="assets/detalhes/placa.webp" alt="Mercadinho" width="650" height="279"></h1>
         <div class="level-badge"><span aria-hidden="true">★ ★</span><div id="level" class="level">Fase 1</div><span aria-hidden="true">★ ★</span></div>
         <button id="pause" class="pause-control" type="button" aria-label="Pausar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="4" y="3" width="6" height="18" rx="2"/><rect x="14" y="3" width="6" height="18" rx="2"/></svg></button>
         <p id="instructions" class="instructions">Arraste os produtos e junte três iguais na mesma prateleira.</p>
@@ -813,7 +780,13 @@
             const count = shelf.queue.length + (item ? 1 : 0);
             const active = selected && selected.shelf === shelfIndex && selected.slot === 1;
             const label = item ? `Dispensador: ${products[item].name}, ${count} produtos restantes` : 'Dispensador vazio';
-            return `<div class="shelf dispenser"><div class="shelf-interior"><div class="dispenser-awning" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><div class="front-row"><button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="1" aria-label="${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button></div><span class="dispenser-count" aria-hidden="true">${count} restantes</span></div></div>`;
+            return `<div class="shelf dispenser"><div class="shelf-interior">
+              <div class="dispenser-case">
+                <img src="assets/detalhes/caixa.webp" alt="" width="280" height="223" draggable="false">
+                <button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="1" aria-label="${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button>
+                <span class="dispenser-count" aria-hidden="true">${count}</span>
+              </div>
+            </div></div>`;
           }
           const behind = shelf.back[0] || [null, null, null];
           const extra = shelf.back.length - 1;
@@ -827,11 +800,10 @@
           }).join('');
           const effect = [matching.includes(shelfIndex) && 'matching', revealed.includes(shelfIndex) && 'revealed', unlocking.includes(shelfIndex) && 'unlocking'].filter(Boolean).join(' ');
           const lock = locked ? `<div class="lock-overlay" role="img" aria-label="Prateleira ${shelfIndex + 1} bloqueada, ${shelf.lock.remaining} ${shelf.lock.remaining === 1 ? 'trio' : 'trios'} para abrir, ${shelf === activeLock ? 'abre primeiro' : 'abre depois'}">
-            <svg class="chain-art" viewBox="0 0 150 42" preserveAspectRatio="none" aria-hidden="true" fill="none">
-              <path d="M-5 4Q75 62 155 4" stroke="#905018" stroke-width="7"/>
-              <path d="M-5 3Q75 61 155 3" stroke="#ffd777" stroke-width="5" stroke-dasharray="9 3"/>
-              <path d="M-5 2Q75 60 155 2" stroke="#fff0b0" stroke-width="1.4" stroke-dasharray="7 5"/>
-            </svg><span class="lock-badge">${shelf.lock.remaining}</span>
+            <svg class="chain-art" viewBox="0 0 360 218" preserveAspectRatio="xMidYMin meet" aria-hidden="true">
+              <image href="assets/detalhes/corrente.webp" width="360" height="218"/>
+              <text class="lock-number" x="180" y="171" dominant-baseline="central">${shelf.lock.remaining}</text>
+            </svg>
             <span class="lock-caption">${shelf === activeLock ? 'Abre primeiro' : 'Abre depois'}</span></div>` : '';
           return `<div class="shelf ${effect}"><div class="shelf-interior"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}${layers}</div></div>`;
         });
