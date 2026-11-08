@@ -188,38 +188,54 @@
     .dispenser .item img { transform: none; }
     .ghost { position: fixed; z-index: 20; pointer-events: none; opacity: .96; filter: drop-shadow(0 7px 5px #39210d55); will-change: transform; }
     .ghost .item { width: 100%; height: 100%; min-height: 0; max-height: none; }
-    .win:not([hidden]) .win-card { animation: victory-appear .22s ease-out; }
-    @keyframes victory-appear { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+    .win:not([hidden]) .win-card { animation: victory-appear .32s ease-out; }
+    @keyframes victory-appear {
+      from { opacity: 0; transform: translateY(7px) scale(.96); }
+      68% { opacity: 1; transform: translateY(-1px) scale(1.01); }
+      to { opacity: 1; transform: none; }
+    }
     .slot.landed .item { animation: product-land .15s ease-out; }
-    .matching .front-row .item { animation: match-pop .28s ease-in both; }
+    .slot.landed::before {
+      content: ''; position: absolute; inset: auto 12% 0; height: 10px; pointer-events: none;
+      background: radial-gradient(ellipse, #ffe0a6b3, transparent 72%);
+      animation: landing-light .15s ease-out both;
+    }
+    .matching .front-row .item { animation: match-pop .28s ease-out both; }
     .revealed .front-row .item { animation: reveal-row .23s ease-out both; }
     .matching .front-row::before {
       content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
-      background: radial-gradient(ellipse at 50% 95%, #ffdc7799, transparent 75%);
+      background: radial-gradient(circle at 17% 78%, #fff3c7 0 1px, transparent 3px),
+        radial-gradient(circle at 50% 86%, #fff3c7 0 1px, transparent 3px),
+        radial-gradient(circle at 83% 78%, #fff3c7 0 1px, transparent 3px),
+        radial-gradient(ellipse at 50% 95%, #ffdc7780, transparent 71%);
       animation: match-light .28s ease-out;
     }
     .unlocking .lock-overlay { animation: lock-fade .26s ease-in both; }
-    .unlocking .chain-art { animation: chain-release .26s ease-in both; }
+    .unlocking .chain-art { animation: chain-release .26s cubic-bezier(.45, 0, .65, 1) both; }
     @keyframes product-land {
-      from { transform: translateY(-4px) scale(1.035); }
-      54% { transform: scale(1.035, .94); }
+      from { transform: translateY(-3px); }
+      48% { transform: scale(1.045, .955); }
       to { transform: none; }
     }
+    @keyframes landing-light { from { opacity: .85; } to { opacity: 0; transform: scaleX(1.24); } }
     @keyframes match-pop {
-      28% { transform: scale(1.08, .95); }
-      55% { transform: translateY(-5px) scale(1.1); opacity: 1; }
-      to { transform: translateY(-13px) scale(.53); opacity: 0; }
+      25% { transform: scale(1.06, .96); }
+      57% { transform: translateY(-5px) scale(1.075); opacity: 1; }
+      to { transform: translateY(-10px) scale(.76); opacity: 0; }
     }
-    @keyframes match-light { 30% { opacity: 1; } }
+    @keyframes match-light {
+      25% { opacity: .9; }
+      to { opacity: 0; transform: translateY(-6px); }
+    }
     @keyframes reveal-row {
-      from { transform: translateY(-7px) scale(.88); opacity: .45; }
-      73% { transform: scale(1.02, .98); opacity: 1; }
+      from { transform: translateY(-5px) scale(.92); opacity: .54; }
+      76% { transform: scale(1.015, .99); opacity: 1; }
       to { transform: none; opacity: 1; }
     }
-    @keyframes lock-fade { 34% { opacity: 1; } to { opacity: 0; } }
+    @keyframes lock-fade { 24% { opacity: 1; } to { opacity: 0; } }
     @keyframes chain-release {
-      34% { transform: translateY(-3px) rotate(-4deg); }
-      to { transform: translateY(16px) rotate(8deg); }
+      28% { transform: translateY(-2px) rotate(-3deg) scaleX(1.03); }
+      to { transform: translateY(18px) rotate(8deg); }
     }
     .controls { position: relative; z-index: 1; display: flex; justify-content: center; width: 100%; margin-top: 16px; gap: clamp(8px, 4vw, 20px); }
     .control { flex: 1; min-height: 50px; border: 0; border-radius: 12px; padding: 10px; font-weight: 800; background: #78984b; color: white; box-shadow: 0 4px #537135; }
@@ -270,11 +286,11 @@
     .setting-note { margin: 0; font-size: .77rem; line-height: 1.35; color: #806b51; }
     [hidden] { display: none !important; }
     @media (max-height: 650px) { .instructions { margin: 7px auto; } .shelf { height: clamp(83px, 24vw, 110px); } }
-    .reduce-motion .matching .front-row::before,
+    .reduce-motion .matching .front-row::before, .reduce-motion .slot.landed::before,
     .reduce-motion :is(.slot.landed .item, .matching .item, .revealed .item,
       .unlocking .lock-overlay, .unlocking .chain-art, .win-card) { animation-duration: .01ms; }
     @media (prefers-reduced-motion: reduce) {
-      .matching .front-row::before,
+      .matching .front-row::before, .slot.landed::before,
       :is(.slot.landed .item, .matching .item, .revealed .item,
         .unlocking .lock-overlay, .unlocking .chain-art, .win-card) { animation-duration: .01ms; }
     }
@@ -667,8 +683,32 @@
       const vibrationRow = document.getElementById('vibration-row');
       const nativeHaptics = globalThis.mercadinhoHaptics;
       let audioContext = null;
+      let effectsGain = null;
       let musicGain = null;
-      let musicTimer = null;
+      let musicPlayback = null;
+
+      // Cada nota define início, frequência, duração, intensidade e timbre.
+      const soundEffects = {
+        place: [[0, 196, .1, .14, 'triangle', 120], [.014, 440, .055, .026]],
+        match: [[0, 523.25, .15, .10, 'triangle'], [.052, 659.25, .16, .085], [.105, 880, .19, .075]],
+        reveal: [[0, 293.66, .09, .06, 'triangle'], [.06, 440, .16, .055]],
+        unlock: [[0, 247, .085, .11, 'triangle', 155], [.036, 1174.66, .12, .026], [.092, 587.33, .22, .08, 'triangle']],
+        win: [[0, 261.63, .57, .085], [0, 523.25, .18, .085, 'triangle'], [.12, 659.25, .21, .085],
+          [.24, 783.99, .22, .08], [.39, 1046.5, .55, .072], [.39, 659.25, .45, .052]],
+        undo: [[0, 440, .12, .065], [.07, 329.63, .16, .065, 'triangle']]
+      };
+      // Oito compassos, com baixo, acorde dedilhado e melodia. As alturas são notas MIDI.
+      const musicScore = [
+        { bass: 48, chord: [55, 59, 64], melody: [76, 79, 81, 79] },
+        { bass: 45, chord: [52, 55, 60], melody: [76, 72, 74, null] },
+        { bass: 41, chord: [53, 57, 60], melody: [77, 76, 72, 69] },
+        { bass: 43, chord: [55, 59, 64], melody: [71, 74, 76, null] },
+        { bass: 40, chord: [52, 55, 59], melody: [79, 76, 74, 71] },
+        { bass: 45, chord: [52, 55, 60], melody: [72, 76, 81, null] },
+        { bass: 38, chord: [53, 57, 60], melody: [77, 74, 72, 69] },
+        { bass: 43, chord: [50, 55, 59], melody: [71, 74, 79, null] }
+      ];
+      const secondsPerBeat = .78;
 
       function saveAudioSettings() {
         try { localStorage.setItem('mercadinho-audio', JSON.stringify(audioSettings)); } catch {}
@@ -683,8 +723,10 @@
         musicValue.textContent = `${audioSettings.musicVolume}%`;
         vibrationEnabled.checked = audioSettings.vibration;
         vibrationRow.hidden = !nativeHaptics && typeof navigator.vibrate !== 'function';
-        if (musicGain && audioContext) {
-          musicGain.gain.setTargetAtTime(audioSettings.music ? audioSettings.musicVolume / 100 : 0, audioContext.currentTime, 0.02);
+        if (audioContext) {
+          const now = audioContext.currentTime;
+          effectsGain.gain.setTargetAtTime(audioSettings.effects ? audioSettings.effectsVolume / 100 : 0, now, .02);
+          musicGain.gain.setTargetAtTime(audioSettings.music ? audioSettings.musicVolume / 100 : 0, now, .02);
         }
       }
 
@@ -695,24 +737,29 @@
           if (!AudioEngine) return null;
           if (!audioContext) {
             audioContext = new AudioEngine();
+            effectsGain = audioContext.createGain();
+            effectsGain.connect(audioContext.destination);
             musicGain = audioContext.createGain();
             musicGain.connect(audioContext.destination);
+            effectsGain.gain.value = audioSettings.effects ? audioSettings.effectsVolume / 100 : 0;
+            musicGain.gain.value = audioSettings.music ? audioSettings.musicVolume / 100 : 0;
             updateAudioControls();
           }
           if (audioContext.state === 'suspended') await audioContext.resume();
-          return !paused && audioContext.state === 'running' ? audioContext : null;
+          return !paused && !document.hidden && audioContext.state === 'running' ? audioContext : null;
         } catch {
           return null;
         }
       }
 
-      function tone(context, frequency, start, duration, volume, output) {
+      function tone(context, output, start, frequency, duration, volume, type = 'sine', endFrequency = frequency) {
         const oscillator = context.createOscillator();
         const envelope = context.createGain();
-        oscillator.type = 'sine';
+        oscillator.type = type;
         oscillator.frequency.setValueAtTime(frequency, start);
+        if (endFrequency !== frequency) oscillator.frequency.exponentialRampToValueAtTime(endFrequency, start + duration);
         envelope.gain.setValueAtTime(0.0001, start);
-        envelope.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), start + 0.025);
+        envelope.gain.exponentialRampToValueAtTime(volume, start + .009);
         envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
         oscillator.connect(envelope);
         envelope.connect(output);
@@ -725,38 +772,60 @@
         if (!audioSettings.effects || audioSettings.effectsVolume === 0) return;
         activateAudio().then(context => {
           if (!context || !audioSettings.effects || audioSettings.effectsVolume === 0) return;
-          const sounds = {
-            place: [392],
-            match: [659.25, 783.99, 1046.5],
-            reveal: [392, 523.25],
-            unlock: [523.25, 659.25, 783.99],
-            win: [523.25, 659.25, 783.99, 1046.5],
-            undo: [440, 349.23]
-          };
-          const notes = sounds[kind] || [];
-          const duration = kind === 'place' ? 0.095 : 0.18;
-          const gain = (kind === 'place' || kind === 'reveal' ? 0.03 : 0.045) * audioSettings.effectsVolume / 100;
-          notes.forEach((frequency, index) => tone(context, frequency, context.currentTime + index * 0.065, duration, gain, context.destination));
+          const start = context.currentTime + .006;
+          for (const [offset, ...note] of soundEffects[kind]) tone(context, effectsGain, start + offset, ...note);
         });
       }
 
-      function playMusicPhrase() {
-        if (paused || !audioContext || audioContext.state !== 'running' || !audioSettings.music || document.hidden) return;
-        const notes = [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23];
-        notes.forEach((frequency, index) => tone(audioContext, frequency, audioContext.currentTime + index * 0.7, 0.8, 0.025, musicGain));
+      function playMusicBeat(context, output, start, beat) {
+        const bar = musicScore[Math.floor(beat / 4) % musicScore.length];
+        const step = beat % 4;
+        const pitch = note => 440 * 2 ** ((note - 69) / 12);
+        if (step === 0 || step === 2) {
+          const bass = bar.bass + (step === 2 ? 7 : 0);
+          tone(context, output, start, pitch(bass), 1.06, step === 0 ? .046 : .032);
+        }
+        const chordNote = bar.chord[[0, 1, 2, 1][step]];
+        tone(context, output, start + .035, pitch(chordNote), .64, .034, 'triangle');
+        const note = bar.melody[step];
+        if (note !== null) {
+          tone(context, output, start + .12, pitch(note), .68, .052);
+          tone(context, output, start + .12, pitch(note + 12), .16, .012);
+        }
       }
 
       function stopMusic() {
-        if (musicTimer !== null) clearInterval(musicTimer);
-        musicTimer = null;
+        if (!musicPlayback) return;
+        const { timer, output } = musicPlayback;
+        musicPlayback = null;
+        clearInterval(timer);
+        output.gain.setTargetAtTime(0, audioContext.currentTime, .012);
+        setTimeout(() => output.disconnect(), 65);
       }
 
       async function startMusic() {
-        if (paused || !audioSettings.music || document.hidden || musicTimer !== null) return;
+        if (paused || !audioSettings.music || !audioSettings.musicVolume || document.hidden || musicPlayback) return;
         const context = await activateAudio();
-        if (paused || !context || !audioSettings.music || document.hidden || musicTimer !== null) return;
-        playMusicPhrase();
-        musicTimer = setInterval(playMusicPhrase, 5600);
+        if (!context || paused || !audioSettings.music || !audioSettings.musicVolume || document.hidden || musicPlayback) return;
+        const output = context.createGain();
+        output.connect(musicGain);
+        let beat = 0;
+        let nextBeatAt = context.currentTime + .04;
+        function schedule() {
+          if (context.state !== 'running' || document.hidden || paused) return;
+          const now = context.currentTime;
+          // Após um atraso longo, siga o compasso sem disparar notas acumuladas.
+          if (nextBeatAt < now) {
+            const missed = Math.ceil((now - nextBeatAt) / secondsPerBeat);
+            beat += missed;
+            nextBeatAt += missed * secondsPerBeat;
+          }
+          if (nextBeatAt > now + .20) return;
+          playMusicBeat(context, output, nextBeatAt, beat++);
+          nextBeatAt += secondsPerBeat;
+        }
+        musicPlayback = { output, timer: setInterval(schedule, 70) };
+        schedule();
       }
 
       function vibrate(kind) {
@@ -791,6 +860,8 @@
         audioSettings.musicVolume = Number(musicVolume.value);
         saveAudioSettings();
         updateAudioControls();
+        if (audioSettings.musicVolume) startMusic();
+        else stopMusic();
       });
       vibrationEnabled.addEventListener('change', () => {
         audioSettings.vibration = vibrationEnabled.checked;
