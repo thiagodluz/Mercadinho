@@ -80,3 +80,17 @@ A lógica do jogo fica em `index.html`, e `fases.js` contém os tabuleiros e as 
 A prioridade é terminar e testar o jogo em HTML, CSS e JavaScript: fortalecer as regras, ampliar as fases, refinar a apresentação e validar a experiência em celulares. A preparação de um aplicativo Android virá depois que a versão web estiver pronta e testada.
 
 Veja o [plano completo de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md) para acompanhar os próximos passos.
+
+## APK de teste para Android
+
+O app empacota os arquivos do jogo com Capacitor e usa uma integração Java para o feedback tátil do Android. A campanha e os recursos visuais vêm no APK, com progresso local separado do navegador.
+
+Para compilar, use Node.js 22 ou superior, JDK 21 e o Android SDK com a plataforma 36 e os Build Tools. Configure `JAVA_HOME` e `ANDROID_HOME` antes de executar:
+
+```sh
+npm ci
+npm test
+npm run android:debug
+```
+
+O APK de depuração fica em `android/app/build/outputs/apk/debug/app-debug.apk`. No aparelho, ative **Som e vibração → Vibração** e teste o encaixe de um produto e a formação de um trio. O feedback respeita os ajustes de toque do Android.

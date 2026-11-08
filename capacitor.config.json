@@ -1,0 +1,10 @@
+{
+  "appId": "br.com.thiagodluz.mercadinho",
+  "appName": "Mercadinho",
+  "webDir": "www",
+  "plugins": {
+    "App": {
+      "disableBackButtonHandler": true
+    }
+  }
+}

@@ -242,6 +242,9 @@
       margin-left: calc(max(2px, var(--android-gesture-left, 24px) - 5px) - var(--side-space));
       margin-right: calc(max(2px, var(--android-gesture-right, 24px) - 5px) - var(--side-space));
     }
+    .android-game.android-immersive .board-stage {
+      margin-inline: calc(2px - var(--side-space));
+    }
     .win {
       position: absolute; inset: 0; z-index: 4; display: grid; place-items: center;
       border-radius: 6px; background: #30190d80; pointer-events: none;
