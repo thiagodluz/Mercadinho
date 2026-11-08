@@ -76,6 +76,7 @@
     .pause-dialog h2 { margin: 0 0 8px; }
     .pause-dialog p { margin: 0 0 18px; }
     .pause-dialog .control { width: 100%; }
+    .pause-dialog .control + .control { margin-top: 10px; }
     .instructions { margin: 9px auto 10px; max-width: 340px; font-size: .86rem; line-height: 1.4; color: #6e482b; text-shadow: 0 1px 3px #fff2ce; }
     .board {
       --crown: clamp(6px, 1.9vw, 10px);
@@ -83,21 +84,19 @@
       --post: clamp(5px, 1.6vw, 8px);
       --post-art: url("assets/prateleira/montante.webp");
       --rail-art: url("assets/prateleira/travessa.webp");
-      position: relative; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      position: relative; width: calc(100% * 2 / 3); margin-inline: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
       touch-action: none; user-select: none;
     }
-    @media (min-width: 360px) {
-      .board.board-dense { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    }
+    .board.board-dense { width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
     /* Os formatos alteram somente a posição visual dos compartimentos. */
     .board.board-shaped { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .board-shaped .shelf { grid-column: span 2; height: clamp(90px, 24vw, 125px); }
+    .board-shaped .shelf { grid-column: span 2; }
     .board-cross .shelf:nth-child(1) { grid-column: 2 / span 2; }
     .board-cross .shelf:nth-child(6) { grid-column: 2 / span 2; }
     .board-steps .shelf:nth-child(1), .board-steps .shelf:nth-child(4) { grid-column: 1 / span 2; }
     .board-steps .shelf:nth-child(2), .board-steps .shelf:nth-child(5) { grid-column: 3 / span 2; }
     .board-steps .shelf:nth-child(3), .board-steps .shelf:nth-child(6) { grid-column: 2 / span 2; }
-    .board.board-campaign { grid-template-columns: minmax(0, 1fr); }
+    .board.board-campaign { width: 100%; grid-template-columns: minmax(0, 1fr); }
     .shelf-row {
       position: relative; display: grid; grid-template-columns: repeat(var(--shelf-count), minmax(0, 1fr));
       width: calc(100% * var(--shelf-count) / 3); justify-self: center;
@@ -105,9 +104,9 @@
     }
     .shelf-row + .shelf-row { margin-top: -3px; }
     .shelf {
-      position: relative; min-width: 0; height: clamp(94px, 27vw, 135px);
+      position: relative; min-width: 0; height: clamp(84px, 25vw, 120px);
     }
-    .shelf-row .shelf { height: clamp(74px, 22vw, 106px); }
+    .shelf-row .shelf { height: clamp(84px, 25vw, 120px); }
     @media (max-height: 740px) {
       .board-four-rows .shelf-row .shelf { height: clamp(57px, 10.4dvh, 76px); }
     }
@@ -185,7 +184,8 @@
     .lock-number { fill: #633111; font-size: 52px; font-weight: 950; text-anchor: middle; }
     .lock-caption { position: absolute; bottom: 2px; padding: 1px 5px; border-radius: 5px; background: #4a301fe8; color: #fff3d7; font-size: .61rem; font-weight: 800; white-space: nowrap; }
     .item { width: min(100%, 65px); height: 100%; max-height: 107px; display: flex; align-items: end; justify-content: center; user-select: none; pointer-events: none; transform-origin: bottom center; }
-    .item img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 2px 1px #3013069c); }
+    .item img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 2px 1px #3013069c); transform: scale(1.1); transform-origin: center bottom; }
+    .dispenser .item img { transform: none; }
     .ghost { position: fixed; z-index: 20; pointer-events: none; opacity: .96; filter: drop-shadow(0 7px 5px #39210d55); will-change: transform; }
     .ghost .item { width: 100%; height: 100%; min-height: 0; max-height: none; }
     .win:not([hidden]) .win-card { animation: victory-appear .22s ease-out; }
@@ -235,6 +235,10 @@
     .controls svg { width: 27px; height: 27px; }
     .message { min-height: 2.6em; text-align: center; color: #70563a; font-size: .86rem; margin: 17px 0 0; }
     .board-stage { position: relative; isolation: isolate; }
+    .android-game .board-stage {
+      margin-left: max(0px, calc(var(--android-gesture-left, 24px) + 2px - var(--side-space)));
+      margin-right: max(0px, calc(var(--android-gesture-right, 24px) + 2px - var(--side-space)));
+    }
     .win {
       position: absolute; inset: 0; z-index: 4; display: grid; place-items: center;
       border-radius: 6px; background: #30190d80; pointer-events: none;
@@ -352,6 +356,7 @@
       <h2 id="pause-title">Jogo pausado</h2>
       <p>Suas prateleiras estão esperando por você.</p>
       <button id="resume" class="control" type="button">Continuar jogando</button>
+      <button id="exit-app" class="control secondary" type="button" hidden>Sair do jogo</button>
     </dialog>
   </main>
   <script src="fases.js"></script>
@@ -654,6 +659,7 @@
       const musicValue = document.getElementById('music-value');
       const vibrationEnabled = document.getElementById('vibration-enabled');
       const vibrationRow = document.getElementById('vibration-row');
+      const nativeHaptics = globalThis.mercadinhoHaptics;
       let audioContext = null;
       let musicGain = null;
       let musicTimer = null;
@@ -670,7 +676,7 @@
         musicVolume.value = audioSettings.musicVolume;
         musicValue.textContent = `${audioSettings.musicVolume}%`;
         vibrationEnabled.checked = audioSettings.vibration;
-        vibrationRow.hidden = typeof navigator.vibrate !== 'function';
+        vibrationRow.hidden = !nativeHaptics && typeof navigator.vibrate !== 'function';
         if (musicGain && audioContext) {
           musicGain.gain.setTargetAtTime(audioSettings.music ? audioSettings.musicVolume / 100 : 0, audioContext.currentTime, 0.02);
         }
@@ -747,9 +753,14 @@
         musicTimer = setInterval(playMusicPhrase, 5600);
       }
 
-      function vibrate(duration) {
-        if (!audioSettings.vibration || typeof navigator.vibrate !== 'function') return;
-        try { navigator.vibrate(duration); } catch {}
+      function vibrate(kind) {
+        if (!audioSettings.vibration) return;
+        if (nativeHaptics) {
+          nativeHaptics(kind).catch(() => {});
+          return;
+        }
+        const duration = { place: 12, match: 30, preview: 15 }[kind];
+        try { navigator.vibrate?.(duration); } catch {}
       }
 
       effectsEnabled.addEventListener('change', () => {
@@ -779,9 +790,9 @@
         audioSettings.vibration = vibrationEnabled.checked;
         saveAudioSettings();
         updateAudioControls();
-        vibrate(15);
+        vibrate('preview');
       });
-      pauseButton.addEventListener('click', () => {
+      function openPause() {
         if (paused || animating || completed) return;
         if (hintSearching) message.textContent = levelDefinition.hint;
         cancelHint();
@@ -791,7 +802,14 @@
         stopMusic();
         if (audioContext && audioContext.state === 'running') audioContext.suspend().catch(() => {});
         resumeButton.focus();
-      });
+      }
+      pauseButton.addEventListener('click', openPause);
+      const exitApp = globalThis.mercadinhoExit;
+      if (exitApp) {
+        const exitButton = document.getElementById('exit-app');
+        exitButton.hidden = false;
+        exitButton.addEventListener('click', () => exitApp().catch(console.error));
+      }
       resumeButton.addEventListener('click', () => pauseDialog.close());
       pauseDialog.addEventListener('close', () => {
         paused = false;
@@ -1117,7 +1135,7 @@
             landing = null;
             render(matching);
             playEffect('match');
-            vibrate(30);
+            vibrate('match');
             await pause(280);
             matching.forEach(index => { shelves[index].front = [null, null, null]; });
             for (const index of matching) {
@@ -1132,7 +1150,7 @@
           }
           const revealed = revealBackRows(shelves);
           if (landing) {
-            vibrate(12);
+            vibrate('place');
             if (!revealed.length) playEffect('place');
           }
           if (unlocking.length || revealed.length) {
