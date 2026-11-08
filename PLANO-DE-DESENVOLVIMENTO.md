@@ -6,19 +6,21 @@ Mercadinho é um jogo casual de organização de produtos em prateleiras. O joga
 
 O jogo será gratuito para instalar e jogar, sem anúncios, compras internas, assinaturas, vidas limitadas ou pagamentos para continuar. A campanha funcionará offline, com progresso salvo no aparelho.
 
-## Estado atual — 7 de novembro de 2026
+## Estado atual — 8 de novembro de 2026
 
 O repositório contém um protótipo web publicado no GitHub Pages, com oito fases iniciais e 200 fases geradas e verificadas, da fase 9 à 208, e continuação sem fim a partir da fase 209. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases 7 e 8 apresentam o chá como quarto produto e combinam as mecânicas já introduzidas. O catálogo possui 20 produtos ilustrados provisórios; as fases usam controles por arraste ou seleção, desfazer, reinício e tela de vitória.
 
 O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. A nova campanha usa 43 formatos de tabuleiro, até quatro linhas de prateleiras e filas de dispensador sem produtos iguais consecutivos. O selo `+1` indica uma fileira além da que aparece escurecida. A dificuldade foi medida com um jogador simulado, com desafios nas fases terminadas em 0 e respiros nas terminadas em 5. A partir da fase 209, os últimos 50 tabuleiros são reaproveitados com os produtos variados por semente. Partidas do gerador anterior recomeçam no tabuleiro atual da mesma fase. Uma fase em andamento é retomada após recarregar, a partir da última jogada concluída; até 100 jogadas ficam disponíveis no histórico salvo. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
 
-O protótipo foi verificado no navegador e por testes pontuais da lógica. O repositório inclui testes automatizados da lógica, das soluções das fases, da persistência, da pausa e da preferência de animações; a cobertura ainda precisa ser ampliada. O toque, a vibração, o áudio e a retomada precisam ser verificados em um celular físico. Ainda é necessário criar o aplicativo Android e validar o funcionamento offline da versão web publicada.
+O protótipo foi verificado no navegador e por testes pontuais da lógica. O repositório inclui testes automatizados da lógica, das soluções das fases, da persistência, da pausa e da preferência de animações; a cobertura ainda precisa ser ampliada. O aplicativo Android usa Capacitor e feedback tátil nativo; a versão 0.1.6 foi integrada à versão principal e publicada como release de teste com APK assinado. Thiago aprovou no celular o visual, o funcionamento, o arraste e a vibração.
+
+Em 8 de novembro de 2026, Thiago deu o item de funcionamento no Android como aprovado, incluindo o escopo de fechamento e reabertura, bloqueio de tela, uso offline e preservação de fase, jogadas e configurações, inclusive ao atualizar o app. Esse registro representa a aprovação geral da etapa; não detalha o resultado de cada cenário ou aparelho. Permanecem relevantes testes adicionais em diferentes aparelhos e a validação offline da versão web publicada.
 
 ## Público e plataformas
 
 - Público casual, com partidas curtas e controles simples.
 - Primeira plataforma disponível: navegador, em orientação vertical adaptável a celular e computador.
-- Aplicativo Android como próximo alvo de plataforma, aproveitando a base web.
+- Aplicativo Android de teste disponível, aproveitando a base web via Capacitor.
 - Idioma inicial: português brasileiro.
 - Arte original, com produtos fictícios e ambiente de mercadinho.
 
@@ -41,7 +43,7 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 - Fases projetadas manualmente no início, incluindo pelo menos uma solução verificada para cada fase.
 - Pontuação e feedback de combos opcionais para a experiência da campanha. A forma de contagem será definida e testada no protótipo.
 - Modo cronometrado como expansão posterior, depois de validar a campanha.
-- Tecnologia inicial: HTML, CSS e JavaScript para a versão web. Avaliar Capacitor para empacotar a mesma base como aplicativo Android e testar as integrações no aparelho.
+- Tecnologia: HTML, CSS e JavaScript para a versão web, empacotada com Capacitor para Android e com integração nativa para vibração.
 
 ## Regras do protótipo
 
@@ -87,7 +89,7 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 2. **Criar mais conteúdo.** Ampliar a campanha gradualmente, projetar e validar uma solução para cada fase e avaliar a dificuldade com jogadores.
 3. **Refinar a apresentação.** Evoluir as ilustrações e as animações a partir do mockup e substituir ou aprovar a melodia provisória após escuta e testes.
 4. **Testar e finalizar a versão web.** Conferir arraste, encaixe, áudio, vibração, legibilidade, salvamento e retomada no navegador do computador e em um celular físico. Implementar e verificar o funcionamento offline pretendido.
-5. **Preparar o aplicativo Android.** Após a versão web estar completa e testada, avaliar e integrar o Capacitor, gerar um APK de teste e verificar tela cheia, áreas seguras, salvamento, áudio, vibração e funcionamento offline no aplicativo.
+5. **Evoluir o aplicativo Android.** Manter o APK de teste atualizado, registrar a aprovação geral da etapa de funcionamento por Thiago e ampliar a verificação em diferentes aparelhos antes da versão pública.
 
 ## Etapas de desenvolvimento
 
@@ -106,7 +108,7 @@ Entrega: projeto abre no navegador, com estrutura e instruções para continuar 
 
 - [x] Implementar prateleiras, vagas e produtos temporários distinguíveis.
 - [x] Implementar arraste por ponteiro, seleção por toque, encaixe e rejeição de movimentos inválidos.
-- [ ] Validar a precisão do toque e do arraste em celular físico.
+- [x] Validar o arraste em celular físico. Thiago aprovou o funcionamento na versão 0.1.6.
 - [x] Implementar trios automáticos, múltiplos compartimentos e fileiras de fundo.
 - [x] Implementar remoção, avanço de fileira e condição de vitória com atualização ordenada.
 - [ ] Ampliar os testes versionados para proteger mais sequências de animação e mudanças de estado.
@@ -151,7 +153,7 @@ Entrega: uma versão visualmente consistente e confortável de jogar.
 - [x] Salvar e retomar o estado estabilizado da fase em andamento no navegador, incluindo até 100 jogadas para desfazer.
 - [ ] Verificar a preservação dos dados em futuras atualizações da versão web e, posteriormente, na versão Android.
 - [x] Avançar pelas fases em sequência, permitir reiniciar a fase atual e preservar o progresso ao recarregar o navegador.
-- [ ] Validar o comportamento após fechamento e atualização no aplicativo Android.
+- [x] Etapa geral de funcionamento no Android, incluindo fechamento e atualização: aprovada por Thiago em 8 de novembro de 2026; resultados individuais não foram detalhados.
 - [x] Verificar automaticamente uma solução para cada fase da campanha.
 - [ ] Testar a curva de dificuldade com jogadores e conferir os formatos com quatro linhas no celular.
 
@@ -175,10 +177,13 @@ Entrega: versão candidata com fases verificadas e desempenho aceitável nos apa
 
 - [ ] Criar nome final, ícone, capturas de tela e descrição coerentes com o jogo.
 - [ ] Revisar direitos de uso dos recursos artísticos, fontes, sons e bibliotecas.
-- [ ] Com a versão web pronta e testada, avaliar e integrar o Capacitor e gerar um APK de teste.
-- [ ] Integrar feedback tátil nativo no APK. No teste em Android, a versão web permaneceu sem vibração com a opção ligada. Validar em um aparelho físico o pulso leve ao encaixar e o pulso de confirmação ao formar um trio, com a opção do jogo ligada e desligada e respeitando os ajustes do sistema.
-- [ ] Verificar o aplicativo em celular físico, incluindo tela cheia, áreas seguras, salvamento, áudio, vibração, interrupções e funcionamento offline.
-- [ ] Preparar versão Android assinada, documentar a compilação e proteger a chave de assinatura.
+- [x] Integrar o Capacitor e gerar um APK de teste para Android. A versão 0.1.6 está publicada como release.
+- [x] Integrar feedback tátil nativo no APK. Thiago confirmou que a vibração funciona no aparelho com a versão 0.1.6.
+- [ ] Verificar os detalhes do feedback tátil em outros aparelhos e combinações de ajustes do sistema.
+- [x] Dar como aprovada a etapa geral de funcionamento no Android, conforme orientação de Thiago em 8 de novembro de 2026.
+- [ ] Ampliar a verificação do aplicativo em outros aparelhos e registrar resultados individuais de tela cheia, áreas seguras, salvamento, áudio, vibração, interrupções e funcionamento offline.
+- [x] Publicar uma versão Android assinada de teste: release 0.1.6.
+- [ ] Documentar a compilação de distribuição e conferir a proteção e recuperação da chave de assinatura.
 - [ ] Conferir os requisitos vigentes da Google Play, incluindo testes, compatibilidade, segurança de dados e políticas aplicáveis.
 - [ ] Realizar teste fechado quando exigido e corrigir os problemas encontrados.
 - [ ] Publicar a primeira versão quando estiver pronta, com histórico de mudanças e canal de suporte.
@@ -208,5 +213,5 @@ Entrega: versão pública gratuita e sem anúncios, acompanhada de instruções 
 - Quantidade de desfazimentos e limites de busca da dica para fases maiores.
 - Fórmula de pontuação e se combos terão uma janela de tempo na campanha.
 - Tratamento de troca entre itens acessíveis em uma versão futura.
-- Validar a retomada após interrupções e atualizações em diferentes navegadores e, depois, no aplicativo Android.
+- Ampliar a validação da retomada após interrupções e atualizações em diferentes navegadores e aparelhos Android.
 - Ampliar os modelos usados na geração e testar dificuldade, legibilidade em celulares e limites da dica nas fases geradas.
