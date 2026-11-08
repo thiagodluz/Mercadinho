@@ -16,11 +16,33 @@
     body { margin: 0; min-height: 100dvh; background: radial-gradient(ellipse at top, #fff3d9, #e3bd86); }
     button { font: inherit; cursor: pointer; }
     .app {
+      --top-space: max(30px, calc(env(safe-area-inset-top) + 22px));
+      --side-space: clamp(8px, 2.2vw, 14px);
+      --wall-color: #f6dfb7;
       position: relative; isolation: isolate; width: min(100%, 520px); min-height: 100dvh; margin: auto;
-      padding: max(30px, calc(env(safe-area-inset-top) + 22px)) clamp(8px, 2.2vw, 14px) max(20px, env(safe-area-inset-bottom));
+      padding: var(--top-space) var(--side-space) max(20px, env(safe-area-inset-bottom));
       display: flex; flex-direction: column; align-items: center;
-      background: repeating-linear-gradient(0deg, #fff5d026 0 2px, transparent 2px 31px), linear-gradient(#eabf88, #fff0d0 210px, #f5d6a3);
+      background: linear-gradient(var(--wall-color) 80%, #efd2a0);
       box-shadow: 0 0 70px #82481539;
+    }
+    .shop-stage { position: relative; isolation: isolate; width: 100%; }
+    .shop-stage::before, .shop-stage::after {
+      content: ''; position: absolute; inset-inline: calc(-1 * var(--side-space)); pointer-events: none;
+    }
+    .shop-stage::before {
+      z-index: -1; top: calc(-1 * var(--top-space)); bottom: -12px;
+      background:
+        linear-gradient(to top, var(--wall-color), transparent 12px),
+        url("assets/cenario/mercearia.webp") center / 100% 100% no-repeat,
+        radial-gradient(ellipse at 50% 24%, #fff1d5, #e2af76);
+    }
+    .shop-stage::after {
+      bottom: -12px; height: clamp(54px, 19vw, 98px);
+      background-image: url("assets/cenario/bananas.webp"), url("assets/cenario/laranjas.webp");
+      background-size: clamp(64px, 20vw, 103px) auto;
+      background-position: left -22px bottom -8px, right -22px bottom -8px;
+      background-repeat: no-repeat;
+      mask-image: linear-gradient(transparent, #000 11%, #000 80%, transparent);
     }
     .awning {
       position: absolute; inset: 0 0 auto; height: max(30px, calc(env(safe-area-inset-top) + 24px));
@@ -30,7 +52,7 @@
     .awning span:nth-child(even) { background: linear-gradient(90deg, #f0d9a4, #fff0c5 45%, #e9c892); }
     .vine { position: absolute; z-index: 3; width: clamp(41px, 14vw, 82px); height: auto; top: 0; left: 0; pointer-events: none; filter: drop-shadow(1px 3px 2px #46381643); }
     header { position: relative; text-align: center; width: 100%; }
-    .sign { position: relative; width: min(74%, 344px); margin: -8px auto 0; filter: drop-shadow(0 4px 3px #7b431c48); }
+    .sign { position: relative; width: min(74%, 344px); margin: -8px auto 0; filter: drop-shadow(0 5px 4px #7b431c66); }
     .sign-art { display: block; width: 100%; }
     h1 {
       position: absolute; inset: 43% 0 auto; margin: 0; color: #773512;
@@ -52,7 +74,7 @@
     .pause-dialog h2 { margin: 0 0 8px; }
     .pause-dialog p { margin: 0 0 18px; }
     .pause-dialog .control { width: 100%; }
-    .instructions { margin: 9px auto 10px; max-width: 340px; font-size: .86rem; line-height: 1.4; color: #6e482b; }
+    .instructions { margin: 9px auto 10px; max-width: 340px; font-size: .86rem; line-height: 1.4; color: #6e482b; text-shadow: 0 1px 3px #fff2ce; }
     .board {
       --crown: clamp(6px, 1.9vw, 10px);
       --rail: clamp(8px, 2.4vw, 12px);
@@ -91,6 +113,9 @@
       border-radius: 6px 6px 4px 4px;
       background: linear-gradient(90deg, #fff4bf55, transparent 17%, transparent 81%, #74340840), #d68c42;
       box-shadow: 0 2px #9e4c20, 0 4px 8px #74370e44;
+    }
+    .shelf-row:last-child, .board:not(.board-campaign) > .shelf {
+      box-shadow: 0 2px #9e4c20, 0 10px 14px -5px #5b2e155e;
     }
     .shelf-row::before, .shelf-row::after,
     .board:not(.board-campaign) > .shelf::before, .board:not(.board-campaign) > .shelf::after {
@@ -179,15 +204,10 @@
     .revealed .front-row .item { animation: reveal-row .28s ease-out both; }
     @keyframes match-pop { 35% { transform: translateY(-5px) scale(1.12); filter: brightness(1.25); } 100% { transform: translateY(-15px) scale(.15); opacity: 0; } }
     @keyframes reveal-row { from { transform: translateY(-12px) scale(.8); opacity: .35; filter: brightness(.7); } to { transform: none; opacity: 1; filter: none; } }
-    .controls { width: 100%; margin-top: 27px; display: flex; gap: 10px; }
+    .controls { position: relative; z-index: 1; display: flex; justify-content: center; width: 100%; margin-top: 16px; gap: clamp(8px, 4vw, 20px); }
     .control { flex: 1; min-height: 50px; border: 0; border-radius: 12px; padding: 10px; font-weight: 800; background: #78984b; color: white; box-shadow: 0 4px #537135; }
     .control.secondary { background: #fff8eb; color: #795634; box-shadow: 0 4px #d6bc94; }
     .control:disabled { opacity: .48; cursor: default; }
-    .controls { position: relative; justify-content: center; margin-top: 16px; gap: clamp(8px, 4vw, 20px); }
-    .controls::before {
-      content: ''; position: absolute; z-index: -1; inset: 34% -8px -10px; border-radius: 6px;
-      background: repeating-linear-gradient(90deg, #8ba94a32 0 19px, transparent 19px 38px), repeating-linear-gradient(#8ba94a32 0 17px, transparent 17px 34px), #fff2ce;
-    }
     .controls .control {
       display: grid; place-items: center; align-content: center; gap: 1px; flex: 0 1 92px; min-height: 62px;
       padding: 4px 5px; border: 3px solid #fff2d1; border-radius: 23px; color: #fff8dc;
@@ -232,31 +252,33 @@
       </g>
       <path d="m33 44 29-5m-36 40 19-14m-16 71-18-12M22 59 8 43" fill="none" stroke="#d0db72" stroke-opacity=".55" stroke-width="1.2"/>
     </svg>
-    <header>
-      <div class="sign">
-        <svg class="sign-art" viewBox="0 0 380 148" aria-hidden="true">
-          <defs>
-            <linearGradient id="sign-edge" x2="0" y2="1"><stop stop-color="#ffc477"/><stop offset="1" stop-color="#c66a2c"/></linearGradient>
-            <linearGradient id="sign-face" x2="0" y2="1"><stop stop-color="#fff1c5"/><stop offset="1" stop-color="#f9ce8a"/></linearGradient>
-          </defs>
-          <path d="M73 127 Q28 137 8 110 Q37 105 57 114 Q21 103 24 78 Q50 83 66 113 M310 127 Q355 137 374 110 Q345 105 322 114 Q357 103 355 78 Q330 83 314 113" fill="#5b8d2e" stroke="#40701f" stroke-width="2"/>
-          <path d="M77 39 V0 M303 39 V0" stroke="#7b3b1d" stroke-width="10"/>
-          <path d="M33 53 Q82 38 139 37 Q149 5 190 5 Q231 5 241 37 Q300 39 347 53 Q363 58 359 72 L345 124 Q341 141 325 137 Q190 119 55 137 Q38 140 34 125 L20 72 Q17 58 33 53Z" fill="url(#sign-edge)" stroke="#98501f" stroke-width="5"/>
-          <path d="M40 58 Q87 45 145 44 Q155 12 190 12 Q226 12 235 44 Q294 45 340 58 Q351 61 348 72 L336 119 Q334 129 322 127 Q190 110 58 127 Q47 130 44 119 L32 72 Q30 62 40 58Z" fill="url(#sign-face)" stroke="#efac60" stroke-width="3"/>
-          <path d="M174 35 H206 L201 53 H179 Z M182 35 Q184 19 193 19 Q198 19 198 23 M186 40 V48 M194 40 V48" fill="none" stroke="#85431c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M124 114 Q190 97 256 114" fill="none" stroke="#e98b30" stroke-width="6" stroke-linecap="round"/>
-        </svg>
-        <h1>Mercadinho</h1>
+    <div class="shop-stage">
+      <header>
+        <div class="sign">
+          <svg class="sign-art" viewBox="0 0 380 148" aria-hidden="true">
+            <defs>
+              <linearGradient id="sign-edge" x2="0" y2="1"><stop stop-color="#ffc477"/><stop offset="1" stop-color="#c66a2c"/></linearGradient>
+              <linearGradient id="sign-face" x2="0" y2="1"><stop stop-color="#fff1c5"/><stop offset="1" stop-color="#f9ce8a"/></linearGradient>
+            </defs>
+            <path d="M73 127 Q28 137 8 110 Q37 105 57 114 Q21 103 24 78 Q50 83 66 113 M310 127 Q355 137 374 110 Q345 105 322 114 Q357 103 355 78 Q330 83 314 113" fill="#5b8d2e" stroke="#40701f" stroke-width="2"/>
+            <path d="M77 39 V0 M303 39 V0" stroke="#7b3b1d" stroke-width="10"/>
+            <path d="M33 53 Q82 38 139 37 Q149 5 190 5 Q231 5 241 37 Q300 39 347 53 Q363 58 359 72 L345 124 Q341 141 325 137 Q190 119 55 137 Q38 140 34 125 L20 72 Q17 58 33 53Z" fill="url(#sign-edge)" stroke="#98501f" stroke-width="5"/>
+            <path d="M40 58 Q87 45 145 44 Q155 12 190 12 Q226 12 235 44 Q294 45 340 58 Q351 61 348 72 L336 119 Q334 129 322 127 Q190 110 58 127 Q47 130 44 119 L32 72 Q30 62 40 58Z" fill="url(#sign-face)" stroke="#efac60" stroke-width="3"/>
+            <path d="M174 35 H206 L201 53 H179 Z M182 35 Q184 19 193 19 Q198 19 198 23 M186 40 V48 M194 40 V48" fill="none" stroke="#85431c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M124 114 Q190 97 256 114" fill="none" stroke="#e98b30" stroke-width="6" stroke-linecap="round"/>
+          </svg>
+          <h1>Mercadinho</h1>
+        </div>
+        <div class="level-badge"><span aria-hidden="true">★ ★</span><div id="level" class="level">Fase 1</div><span aria-hidden="true">★ ★</span></div>
+        <button id="pause" class="pause-control" type="button" aria-label="Pausar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="4" y="3" width="6" height="18" rx="2"/><rect x="14" y="3" width="6" height="18" rx="2"/></svg></button>
+        <p id="instructions" class="instructions">Arraste os produtos e junte três iguais na mesma prateleira.</p>
+      </header>
+      <div id="board" class="board" aria-label="Prateleiras do jogo"></div>
+      <div class="controls">
+        <button id="undo" class="control secondary" type="button" disabled><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m13 6-8 8 8 8M6 14h13a7 7 0 0 1 0 14h-5"/></svg>Desfazer</button>
+        <button id="hint" class="control secondary" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 21c0-3-3-3-3-8a8 8 0 0 1 16 0c0 5-3 5-3 8l-1 3h-8ZM14 28h4M16 1v1M4 5l2 2M1 14h3M26 7l2-2M28 14h3"/></svg>Dica</button>
+        <button id="restart" class="control" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M25 11a11 11 0 1 0 1 12M26 4v9h-9"/></svg>Reiniciar</button>
       </div>
-      <div class="level-badge"><span aria-hidden="true">★ ★</span><div id="level" class="level">Fase 1</div><span aria-hidden="true">★ ★</span></div>
-      <button id="pause" class="pause-control" type="button" aria-label="Pausar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="4" y="3" width="6" height="18" rx="2"/><rect x="14" y="3" width="6" height="18" rx="2"/></svg></button>
-      <p id="instructions" class="instructions">Arraste os produtos e junte três iguais na mesma prateleira.</p>
-    </header>
-    <div id="board" class="board" aria-label="Prateleiras do jogo"></div>
-    <div class="controls">
-      <button id="undo" class="control secondary" type="button" disabled><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m13 6-8 8 8 8M6 14h13a7 7 0 0 1 0 14h-5"/></svg>Desfazer</button>
-      <button id="hint" class="control secondary" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 21c0-3-3-3-3-8a8 8 0 0 1 16 0c0 5-3 5-3 8l-1 3h-8ZM14 28h4M16 1v1M4 5l2 2M1 14h3M26 7l2-2M28 14h3"/></svg>Dica</button>
-      <button id="restart" class="control" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M25 11a11 11 0 1 0 1 12M26 4v9h-9"/></svg>Reiniciar</button>
     </div>
     <p id="message" class="message" aria-live="polite">Os produtos escuros estão na fileira de trás.</p>
     <section id="win" class="win" hidden aria-live="polite"><h2>Prateleiras organizadas!</h2><p id="win-message"></p></section>
