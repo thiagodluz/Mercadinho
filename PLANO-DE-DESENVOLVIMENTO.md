@@ -167,9 +167,10 @@ Entrega: campanha inicial completa e jogável offline.
 - [ ] Testar consistência da versão web após fechar, reabrir e atualizar o jogo.
 - [ ] Validar vitória, impasse, desfazer e reinício em fases com camadas, dispensadores e correntes.
 - [ ] Avaliar fluidez, consumo de bateria, tamanho dos recursos e legibilidade na versão web.
-- [ ] Fazer testes com jogadores e registrar onde ficam confusos ou presos.
+- [x] Preparar a beta web para jogadores, com [instruções, atalhos e perguntas de feedback](README.md#teste-beta-no-navegador).
+- [ ] Reunir relatos de jogadores em aparelhos diferentes e registrar onde ficam confusos ou presos.
 - [ ] Priorizar as fases 20, 29 e 30 no teste humano das primeiras 30 fases. Na simulação com 200 partidas por fase, elas tiveram as menores taxas de vitória.
-- [ ] Corrigir falhas e ajustar a dificuldade antes da publicação.
+- [ ] Corrigir as falhas encontradas na beta e ajustar a dificuldade conforme os relatos antes de gerar o próximo APK assinado.
 
 Entrega: versão candidata com fases verificadas e desempenho aceitável nos aparelhos testados.
 

@@ -75,9 +75,23 @@ Os testes cobrem as oito fases iniciais, os 200 tabuleiros da campanha, continua
 
 A lógica do jogo fica em `index.html`, e `fases.js` contém os tabuleiros e as soluções pré-calculadas. O gerador em `tools/fases/` usa as regras do jogo e roda apenas no computador de desenvolvimento. `node tools/fases/campanha.cjs index.html` monta e grava um novo banco em `fases.js`. Ao substituir o banco publicado, atualize a versão da campanha para que o jogo reinicie os tabuleiros incompatíveis na mesma fase.
 
+## Teste beta no navegador
+
+[Abra o Mercadinho no celular](https://thiagodluz.github.io/Mercadinho/) e jogue de três a cinco fases. Você pode começar direto, sem instalar nada. Experimente tanto arrastar quanto tocar no produto e depois na vaga. Em **Som e vibração**, a música ambiente pode ser ativada para ouvir durante a partida.
+
+Para testar a dificuldade, abra a [fase 20](https://thiagodluz.github.io/Mercadinho/?teste=20), a [fase 29](https://thiagodluz.github.io/Mercadinho/?teste=29) ou a [fase 30](https://thiagodluz.github.io/Mercadinho/?teste=30). Esses atalhos abrem partidas de teste sem alterar seu avanço na campanha.
+
+Envie seu relato a quem convidou você para jogar. Informe o aparelho, o navegador e a fase, se souber, e conte:
+
+- O que demorou para entender ou ficou confuso?
+- Onde ficou difícil, fácil demais ou repetitivo?
+- Se algo falhou, o que você fez, o que esperava e o que aconteceu?
+
+Se o gesto de voltar do Android atrapalhar ao arrastar, experimente **Acessibilidade → Afastar tabuleiro das bordas** e diga se ajudou. A vibração nativa será avaliada no aplicativo Android.
+
 ## Próximas etapas
 
-A prioridade é terminar e testar o jogo em HTML, CSS e JavaScript: fortalecer as regras, ampliar as fases, refinar a apresentação e validar a experiência em celulares. A preparação de um aplicativo Android virá depois que a versão web estiver pronta e testada.
+Reunir relatos da beta, corrigir as falhas que atrapalham jogar e ajustar os pontos de dificuldade que aparecerem no teste. Depois, empacotar as melhorias em um único APK de teste.
 
 Veja o [plano completo de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md) para acompanhar os próximos passos.
 
