@@ -11,7 +11,6 @@
       font-family: system-ui, sans-serif;
       color: #573019;
       background: #f2dcb3;
-      --wood-grain: repeating-linear-gradient(2deg, #8b441114 0 1px, transparent 1px 6px, #fff1ba24 6px 7px, transparent 7px 12px);
     }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100dvh; background: radial-gradient(ellipse at top, #fff3d9, #e3bd86); }
@@ -55,10 +54,12 @@
     .pause-dialog .control { width: 100%; }
     .instructions { margin: 9px auto 10px; max-width: 340px; font-size: .86rem; line-height: 1.4; color: #6e482b; }
     .board {
+      --crown: clamp(6px, 1.9vw, 10px);
+      --rail: clamp(8px, 2.4vw, 12px);
+      --post: clamp(5px, 1.6vw, 8px);
+      --post-art: url("assets/prateleira/montante.webp");
+      --rail-art: url("assets/prateleira/travessa.webp");
       position: relative; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 4px; padding: 7px 6px; border: 2px solid #ad5925; border-radius: 10px;
-      background: var(--wood-grain), linear-gradient(105deg, #bb6930, #f4b16a 47%, #d98744);
-      box-shadow: inset 0 2px #ffe2a4, inset 0 -3px #9e4c23, 0 5px #955124, 0 12px 19px #7948203d;
       touch-action: none; user-select: none;
     }
     @media (min-width: 360px) {
@@ -72,25 +73,55 @@
     .board-steps .shelf:nth-child(1), .board-steps .shelf:nth-child(4) { grid-column: 1 / span 2; }
     .board-steps .shelf:nth-child(2), .board-steps .shelf:nth-child(5) { grid-column: 3 / span 2; }
     .board-steps .shelf:nth-child(3), .board-steps .shelf:nth-child(6) { grid-column: 2 / span 2; }
-    .board.board-campaign { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-    .board-campaign .shelf { grid-column: var(--shelf-column) / span 2; height: clamp(84px, 24vw, 116px); }
-    @media (max-height: 740px) {
-      .board-campaign.board-four-rows .shelf { height: clamp(69px, 12dvh, 86px); }
+    .board.board-campaign { grid-template-columns: minmax(0, 1fr); }
+    .shelf-row {
+      position: relative; display: grid; grid-template-columns: repeat(var(--shelf-count), minmax(0, 1fr));
+      width: calc(100% * var(--shelf-count) / 3); justify-self: center;
+      padding: var(--crown) calc(var(--post) / 2) var(--rail);
     }
+    .shelf-row + .shelf-row { margin-top: -3px; }
     .shelf {
-      position: relative; min-width: 0; height: clamp(94px, 27vw, 135px); display: flex; align-items: end;
-      border: 3px solid #cd8247; border-bottom: 8px solid #efab62; border-radius: 3px;
-      background:
-        linear-gradient(90deg, #38180566, transparent 19%, transparent 83%, #3818054d),
-        var(--wood-grain), linear-gradient(#4a210e, #8c4924 73%, #af642e 74%, #f9bb73);
-      box-shadow: inset 0 5px 9px #341509b3, inset 2px 0 #6e371a, 0 2px #ac5428, 0 -1px #ffe0a0;
+      position: relative; min-width: 0; height: clamp(94px, 27vw, 135px);
     }
-    .shelf::after {
-      content: ''; position: absolute; inset: auto -3px -7px; height: 5px; pointer-events: none;
-      background: var(--wood-grain), linear-gradient(#ffe0a2, #efab62 39%, #ce7737); border-radius: 0 0 2px 2px;
+    .shelf-row .shelf { height: clamp(74px, 22vw, 106px); }
+    @media (max-height: 740px) {
+      .board-four-rows .shelf-row .shelf { height: clamp(57px, 10.4dvh, 76px); }
     }
-    .back-row, .front-row { position: absolute; inset: 0 1px 1px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
-    .back-row { inset: 3px 1px 13%; transform: scaleX(.9); opacity: .79; filter: brightness(.62) saturate(.79); pointer-events: none; }
+    .shelf-row, .board:not(.board-campaign) > .shelf {
+      border-radius: 6px 6px 4px 4px;
+      background: linear-gradient(90deg, #fff4bf55, transparent 17%, transparent 81%, #74340840), #d68c42;
+      box-shadow: 0 2px #9e4c20, 0 4px 8px #74370e44;
+    }
+    .shelf-row::before, .shelf-row::after,
+    .board:not(.board-campaign) > .shelf::before, .board:not(.board-campaign) > .shelf::after {
+      content: ''; position: absolute; inset-inline: 0; z-index: 1; pointer-events: none;
+      background: var(--rail-art) center / 100% 100% no-repeat,
+        linear-gradient(#ffe0a1, #eaa251 56%, #a94d1d);
+    }
+    .shelf-row::before, .board:not(.board-campaign) > .shelf::before {
+      top: 0; height: var(--crown); border-radius: 6px 6px 1px 1px;
+      box-shadow: inset 0 1px #ffe7a6, 0 2px 4px #43200caa;
+    }
+    .shelf-row::after, .board:not(.board-campaign) > .shelf::after {
+      bottom: 0; height: var(--rail); border-radius: 1px 1px 5px 5px;
+      box-shadow: inset 0 1px #ffe3a0, inset 0 -2px #a65024a0, 0 2px 2px #63331655;
+    }
+    .shelf-interior {
+      position: absolute; inset: var(--crown) var(--post) var(--rail);
+      background: url("assets/prateleira/nicho.webp") center / 100% 100% no-repeat,
+        linear-gradient(#401b08, #803d18 83%, #d3914c);
+    }
+    .shelf-row .shelf-interior { inset: 0 calc(var(--post) / 2); }
+    .shelf-interior::before, .shelf-interior::after {
+      content: ''; position: absolute; top: 0; bottom: 0; width: var(--post); pointer-events: none;
+      background: var(--post-art) center / 100% 100% no-repeat, linear-gradient(90deg, #d78437, #ffe0a0, #a65427);
+    }
+    .shelf-interior::before { right: 100%; }
+    .shelf-interior::after { left: 100%; }
+    /* Um montante é compartilhado por dois nichos na mesma fileira. */
+    .shelf-row .shelf:not(:last-child) .shelf-interior::after { display: none; }
+    .back-row, .front-row { position: absolute; inset: 2px 3px 5%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
+    .back-row { inset: 4px 5px 16%; transform: scaleX(.94); opacity: .79; filter: brightness(.62) saturate(.79); pointer-events: none; }
     .back-row > span { display: flex; justify-content: center; align-items: end; height: 100%; min-width: 0; min-height: 0; }
     .front-row { z-index: 1; }
     .back-count { position: absolute; z-index: 2; top: 2px; right: 3px; padding: 1px 4px; border-radius: 5px; background: #fff1d0; color: #704020; font-size: .65rem; font-weight: 900; pointer-events: none; }
@@ -102,20 +133,31 @@
     .slot.selected { background: #ffdf7255; box-shadow: inset 0 0 0 2px #ffdf72; }
     .slot.drop-target { background: #c9ec8055; box-shadow: inset 0 0 0 3px #d8f795, 0 0 12px #e4ffb8; }
     .slot.drag-origin .item { opacity: .25; }
-    .dispenser { background: radial-gradient(ellipse at 50% 95%, #ca884f, #693516 77%); }
     .dispenser .front-row {
-      display: flex; justify-content: center; inset: 9px 4px 3px; padding: 9px 1px 9px;
-      border: 4px solid #ffdc9d; border-radius: 9px; box-shadow: 0 2px 3px #3d1c0e99, inset 0 1px 5px #3d1c0ecc;
+      display: flex; justify-content: center; inset: 8% 5% 5%; padding: 12px 0 6px;
+      border: 3px solid #ffdc9d; border-radius: 10px 10px 5px 5px;
+      background: radial-gradient(ellipse at bottom, #ac633688, #3b200fb3);
+      box-shadow: 0 2px 3px #3d1c0e99, inset 0 1px 5px #3d1c0ecc;
     }
     .dispenser .slot { width: 56%; max-width: 58px; height: 100%; }
-    .dispenser-label {
-      position: absolute; z-index: 2; inset: 1px 3px auto; height: 17px; padding-top: 2px; text-align: center;
-      border-radius: 6px 6px 7px 7px;
-      background: linear-gradient(#fff8c94d, #ffffff00 50%, #e188193d),
-        repeating-linear-gradient(90deg, #ffab21 0 15px, #fff0c7 15px 30px);
-      box-shadow: inset 0 1px #fff8d3, 0 2px #884a24a3; color: #4e2a16; font-size: .63rem; font-weight: 900; pointer-events: none;
+    .dispenser-awning {
+      position: absolute; z-index: 2; inset: 4% 4% auto; height: clamp(12px, 3.9vw, 19px);
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+      border-radius: 7px 7px 5px 5px; box-shadow: 0 3px 3px #51271077; pointer-events: none;
     }
-    .dispenser-count { position: absolute; z-index: 2; right: 3px; bottom: 0; background: #fff1d0; border: 1px solid #e6a24b; color: #704020; border-radius: 5px; padding: 1px 4px; font-size: .65rem; font-weight: 900; pointer-events: none; }
+    .dispenser-awning span {
+      border-radius: 0 0 44% 44%; background: linear-gradient(#ffb733, #f28b08 72%, #d76b10);
+      box-shadow: inset 0 1px #fff0ab, inset 0 -1px #ffca58;
+    }
+    .dispenser-awning span:nth-child(even) { background: linear-gradient(#fff4cc, #f4c991); }
+    .dispenser-awning span:first-child { border-top-left-radius: 7px; }
+    .dispenser-awning span:last-child { border-top-right-radius: 7px; }
+    .dispenser-count {
+      position: absolute; z-index: 2; bottom: 2%; left: 50%; transform: translateX(-50%); white-space: nowrap;
+      padding: 1px 6px; border: 1px solid #e89d3c; border-radius: 6px;
+      background: linear-gradient(#fff3cc, #ffd890); box-shadow: 0 1px 2px #5c290e88;
+      color: #6e3416; font-size: .65rem; font-weight: 900; pointer-events: none;
+    }
     .lock-overlay { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; pointer-events: none; background: #38231377; }
     .chain-art { position: absolute; width: 110%; height: 66%; inset: 5% -5% auto; filter: drop-shadow(0 2px 1px #351709); }
     .lock-badge {
@@ -731,7 +773,6 @@
       function render(matching = [], revealed = [], unlocking = []) {
         const rows = levelDefinition.layout;
         const layout = rows ? 'campaign' : tutorialLayout(currentLevel);
-        const columns = rows?.flatMap(count => Array.from({ length: count }, (_, i) => 4 - count + i * 2));
         board.classList.toggle('board-campaign', Boolean(rows));
         board.classList.toggle('board-four-rows', rows?.length === 4);
         board.classList.toggle('board-shaped', layout === 'cross' || layout === 'steps');
@@ -744,14 +785,13 @@
             : 'Sem movimentos disponíveis. Reinicie a fase.';
         }
         const activeLock = firstActiveLock(shelves);
-        board.innerHTML = shelves.map((shelf, shelfIndex) => {
-          const column = columns ? ` style="--shelf-column:${columns[shelfIndex]}"` : '';
+        const compartments = shelves.map((shelf, shelfIndex) => {
           if (shelf.type === 'dispenser') {
             const item = shelf.front[1];
             const count = shelf.queue.length + (item ? 1 : 0);
             const active = selected && selected.shelf === shelfIndex && selected.slot === 1;
             const label = item ? `Dispensador: ${products[item].name}, ${count} produtos restantes` : 'Dispensador vazio';
-            return `<div class="shelf dispenser"${column}><span class="dispenser-label">Caixa de produtos</span><div class="front-row"><button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="1" aria-label="${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button></div><span class="dispenser-count" aria-hidden="true">${count} restantes</span></div>`;
+            return `<div class="shelf dispenser"><div class="shelf-interior"><div class="dispenser-awning" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><div class="front-row"><button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="1" aria-label="${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button></div><span class="dispenser-count" aria-hidden="true">${count} restantes</span></div></div>`;
           }
           const behind = shelf.back[0] || [null, null, null];
           const extra = shelf.back.length - 1;
@@ -771,8 +811,14 @@
               <path d="M-5 2Q75 60 155 2" stroke="#fff0b0" stroke-width="1.4" stroke-dasharray="7 5"/>
             </svg><span class="lock-badge">${shelf.lock.remaining}</span>
             <span class="lock-caption">${shelf === activeLock ? 'Abre primeiro' : 'Abre depois'}</span></div>` : '';
-          return `<div class="shelf ${effect}"${column}><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}${layers}</div>`;
-        }).join('');
+          return `<div class="shelf ${effect}"><div class="shelf-interior"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}${layers}</div></div>`;
+        });
+        let rowStart = 0;
+        board.innerHTML = rows ? rows.map(count => {
+          const row = compartments.slice(rowStart, rowStart + count).join('');
+          rowStart += count;
+          return `<div class="shelf-row" style="--shelf-count:${count}">${row}</div>`;
+        }).join('') : compartments.join('');
         if (currentHint) {
           for (const [pos, cls] of [[currentHint.from, 'hint-origin'], [currentHint.to, 'hint-destination']]) {
             const el = board.querySelector(`[data-shelf="${pos.shelf}"][data-slot="${pos.slot}"]`);
