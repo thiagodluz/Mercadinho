@@ -8,9 +8,9 @@ O jogo será gratuito para instalar e jogar, sem anúncios, compras internas, as
 
 ## Estado atual — 7 de novembro de 2026
 
-O repositório contém um protótipo web publicado no GitHub Pages, com oito fases iniciais e uma sequência contínua de fases geradas a partir da fase 9. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases 7 e 8 apresentam o chá como quarto produto e combinam as mecânicas já introduzidas. O catálogo possui 20 produtos ilustrados provisórios; as fases usam controles por arraste ou seleção, desfazer, reinício e tela de vitória.
+O repositório contém um protótipo web publicado no GitHub Pages, com oito fases iniciais e 200 fases geradas e verificadas, da fase 9 à 208, e continuação sem fim a partir da fase 209. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases 7 e 8 apresentam o chá como quarto produto e combinam as mecânicas já introduzidas. O catálogo possui 20 produtos ilustrados provisórios; as fases usam controles por arraste ou seleção, desfazer, reinício e tela de vitória.
 
-O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. As fases avançadas com seis compartimentos alternam formatos de prateleira. A partir da fase 9, tabuleiros gerados usam 6 a 14 tipos de produto, aumentados por faixas de progressão, com posições e produtos variados. Uma semente salva mantém cada tabuleiro estável ao retomar. As fases geradas usam filas intercaladas e fileiras de fundo com produtos misturados, com mais de uma prateleira com camadas a partir da fase 21. Partidas geradas antes desta atualização mantêm o formato anterior até terminar. Uma fase em andamento é retomada após recarregar, a partir da última jogada concluída; até 100 jogadas ficam disponíveis no histórico salvo. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
+O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. A nova campanha usa 43 formatos de tabuleiro, até quatro linhas de prateleiras e filas de dispensador sem produtos iguais consecutivos. O selo `+1` indica uma fileira além da que aparece escurecida. A dificuldade foi medida com um jogador simulado, com desafios nas fases terminadas em 0 e respiros nas terminadas em 5. A partir da fase 209, os últimos 50 tabuleiros são reaproveitados com os produtos variados por semente. Partidas geradas antes desta atualização mantêm seu tabuleiro até a próxima fase. Uma fase em andamento é retomada após recarregar, a partir da última jogada concluída; até 100 jogadas ficam disponíveis no histórico salvo. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
 
 O protótipo foi verificado no navegador e por testes pontuais da lógica. O repositório inclui testes automatizados da lógica, das soluções das fases, da persistência, da pausa e da preferência de animações; a cobertura ainda precisa ser ampliada. O toque, a vibração, o áudio e a retomada precisam ser verificados em um celular físico. Ainda é necessário criar o aplicativo Android e validar o funcionamento offline da versão web publicada.
 
@@ -78,12 +78,12 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 
 - Desfazer restaura integralmente a jogada anterior, incluindo produtos, camadas, dispensadores e correntes. Durante animações, aguardar o estado estável antes de aplicar a ação.
 - Reiniciar recompõe a configuração inicial da fase, mediante confirmação.
-- A dica procura uma sequência completa até a vitória e destaca a primeira jogada. A busca tem limites de tempo e estados. A interface distingue um limite atingido de uma posição comprovadamente sem solução.
+- As fases da nova campanha têm uma solução inicial encurtada e verificada. Ao sair da sequência sugerida, a dica procura um caminho para a posição atual dentro dos limites de tempo e estados. A interface distingue um limite atingido de uma posição comprovadamente sem solução.
 - Já há controles separados de música e efeitos, vibração opcional em navegadores compatíveis e suporte à preferência de movimento reduzido do sistema. Há um menu de pausa na versão web, que interrompe a música e permite retomar a partida. Há uma opção própria para reduzir animações, respeitando também a preferência do sistema.
 
 ## Próximas prioridades
 
-1. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. A matriz atual verifica 72 tabuleiros gerados em seis sementes, com até 14 tipos de produto. Ampliar a cobertura para posições intermediárias e repetir a validação da busca em outros celulares.
+1. **Fortalecer as regras e os testes.** Versionar testes de combinações, camadas, dispensadores, correntes, desfazer, reinício, desbloqueio e persistência. A matriz atual verifica os 200 tabuleiros da nova campanha e 72 amostras do gerador anterior em seis sementes. Ampliar a cobertura para posições intermediárias e repetir a validação da busca em outros celulares.
 2. **Criar mais conteúdo.** Ampliar a campanha gradualmente, projetar e validar uma solução para cada fase e avaliar a dificuldade com jogadores.
 3. **Refinar a apresentação.** Evoluir as ilustrações e as animações a partir do mockup e substituir ou aprovar a melodia provisória após escuta e testes.
 4. **Testar e finalizar a versão web.** Conferir arraste, encaixe, áudio, vibração, legibilidade, salvamento e retomada no navegador do computador e em um celular físico. Implementar e verificar o funcionamento offline pretendido.
@@ -144,15 +144,16 @@ Entrega: uma versão visualmente consistente e confortável de jogar.
 
 ### 5. Conteúdo e progressão
 
-- [ ] Criar entre 20 e 30 fases manuais para a primeira versão de teste.
+- [x] Montar oito fases manuais de introdução e um banco de 200 fases distintas.
 - [ ] Introduzir cada mecânica de forma gradual e variar a dificuldade sem saltos bruscos.
-- [ ] Variar quantidade de vagas, tipos de produto, profundidade e posição dos obstáculos.
+- [x] Variar quantidade de vagas, tipos de produto, profundidade e posição dos obstáculos.
 - [x] Salvar a fase mais avançada e as preferências de áudio no navegador.
 - [x] Salvar e retomar o estado estabilizado da fase em andamento no navegador, incluindo até 100 jogadas para desfazer.
 - [ ] Verificar a preservação dos dados em futuras atualizações da versão web e, posteriormente, na versão Android.
 - [x] Avançar pelas fases em sequência, permitir reiniciar a fase atual e preservar o progresso ao recarregar o navegador.
 - [ ] Validar o comportamento após fechamento e atualização no aplicativo Android.
-- [ ] Validar solução e conclusão de cada fase. Automatizar verificações de tabuleiro e acrescentar testes manuais para situações não cobertas.
+- [x] Verificar automaticamente uma solução para cada fase da campanha.
+- [ ] Testar a curva de dificuldade com jogadores e conferir os formatos com quatro linhas no celular.
 
 Entrega: campanha inicial completa e jogável offline.
 

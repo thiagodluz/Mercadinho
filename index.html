@@ -72,6 +72,11 @@
     .board-steps .shelf:nth-child(1), .board-steps .shelf:nth-child(4) { grid-column: 1 / span 2; }
     .board-steps .shelf:nth-child(2), .board-steps .shelf:nth-child(5) { grid-column: 3 / span 2; }
     .board-steps .shelf:nth-child(3), .board-steps .shelf:nth-child(6) { grid-column: 2 / span 2; }
+    .board.board-campaign { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .board-campaign .shelf { grid-column: var(--shelf-column) / span 2; height: clamp(84px, 24vw, 116px); }
+    @media (max-height: 740px) {
+      .board-campaign.board-four-rows .shelf { height: clamp(69px, 12dvh, 86px); }
+    }
     .shelf {
       position: relative; min-width: 0; height: clamp(94px, 27vw, 135px); display: flex; align-items: end;
       border: 3px solid #cd8247; border-bottom: 8px solid #efab62; border-radius: 3px;
@@ -86,6 +91,7 @@
     .back-row { transform: translateY(-10%) scale(.9); opacity: .56; filter: brightness(.49) saturate(.8); pointer-events: none; }
     .back-row > span { display: flex; justify-content: center; align-items: end; height: 84%; }
     .front-row { z-index: 1; }
+    .back-count { position: absolute; z-index: 2; top: 2px; right: 3px; padding: 1px 4px; border-radius: 5px; background: #fff1d0; color: #704020; font-size: .65rem; font-weight: 900; pointer-events: none; }
     .slot { position: relative; min-width: 0; height: 92%; display: flex; align-items: end; justify-content: center; border: 0; padding: 0 1px; background: transparent; border-radius: 7px; touch-action: none; }
     .slot:focus-visible { outline: 3px solid #ffdf72; outline-offset: -2px; }
     .slot.empty::after { content: ''; width: 77%; height: 7px; margin-bottom: 1px; background: #7b3f2070; border-radius: 4px; box-shadow: inset 0 1px 2px #6132128c, 0 1px #ffcd87; }
@@ -252,6 +258,7 @@
       <button id="resume" class="control" type="button">Continuar jogando</button>
     </dialog>
   </main>
+  <script src="fases.js"></script>
   <script>
     (() => {
       const icons = {
@@ -442,6 +449,8 @@
         }
       } catch { layoutSeed = Math.floor(Math.random() * 4294967296); }
       // Uma partida gerada pela versão anterior continua com seu gerador original.
+      const campaign = globalThis.mercadinhoCampanha || [];
+      const campaignVersion = 4;
       let legacyLevelIndex = null;
       let savedGeneratedLevel = null;
       let savedGenerator = null;
@@ -453,8 +462,16 @@
           if (savedGenerator === 1) legacyLevelIndex = previous.level;
         }
       } catch {}
-      // Fases infinitas são variações de modelos já solucionáveis. A mesma
-      // semente e o mesmo número sempre produzem exatamente o mesmo tabuleiro.
+      if (savedGenerator === campaignVersion && !campaign.length) {
+        message.textContent = 'Não foi possível carregar as fases. Recarregue a página para retomar sua partida.';
+        for (const control of [pauseButton, undo, hintButton, restart, resetProgress]) control.disabled = true;
+        return;
+      }
+      function generatorForLevel(index) {
+        if (index === savedGeneratedLevel && [1, 2, 3].includes(savedGenerator)) return savedGenerator;
+        return campaign.length ? campaignVersion : 3;
+      }
+      // A campanha é fixa. Depois dela, a semente troca os produtos dos modelos finais.
       function levelAt(index) {
         if (index < levels.length) return levels[index];
         let value = (layoutSeed ^ Math.imul(index + 1, 0x9e3779b1)) >>> 0;
@@ -471,6 +488,31 @@
             [items[i], items[j]] = [items[j], items[i]];
           }
           return items;
+        }
+        if (generatorForLevel(index) === campaignVersion) {
+          const offset = index - levels.length;
+          const replayCount = Math.min(50, campaign.length);
+          const model = campaign[offset] || campaign[campaign.length - replayCount + (offset - campaign.length) % replayCount];
+          let shelves = model.shelves;
+          if (offset >= campaign.length) {
+            const ids = Object.keys(products);
+            const shuffled = shuffle(ids.slice());
+            const mapping = Object.fromEntries(ids.map((id, i) => [id, shuffled[i]]));
+            const remap = item => item === null ? null : mapping[item];
+            shelves = model.shelves.map(shelf => ({
+              ...shelf,
+              front: shelf.front.map(remap),
+              back: shelf.back.map(row => row.map(remap)),
+              ...(shelf.queue ? { queue: shelf.queue.map(remap) } : {})
+            }));
+          }
+          return {
+            layout: model.layout,
+            shelves,
+            instructions: 'Organize os produtos e encontre todos os trios.',
+            hint: 'Use as vagas para organizar produtos e revelar as fileiras de trás.',
+            solution: model.hint
+          };
         }
         if (index !== legacyLevelIndex) {
           const count = index < 12 ? 6 : index < 20 ? 7 : index < 30 ? 8 : index < 60 ? 10 : index < 100 ? 12 : 14;
@@ -544,11 +586,12 @@
         return level;
       }
       function layoutForLevel(index) {
-        if (index < 3 || levelAt(index).shelves.length !== 6) return 'grid';
+        if (index < 3 || levelDefinition.shelves.length !== 6) return 'grid';
         return ['cross', 'steps', 'grid'][(layoutSeed + index - 3) % 3];
       }
       let currentLevel = unlocked;
-      let shelves = copy(levelAt(currentLevel).shelves);
+      let levelDefinition = levelAt(currentLevel);
+      let shelves = copy(levelDefinition.shelves);
       let history = [];
       let selected = null;
       let pointer = null;
@@ -575,7 +618,7 @@
       if (!completed) {
         try {
           const saved = JSON.parse(localStorage.getItem(saveKey) || 'null');
-          if (saved && saved.version === 1 && saved.level === currentLevel && validSnapshot(saved.shelves, levelAt(currentLevel)) && Array.isArray(saved.history) && saved.history.length <= 100 && saved.history.every(state => validSnapshot(state, levelAt(currentLevel)))) {
+          if (saved && saved.version === 1 && saved.level === currentLevel && validSnapshot(saved.shelves, levelDefinition) && Array.isArray(saved.history) && saved.history.length <= 100 && saved.history.every(state => validSnapshot(state, levelDefinition))) {
             shelves = saved.shelves;
             history = saved.history;
             restored = true;
@@ -586,7 +629,7 @@
       function saveGame(pending = false) {
         try {
           if (completed) localStorage.removeItem(saveKey);
-          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: currentLevel === savedGeneratedLevel ? savedGenerator : 3, level: currentLevel, shelves, history: history.slice(-100), pending }));
+          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: generatorForLevel(currentLevel), level: currentLevel, shelves, history: history.slice(-100), pending }));
         } catch {}
       }
       let currentHint = null;
@@ -754,7 +797,7 @@
       });
       pauseButton.addEventListener('click', () => {
         if (paused || animating || completed) return;
-        if (hintSearching) message.textContent = levelAt(currentLevel).hint;
+        if (hintSearching) message.textContent = levelDefinition.hint;
         cancelHint();
         render();
         pauseDialog.showModal();
@@ -803,8 +846,12 @@
       }
 
       function render(matching = [], revealed = [], unlocking = []) {
-        const layout = layoutForLevel(currentLevel);
-        board.classList.toggle('board-shaped', layout !== 'grid');
+        const rows = levelDefinition.layout;
+        const layout = rows ? 'campaign' : layoutForLevel(currentLevel);
+        const columns = rows?.flatMap(count => Array.from({ length: count }, (_, i) => 4 - count + i * 2));
+        board.classList.toggle('board-campaign', Boolean(rows));
+        board.classList.toggle('board-four-rows', rows?.length === 4);
+        board.classList.toggle('board-shaped', layout === 'cross' || layout === 'steps');
         board.classList.toggle('board-dense', layout === 'grid' && shelves.length >= 6);
         board.classList.toggle('board-cross', layout === 'cross');
         board.classList.toggle('board-steps', layout === 'steps');
@@ -815,14 +862,17 @@
         }
         const activeLock = firstActiveLock(shelves);
         board.innerHTML = shelves.map((shelf, shelfIndex) => {
+          const column = columns ? ` style="--shelf-column:${columns[shelfIndex]}"` : '';
           if (shelf.type === 'dispenser') {
             const item = shelf.front[1];
             const count = shelf.queue.length + (item ? 1 : 0);
             const active = selected && selected.shelf === shelfIndex && selected.slot === 1;
             const label = item ? `Dispensador: ${products[item].name}, ${count} produtos restantes` : 'Dispensador vazio';
-            return `<div class="shelf dispenser"><span class="dispenser-label">Caixa de produtos</span><div class="front-row"><button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="1" aria-label="${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button></div><span class="dispenser-count" aria-hidden="true">${count} restantes</span></div>`;
+            return `<div class="shelf dispenser"${column}><span class="dispenser-label">Caixa de produtos</span><div class="front-row"><button type="button" class="slot ${item ? '' : 'empty'} ${active ? 'selected' : ''}" data-shelf="${shelfIndex}" data-slot="1" aria-label="${label}" ${completed ? 'disabled' : ''}>${itemMarkup(item)}</button></div><span class="dispenser-count" aria-hidden="true">${count} restantes</span></div>`;
           }
           const behind = shelf.back[0] || [null, null, null];
+          const extra = shelf.back.length - 1;
+          const layers = extra > 0 ? `<span class="back-count" role="img" aria-label="Prateleira ${shelfIndex + 1}, ${extra} ${extra === 1 ? 'fileira adicional' : 'fileiras adicionais'} no fundo">+${extra}</span>` : '';
           const locked = shelf.lock && shelf.lock.remaining > 0;
           const backRow = behind.map(item => `<span>${itemMarkup(item)}</span>`).join('');
           const frontRow = shelf.front.map((item, slotIndex) => {
@@ -838,7 +888,7 @@
               <path d="M-5 2Q75 60 155 2" stroke="#fff0b0" stroke-width="1.4" stroke-dasharray="7 5"/>
             </svg><span class="lock-badge">${shelf.lock.remaining}</span>
             <span class="lock-caption">${shelf === activeLock ? 'Abre primeiro' : 'Abre depois'}</span></div>` : '';
-          return `<div class="shelf ${effect}"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}</div>`;
+          return `<div class="shelf ${effect}"${column}><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}${layers}</div>`;
         }).join('');
         if (currentHint) {
           for (const [pos, cls] of [[currentHint.from, 'hint-origin'], [currentHint.to, 'hint-destination']]) {
@@ -854,7 +904,7 @@
         board.setAttribute('aria-busy', String(animating));
         win.hidden = !completed;
         levelLabel.textContent = `Fase ${currentLevel + 1}`;
-        instructions.textContent = levelAt(currentLevel).instructions;
+        instructions.textContent = levelDefinition.instructions;
         winMessage.textContent = `Você concluiu a fase ${currentLevel + 1}. A próxima fase já vai começar! ✨`;
       }
 
@@ -963,6 +1013,16 @@
         hintSearching = false;
         currentHint = null;
       }
+      function initialHintPath() {
+        if (history.length || !levelDefinition.solution) return [];
+        const position = digit => {
+          const index = parseInt(digit, 36);
+          return { shelf: Math.floor(index / 3), slot: index % 3 };
+        };
+        return levelDefinition.solution.match(/../g).map(([from, to]) => ({
+          from: position(from), to: position(to)
+        }));
+      }
       hintButton.addEventListener('click', async () => {
         if (animating || completed || paused || hintSearching) return;
         const request = ++hintRequest;
@@ -970,7 +1030,8 @@
         currentHint = null;
         message.textContent = 'Procurando uma jogada para concluir a fase...';
         render();
-        const result = hintPlan.length ? { status: 'solved', path: hintPlan } : await findSolutionHint(shelves, request);
+        const knownPath = hintPlan.length ? hintPlan : initialHintPath();
+        const result = knownPath.length ? { status: 'solved', path: knownPath } : await findSolutionHint(shelves, request);
         if (request !== hintRequest) return;
         hintSearching = false;
         hintPlan = result.path || [];
@@ -1168,11 +1229,12 @@
         clearTimeout(advanceTimer);
         advanceTimer = null;
         currentLevel = index;
-        shelves = copy(levelAt(index).shelves);
+        levelDefinition = levelAt(index);
+        shelves = copy(levelDefinition.shelves);
         history = [];
         selected = null;
         completed = false;
-        message.textContent = levelAt(index).hint;
+        message.textContent = levelDefinition.hint;
         saveGame();
         render();
       }
@@ -1194,7 +1256,7 @@
         savedGenerator = null;
         openLevel(0);
       });
-      message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : restored ? 'Sua partida foi retomada.' : levelAt(currentLevel).hint;
+      message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : restored ? 'Sua partida foi retomada.' : levelDefinition.hint;
       if (resumePending) {
         animating = true;
         render();

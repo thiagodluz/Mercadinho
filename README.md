@@ -16,14 +16,17 @@ O mockup acima apresenta a direção visual inicial. As ilustrações e alguns e
 
 ## Protótipo atual
 
-O protótipo começa com oito fases manuais. A partir da fase 9, gera fases continuamente com 6 a 14 tipos de produtos, a partir de tabuleiros com solução, com estas mecânicas:
+O protótipo começa com oito fases manuais. Da fase 9 à 208, há 200 tabuleiros distintos com solução verificada e 43 formatos de prateleiras. A dificuldade estimada sobe ao longo da campanha, com desafios nas fases terminadas em 0 e respiros nas terminadas em 5. A partir da fase 209, a sequência reutiliza os últimos 50 tabuleiros com produtos variados por semente.
 
-- **Produtos:** catálogo de 20 mercadorias ilustradas provisórias.\n- **Trincas:** reúna três produtos iguais no mesmo compartimento para removê-los.
-- **Prateleiras em camadas:** organize os itens da frente para revelar os que estão atrás.
-- **Dispensador:** retire os produtos na ordem apresentada.
+- **Produtos:** catálogo de 20 mercadorias ilustradas provisórias.
+- **Trincas:** reúna três produtos iguais no mesmo compartimento para removê-los.
+- **Prateleiras em camadas:** organize os itens da frente para revelar os que estão atrás. Um selo `+1` indica mais uma fileira além da que aparece escurecida.
+- **Dispensador:** retire os produtos na ordem apresentada. A nova campanha intercala os tipos da fila.
 - **Correntes:** complete trios para abrir compartimentos bloqueados.
-- **Dica:** procura uma sequência que conclua a fase e destaca a próxima jogada quando encontra uma solução.\n- **Controles de partida:** arraste ou selecione um produto, desfaça movimentos, pause a partida e reinicie a fase.
-- **Acessibilidade:** opção para reduzir animações, além da preferência do aparelho.\n- **Progresso local:** o navegador guarda a fase mais avançada, a partida em andamento e as preferências de áudio.
+- **Dica:** mostra de imediato o primeiro movimento de uma solução verificada no início das fases da nova campanha. Durante a partida, procura uma solução para a posição atual se você sair da sequência sugerida.
+- **Controles de partida:** arraste ou selecione um produto, desfaça movimentos, pause a partida e reinicie a fase.
+- **Acessibilidade:** opção para reduzir animações, além da preferência do aparelho.
+- **Progresso local:** o navegador guarda a fase mais avançada, a partida em andamento e as preferências de áudio.
 
 O conteúdo ainda é um protótipo; número de fases, arte, áudio e regras podem mudar conforme os testes.
 
@@ -54,7 +57,7 @@ Com o Node.js instalado, execute na pasta do projeto:
 node tests/run.cjs
 ```
 
-Os testes cobrem soluções das fases iniciais e amostras de fases geradas, salvamento, interrupções, pausa, acessibilidade e interações entre camadas, correntes e dispensadores. A verificação em aparelhos físicos continua necessária.
+Os testes cobrem as oito fases iniciais, os 200 tabuleiros da campanha, amostras de versões anteriores, retomada, interrupções, pausa, acessibilidade e interações entre as mecânicas. Para medir novamente a curva com o jogador simulado, execute `node tests/campanha.cjs --dificuldade`.
 
 ## Estrutura
 
@@ -62,12 +65,15 @@ Os testes cobrem soluções das fases iniciais e amostras de fases geradas, salv
 .
 ├── assets/
 │   └── mockup.jpg
-├── tests/\n├── index.html
+├── tests/
+├── tools/fases/
+├── fases.js
+├── index.html
 ├── PLANO-DE-DESENVOLVIMENTO.md
 └── README.md
 ```
 
-A implementação jogável está concentrada em `index.html`. O plano registra as decisões, o estado atual e as próximas etapas.
+A lógica do jogo fica em `index.html`, e `fases.js` contém os tabuleiros e as soluções pré-calculadas. O gerador em `tools/fases/` usa as regras do jogo e roda apenas no computador de desenvolvimento. `node tools/fases/campanha.cjs index.html` monta e grava um novo banco em `fases.js`. Alterar o banco publicado exige uma nova versão do gerador e um plano de compatibilidade para partidas salvas.
 
 ## Próximas etapas
 

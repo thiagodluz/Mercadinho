@@ -8,6 +8,7 @@ assert(script.includes(marker));
 const source = script.replace(marker, `
       globalThis.testGame = {
         level: levelAt,
+        initialHintPath,
         search: maxStates => findSolutionHint(shelves, ++hintRequest, maxStates),
         start(index) { unlocked = index; openLevel(index); },
         move: ({from, to}) => move(from, to),
@@ -22,7 +23,7 @@ const source = script.replace(marker, `
       };
 ${marker}`);
 
-function setup(index, seed = 12345, shared) {
+function setup(index, seed = 12345, shared, campaign = false) {
   const elements = new Map();
   function element(id) {
     if (!elements.has(id)) elements.set(id, {
@@ -53,6 +54,7 @@ function setup(index, seed = 12345, shared) {
       else clearTimeout(timer);
     }
   });
+  if (campaign) vm.runInContext(fs.readFileSync('fases.js', 'utf8'), context);
   vm.runInContext(source, context);
   return { ...context.testGame, element, advance: () => advance() };
 }
@@ -161,6 +163,35 @@ async function main() {
 
   game.setBoard([{ front: ['milk', 'coffee', 'tea'], back: [] }]);
   assert.match(game.element('message').textContent, /Sem movimentos disponíveis/);
+
+  // A atualização conserva o tabuleiro e o histórico v3 até a próxima fase.
+  const savedV3 = JSON.parse(storage['mercadinho-partida-v1']);
+  const upgraded = setup(8, 12345, storage, true);
+  assert.equal(JSON.stringify(upgraded.state().shelves), JSON.stringify(savedV3.shelves));
+  assert.equal(JSON.stringify(upgraded.state().history), JSON.stringify(savedV3.history));
+  await play(upgraded, (await upgraded.search()).path, 'última fase v3');
+  upgraded.advance();
+  assert.equal(upgraded.state().currentLevel, 9);
+  assert.equal(JSON.parse(storage['mercadinho-partida-v1']).generator, 4);
+  assert(upgraded.initialHintPath().length);
+  const first = upgraded.initialHintPath()[0];
+  await upgraded.element('hint').handlers.click();
+  assert.match(upgraded.element('message').textContent, /^Mova /);
+  await play(upgraded, [first], 'partida da campanha');
+  const savedV4 = storage['mercadinho-partida-v1'];
+  assert.equal(JSON.stringify(setup(9, 12345, storage, true).state().shelves), JSON.stringify(upgraded.state().shelves));
+  assert.match(setup(9, 12345, storage).element('message').textContent, /Recarregue/);
+  assert.equal(storage['mercadinho-partida-v1'], savedV4);
+
+  const endless = setup(207, 12345, undefined, true);
+  await play(endless, endless.initialHintPath(), 'fase 208');
+  endless.advance();
+  assert.equal(endless.state().currentLevel, 208);
+  assert.equal(JSON.stringify(endless.state().shelves), JSON.stringify(setup(208, 12345, undefined, true).state().shelves));
+  assert.notEqual(JSON.stringify(endless.state().shelves), JSON.stringify(setup(208, 1, undefined, true).state().shelves));
+  assert.equal(JSON.stringify(endless.level(208).layout), JSON.stringify(endless.level(158).layout));
+  await play(endless, endless.initialHintPath(), 'fase 209');
+  assert(endless.state().completed);
   console.log(`${seeds.length * tiers.length} fases geradas concluídas. Retomada, dica, limite e impasses verificados.`);
 }
 
