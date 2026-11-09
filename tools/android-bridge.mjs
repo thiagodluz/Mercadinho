@@ -1,5 +1,24 @@
 import { App } from '@capacitor/app';
 import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
+import { createNativeStorage } from './native-storage.mjs';
+
+if (Capacitor.getPlatform() === 'android') {
+  function reportStorageError(error) {
+    console.error('Falha ao salvar o progresso:', error);
+    let notice = document.getElementById('storage-error');
+    if (!notice) {
+      notice = document.createElement('p');
+      notice.id = 'storage-error';
+      notice.setAttribute('role', 'alert');
+      notice.style.cssText = 'position:fixed;z-index:100;bottom:0;left:0;right:0;margin:0;padding:12px;background:#743510;color:white;text-align:center';
+      document.body.append(notice);
+    }
+    notice.textContent = 'Não foi possível salvar o progresso. Verifique o espaço disponível no aparelho.';
+  }
+  globalThis.mercadinhoStorageReady = createNativeStorage(Preferences, localStorage, reportStorageError)
+    .then(storage => { globalThis.mercadinhoStorage = storage; });
+}
 
 if (Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('MercadinhoHaptics')) {
   const haptics = registerPlugin('MercadinhoHaptics');

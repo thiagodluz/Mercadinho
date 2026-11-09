@@ -25,7 +25,7 @@ const source = script.replace(marker, `
       };
 ${marker}`);
 
-function setup(index, seed = 12345, shared, campaign = true, search = '') {
+function setup(index, seed = 12345, shared, campaign = true, search = '', forceRecoveryLimit = false) {
   const elements = new Map();
   function element(id) {
     if (!elements.has(id)) elements.set(id, {
@@ -59,7 +59,10 @@ function setup(index, seed = 12345, shared, campaign = true, search = '') {
     }
   });
   if (campaign) vm.runInContext(campaignScript, context);
-  vm.runInContext(source, context);
+  const gameSource = forceRecoveryLimit
+    ? source.replace('findSolutionHint(expanded, request);', 'findSolutionHint(expanded, request, 1);')
+    : source;
+  vm.runInContext(gameSource, context);
   return { ...context.testGame, element, advance: () => advance(), canAdvance: () => Boolean(advance) };
 }
 
@@ -116,6 +119,14 @@ async function checkCascade() {
 }
 
 async function checkExtraShelf() {
+  const limited = setup(28, 12345, undefined, true, '', true);
+  await play(limited, [
+    { from: { shelf: 3, slot: 1 }, to: { shelf: 2, slot: 2 } },
+    { from: { shelf: 3, slot: 1 }, to: { shelf: 4, slot: 1 } }
+  ], 'impasse com busca limitada');
+  await limited.element('recover-shelf').handlers.click();
+  assert.equal(limited.state().shelves.at(-1).type, 'extra');
+  assert.match(limited.element('message').textContent, /não conseguiu confirmar/);
   const storage = { 'mercadinho-unlocked': '28', 'mercadinho-layout-seed': '12345' };
   const game = setup(28, 12345, storage);
   const take = (shelf, slot) => ({ from: { shelf: 3, slot: 1 }, to: { shelf, slot } });
@@ -212,7 +223,7 @@ async function main() {
   game.advance();
   assert.equal(game.state().currentLevel, 8);
   assert.equal(game.state().completed, false);
-  assert.equal(JSON.parse(storage[saveKey]).generator, 4);
+  assert.equal(JSON.parse(storage[saveKey]).generator, 5);
 
   const firstBoard = JSON.stringify(game.state().shelves);
   assert.equal(firstBoard, JSON.stringify(setup(8, 1).state().shelves));
@@ -231,14 +242,14 @@ async function main() {
   resumed.element('undo').handlers.click();
   assert.equal(JSON.stringify(resumed.state().shelves), firstBoard);
 
-  for (const generator of [undefined, 2, 3]) {
+  for (const generator of [undefined, 2, 3, 4]) {
     const legacy = { ...storage, [saveKey]: JSON.stringify({ ...JSON.parse(savedV4), generator }) };
     const upgraded = setup(8, 12345, legacy);
     assert.equal(upgraded.state().currentLevel, 8);
     assert.equal(JSON.stringify(upgraded.state().shelves), firstBoard);
     assert.equal(upgraded.state().history.length, 0);
     await play(upgraded, path.slice(0, 1), 'primeira jogada após a atualização');
-    assert.equal(JSON.parse(legacy[saveKey]).generator, 4);
+    assert.equal(JSON.parse(legacy[saveKey]).generator, 5);
   }
 
   const unavailable = { ...storage, [saveKey]: savedV4 };
@@ -278,7 +289,7 @@ async function main() {
   const stalledStorage = {
     'mercadinho-unlocked': '29',
     'mercadinho-layout-seed': '12345',
-    [saveKey]: JSON.stringify({ version: 1, generator: 4, level: 29, shelves: originalPhase30, history: [] })
+    [saveKey]: JSON.stringify({ version: 1, generator: 5, level: 29, shelves: originalPhase30, history: [] })
   };
   const phase30 = setup(29, 12345, stalledStorage);
   const beforeStall = JSON.stringify(phase30.state().shelves);

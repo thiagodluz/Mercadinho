@@ -1,0 +1,28 @@
+name: Verificar auditoria Zen
+on:
+  push:
+    branches: [melhoria/auditoria-zen-017]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - run: npm test
+      - run: npm install --no-save --package-lock=false playwright@1.55.1
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/layout-auditoria.cjs
+      - name: Preparar Android SDK
+        run: |
+          sdk_manager=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f -print -quit)
+          "$sdk_manager" --licenses < <(yes) >/dev/null
+          "$sdk_manager" 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
+      - run: npm run android:beta
