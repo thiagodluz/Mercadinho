@@ -17,7 +17,9 @@ const server = http.createServer((req, res) => {
   const browser = await chromium.launch({ headless: true });
   try {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-    await context.addInitScript(() => { Element.prototype.setPointerCapture = function () {}; });
+    await context.addInitScript(() => {
+      if (location.search.includes('mock=1')) Element.prototype.setPointerCapture = function () {};
+    });
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -43,7 +45,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('mercadinho-partida-v1')).history.length), 2, 'a jogada durante a animação deve ser aplicada');
     assert.match(await page.locator('[data-shelf="3"][data-slot="0"]').getAttribute('aria-label'), /Café/);
     await page.evaluate(() => localStorage.clear());
-    await page.reload();
+    await page.goto(`${url}?mock=1`);
     const from = await source.boundingBox();
     const to = await target.boundingBox();
     await source.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', button: 0, clientX: from.x + from.width / 2, clientY: from.y + from.height / 2 });
