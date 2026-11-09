@@ -689,6 +689,7 @@
       let history = [];
       let selected = null;
       let pointer = null;
+      let pendingDrag = null;
       let completed = false;
       const extraShelf = { type: 'extra', front: [null, null, null], back: [] };
       // Salva a jogada antes da animação e registra quando ela termina.
@@ -1445,6 +1446,9 @@
         if (justSoldOut) message.textContent = 'Prateleira esgotada. Use as outras vagas para continuar.';
         if (completed) message.textContent = 'Muito bem! Você encontrou todas as combinações.';
         render([], [], [], landing);
+        const queued = pendingDrag;
+        pendingDrag = null;
+        if (queued && !completed && shelves[queued.from.shelf]?.front[queued.from.slot] === queued.item && move(queued.from, queued.to)) return;
         if (completed && !testMode) {
           const finishedLevel = currentLevel;
           advanceTimer = setTimeout(() => {
@@ -1504,19 +1508,21 @@
       }
 
       board.addEventListener('pointerdown', event => {
-        if (event.button !== 0 || pointer || completed || animating) return;
+        if (event.button !== 0 || pointer || pendingDrag || completed || paused) return;
         const origin = position(event.target);
         if (!origin) return;
+        const originalItem = shelves[origin.shelf]?.front[origin.slot] || null;
+        if (animating && !originalItem) return;
         const slot = event.target.closest('.slot');
         const item = slot.querySelector('.item');
         const bounds = item && item.getBoundingClientRect();
-        pointer = { id: event.pointerId, origin, x: event.clientX, y: event.clientY, bounds, dragging: false, ghost: null, target: null };
+        pointer = { id: event.pointerId, origin, item: originalItem, x: event.clientX, y: event.clientY, bounds, dragging: false, ghost: null, target: null };
         board.setPointerCapture(event.pointerId);
       });
 
       board.addEventListener('pointermove', event => {
         if (!pointer || event.pointerId !== pointer.id) return;
-        const item = shelves[pointer.origin.shelf].front[pointer.origin.slot];
+        const item = pointer.item;
         if (!item || !pointer.bounds) return;
         const dx = event.clientX - pointer.x;
         const dy = event.clientY - pointer.y;
@@ -1557,11 +1563,15 @@
         const dragged = current.dragging || Math.hypot(event.clientX - current.x, event.clientY - current.y) > 8;
         const destination = dragged ? dropPosition(event.clientX, event.clientY) : position(document.elementFromPoint(event.clientX, event.clientY));
         if (dragged) {
-          if (!move(current.origin, destination)) {
+          if (animating) {
+            if (destination && current.item) pendingDrag = { from: current.origin, to: destination, item: current.item };
+            return;
+          }
+          if (!current.item || shelves[current.origin.shelf]?.front[current.origin.slot] !== current.item || !move(current.origin, destination)) {
             message.textContent = 'Escolha uma vaga livre na frente da prateleira.';
             render();
           }
-        } else if (destination) {
+        } else if (destination && !animating) {
           if (selected && move(selected, destination)) return;
           selected = shelves[destination.shelf].front[destination.slot] ? destination : null;
           message.textContent = selected ? 'Agora toque em uma vaga livre.' : 'Escolha um produto para mover.';

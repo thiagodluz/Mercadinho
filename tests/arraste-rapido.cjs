@@ -17,7 +17,9 @@ const server = http.createServer((req, res) => {
   const browser = await chromium.launch({ headless: true });
   try {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-    await context.addInitScript(() => { Element.prototype.setPointerCapture = function () {}; });
+    await context.addInitScript(() => {
+      if (location.search.includes('mock=1')) Element.prototype.setPointerCapture = function () {};
+    });
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -25,6 +27,25 @@ const server = http.createServer((req, res) => {
     await page.goto(url);
     const source = page.locator('[data-shelf="1"][data-slot="2"]');
     const target = page.locator('[data-shelf="0"][data-slot="2"]');
+    const coffee = await page.locator('[data-shelf="1"][data-slot="0"]').boundingBox();
+    const spare = await page.locator('[data-shelf="3"][data-slot="0"]').boundingBox();
+    const first = await source.boundingBox();
+    const match = await target.boundingBox();
+    const center = box => [box.x + box.width / 2, box.y + box.height / 2];
+    await page.mouse.move(...center(first));
+    await page.mouse.down();
+    await page.mouse.move(...center(match));
+    await page.mouse.up();
+    assert.equal(await page.locator('#board').getAttribute('aria-busy'), 'true', 'primeira jogada deve estar animando');
+    await page.mouse.move(...center(coffee));
+    await page.mouse.down();
+    await page.mouse.move(...center(spare));
+    await page.mouse.up();
+    await page.waitForFunction(() => document.querySelector('#board').getAttribute('aria-busy') === 'false');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('mercadinho-partida-v1')).history.length), 2, 'a jogada durante a animação deve ser aplicada');
+    assert.match(await page.locator('[data-shelf="3"][data-slot="0"]').getAttribute('aria-label'), /Café/);
+    await page.evaluate(() => localStorage.clear());
+    await page.goto(`${url}?mock=1`);
     const from = await source.boundingBox();
     const to = await target.boundingBox();
     await source.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', button: 0, clientX: from.x + from.width / 2, clientY: from.y + from.height / 2 });
