@@ -1482,6 +1482,27 @@
         return slot && board.contains(slot) ? { shelf: Number(slot.dataset.shelf), slot: Number(slot.dataset.slot) } : null;
       }
 
+      function dropPosition(x, y) {
+        const exact = position(document.elementFromPoint(x, y));
+        if (exact) return exact;
+        // As molduras das prateleiras ficam entre as áreas interativas das vagas.
+        // Aceita soltar perto da vaga sem escolher uma vaga distante ou ocupada por aproximação.
+        let nearest = null;
+        let bestDistance = Infinity;
+        for (const slot of board.querySelectorAll('.slot')) {
+          const bounds = slot.getBoundingClientRect();
+          const dx = Math.max(bounds.left - x, 0, x - bounds.right);
+          const dy = Math.max(bounds.top - y, 0, y - bounds.bottom);
+          if (dx > 6 || dy > 14) continue;
+          const distance = dx * dx + dy * dy;
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            nearest = position(slot);
+          }
+        }
+        return nearest;
+      }
+
       board.addEventListener('pointerdown', event => {
         if (event.button !== 0 || pointer || completed || animating) return;
         const origin = position(event.target);
@@ -1513,9 +1534,9 @@
         }
         if (pointer.ghost) {
           pointer.ghost.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-          const destination = document.elementFromPoint(event.clientX, event.clientY);
-          const target = position(destination);
-          const validSlot = target && canReceiveProduct(shelves[target.shelf]) && shelves[target.shelf].front[target.slot] === null ? destination.closest('.slot') : null;
+          const target = dropPosition(event.clientX, event.clientY);
+          const validSlot = target && canReceiveProduct(shelves[target.shelf]) && shelves[target.shelf].front[target.slot] === null
+            ? board.querySelector(`[data-shelf="${target.shelf}"][data-slot="${target.slot}"]`) : null;
           if (validSlot !== pointer.target) {
             pointer.target?.classList.remove('drop-target');
             pointer.target = validSlot;
@@ -1533,8 +1554,8 @@
         const origin = board.querySelector(`[data-shelf="${current.origin.shelf}"][data-slot="${current.origin.slot}"]`);
         if (origin) origin.classList.remove('drag-origin');
         if (cancelled) return;
-        const destination = position(document.elementFromPoint(event.clientX, event.clientY));
         const dragged = current.dragging || Math.hypot(event.clientX - current.x, event.clientY - current.y) > 8;
+        const destination = dragged ? dropPosition(event.clientX, event.clientY) : position(document.elementFromPoint(event.clientX, event.clientY));
         if (dragged) {
           if (!move(current.origin, destination)) {
             message.textContent = 'Escolha uma vaga livre na frente da prateleira.';
