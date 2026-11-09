@@ -73,6 +73,7 @@
       background: linear-gradient(#ffb238, #e9780c); box-shadow: inset 0 1px #ffdf80, 0 3px #b25617, 0 5px 9px #793f2940;
     }
     .pause-control svg { width: 21px; height: 21px; }
+    .settings-control { right: 50px; }
     .pause-control:disabled { opacity: .48; cursor: default; }
     .pause-dialog { width: min(92vw, 360px); max-height: 88dvh; overflow-y: auto; padding: 18px; border: 2px solid #c69155; border-radius: 18px; background: #fff8eb; color: #51351e; text-align: center; box-shadow: 0 12px 35px #38231366; }
     .pause-dialog::backdrop { background: #382313aa; }
@@ -314,13 +315,10 @@
     .setting-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #78984b; }
     .setting-row input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: #78984b; }
     .setting-note { margin: 0; font-size: .77rem; line-height: 1.35; color: #806b51; }
-    .web-gesture-option { display: none; }
-    @media (any-pointer: coarse) and (max-width: 568px) {
-      :root:not(.android-game) .web-gesture-option { display: grid; gap: 8px; }
-      :root:not(.android-game):has(#gesture-margin:checked) .board-stage {
-        margin-left: calc(max(24px, env(safe-area-inset-left, 0px)) - var(--side-space));
-        margin-right: calc(max(24px, env(safe-area-inset-right, 0px)) - var(--side-space));
-      }
+    .web-gesture-option { display: grid; gap: 8px; }
+    :root:has(#gesture-margin:checked) .board-stage {
+      margin-left: calc(max(24px, env(safe-area-inset-left, 0px)) - var(--side-space));
+      margin-right: calc(max(24px, env(safe-area-inset-right, 0px)) - var(--side-space));
     }
     [hidden] { display: none !important; }
     @media (max-height: 650px) { .instructions { margin: 7px auto; } .shelf { height: clamp(83px, 24vw, 110px); } }
@@ -346,6 +344,7 @@
         <h1 class="sign"><img src="assets/detalhes/placa.webp" alt="Mercadinho" width="650" height="279"></h1>
         <div class="level-badge"><span aria-hidden="true">★ ★</span><div id="level" class="level">Fase 1</div><span aria-hidden="true">★ ★</span><span id="cascade-note" class="cascade-note" role="status" hidden></span></div>
         <button id="pause" class="pause-control" type="button" aria-label="Pausar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="4" y="3" width="6" height="18" rx="2"/><rect x="14" y="3" width="6" height="18" rx="2"/></svg></button>
+        <button id="settings-toggle" class="pause-control settings-control" type="button" aria-label="Configurações" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42m0-14.14-1.42 1.42M6.35 17.65l-1.42 1.42"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg></button>
         <p id="instructions" class="instructions" aria-live="polite">Arraste os produtos e junte três iguais na mesma prateleira.</p>
         <div id="turn-status" class="turn-status" hidden>
           <p id="message" class="message" role="status">A fileira de trás avança quando você esvazia toda a frente.</p>
@@ -381,6 +380,10 @@
       <p>Suas prateleiras estão esperando por você.</p>
       <button id="resume" class="control" type="button">Continuar jogando</button>
       <button id="exit-app" class="control secondary" type="button" hidden>Sair do jogo</button>
+    </dialog>
+    <dialog id="settings-dialog" class="pause-dialog" aria-labelledby="settings-title">
+      <h2 id="settings-title">Configurações</h2>
+      <button id="settings-close" class="control" type="button">Voltar ao jogo</button>
       <div class="pause-settings">
     <details id="progress" class="settings">
       <summary>Progresso</summary>
@@ -577,6 +580,9 @@
       const board = document.getElementById('board');
       const pauseButton = document.getElementById('pause');
       const pauseDialog = document.getElementById('pause-dialog');
+      const settingsDialog = document.getElementById('settings-dialog');
+      const settingsButton = document.getElementById('settings-toggle');
+      const settingsClose = document.getElementById('settings-close');
       const resumeButton = document.getElementById('resume');
       const undo = document.getElementById('undo');
       const recoverUndo = document.getElementById('recover-undo');
@@ -959,18 +965,19 @@
         updateAudioControls();
         vibrate('preview');
       });
-      function openPause() {
+      function openGameDialog(dialog, focusTarget) {
         if (paused || animating || completed) return;
         if (hintSearching) message.textContent = levelDefinition.hint;
         cancelHint();
         render();
-        pauseDialog.showModal();
+        dialog.showModal();
         paused = true;
         stopMusic();
         if (audioContext && audioContext.state === 'running') audioContext.suspend().catch(() => {});
-        resumeButton.focus();
+        focusTarget.focus();
       }
-      pauseButton.addEventListener('click', openPause);
+      pauseButton.addEventListener('click', () => openGameDialog(pauseDialog, resumeButton));
+      settingsButton.addEventListener('click', () => openGameDialog(settingsDialog, settingsClose));
       const exitApp = globalThis.mercadinhoExit;
       if (exitApp) {
         const exitButton = document.getElementById('exit-app');
@@ -978,11 +985,14 @@
         exitButton.addEventListener('click', () => exitApp().catch(console.error));
       }
       resumeButton.addEventListener('click', () => pauseDialog.close());
-      pauseDialog.addEventListener('close', () => {
-        paused = false;
-        if (audioSettings.music) startMusic();
-        pauseButton.focus();
-      });
+      settingsClose.addEventListener('click', () => settingsDialog.close());
+      for (const [dialog, trigger] of [[pauseDialog, pauseButton], [settingsDialog, settingsButton]]) {
+        dialog.addEventListener('close', () => {
+          paused = false;
+          if (audioSettings.music) startMusic();
+          trigger.focus();
+        });
+      }
       function onInteraction() {
         activateAudio().then(() => startMusic());
       }
@@ -1119,6 +1129,7 @@
         board.innerHTML = mainRows + extraRow;
         hintButton.disabled = animating || completed || hintSearching || stalled;
         pauseButton.disabled = animating || completed;
+        settingsButton.disabled = animating || completed;
         undo.disabled = animating || history.length === 0;
         restart.disabled = animating;
         resetProgress.disabled = animating;
@@ -1523,7 +1534,8 @@
         if (origin) origin.classList.remove('drag-origin');
         if (cancelled) return;
         const destination = position(document.elementFromPoint(event.clientX, event.clientY));
-        if (current.dragging) {
+        const dragged = current.dragging || Math.hypot(event.clientX - current.x, event.clientY - current.y) > 8;
+        if (dragged) {
           if (!move(current.origin, destination)) {
             message.textContent = 'Escolha uma vaga livre na frente da prateleira.';
             render();

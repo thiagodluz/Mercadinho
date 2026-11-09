@@ -47,11 +47,11 @@ const server = http.createServer((request, response) => {
           assert(undo.y >= 0 && undo.y + undo.height <= height, `desfazer fora da tela: fase ${level}, ${width}x${height}`);
           assert(await page.locator('#hint').isHidden());
           assert(await page.locator('#recover-undo').isHidden());
-          await page.locator('#pause').click();
-          assert(await page.locator('#pause-dialog #progress').isVisible());
-          assert(await page.locator('#pause-dialog').getByText('Som e vibração').isVisible());
-          assert(await page.locator('#pause-dialog').getByText('Acessibilidade').isVisible());
-          await page.locator('#resume').click();
+          await page.locator('#settings-toggle').click();
+          assert(await page.locator('#settings-dialog #progress').isVisible());
+          assert(await page.locator('#settings-dialog').getByText('Som e vibração').isVisible());
+          assert(await page.locator('#settings-dialog').getByText('Acessibilidade').isVisible());
+          await page.locator('#settings-close').click();
           assert(await page.locator('#recover-shelf').isVisible());
           console.log(`Fase ${level}, ${width}x${height}, ${android ? 'Android' : 'web'}: impasse e pausa visíveis.`);
           await context.close();
