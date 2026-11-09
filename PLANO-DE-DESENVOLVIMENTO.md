@@ -38,11 +38,11 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 
 ## Decisões iniciais
 
-- Campanha principal sem limite de tempo, com pausa e tentativas ilimitadas.
+- A experiência atual é a base do **modo Zen**, inspirada na proposta do Prisma. Thiago confirmou que o jogo está tranquilo de jogar e que esse ritmo é intencional. A campanha Zen permanece sem limite de tempo, com pausa e tentativas ilimitadas.
 - Jogo apresentado de frente, em 2D ou 2,5D, com objetos de aparência tridimensional.
 - Fases projetadas manualmente no início, incluindo pelo menos uma solução verificada para cada fase.
 - Pontuação e feedback de combos opcionais para a experiência da campanha. A forma de contagem será definida e testada no protótipo.
-- Modo cronometrado como expansão posterior, depois de validar a campanha.
+- Criar posteriormente um modo separado com tempo e outras funcionalidades, após amadurecer a experiência Zen. Os detalhes serão definidos mais adiante.
 - Tecnologia: HTML, CSS e JavaScript para a versão web, empacotada com Capacitor para Android e com integração nativa para vibração.
 
 ## Regras do protótipo
@@ -197,7 +197,7 @@ Entrega: versão pública gratuita e sem anúncios, acompanhada de instruções 
 
 - [ ] Acompanhar falhas e relatos de jogadores.
 - [ ] Adicionar novos conjuntos de fases, objetos e cenários originais.
-- [ ] Avaliar modo cronometrado separado e novos obstáculos com base nos testes.
+- [ ] Desenvolver posteriormente um modo separado com tempo e outras funcionalidades, a definir.
 - [ ] Avaliar outras plataformas e melhorias da versão web após estabilizar a versão Android.
 
 ## Critérios para a primeira versão pública
