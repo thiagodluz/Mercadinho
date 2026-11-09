@@ -123,6 +123,10 @@
     @media (max-height: 740px) {
       .board-four-rows .shelf-row .shelf { height: clamp(57px, 10.4dvh, 76px); }
     }
+    .board-four-rows.has-extra .shelf-row .shelf {
+      height: clamp(44px, calc(20dvh - 79px), 76px);
+    }
+    .board-four-rows.has-extra .extra-row { margin-top: 5px; }
     .shelf-row, .board:not(.board-campaign) > .shelf {
       border-radius: 6px 6px 4px 4px;
       background: linear-gradient(90deg, #fff4bf55, transparent 17%, transparent 81%, #74340840), #d68c42;
@@ -424,7 +428,8 @@
   </main>
   <script src="fases.js"></script>
   <script>
-    (() => {
+    function startGame() {
+      const gameStorage = globalThis.mercadinhoStorage || localStorage;
       // A ordem dos produtos faz parte da geração das fases salvas.
       const products = {
         milk: { name: 'Leite' },
@@ -594,21 +599,21 @@
         document.getElementById('progress').hidden = true;
       } else {
         try {
-          const saved = Number(localStorage.getItem('mercadinho-unlocked'));
+          const saved = Number(gameStorage.getItem('mercadinho-unlocked'));
           if (Number.isSafeInteger(saved) && saved >= 0 && saved < Number.MAX_SAFE_INTEGER) unlocked = saved;
         } catch {}
         try {
-          const savedSeed = localStorage.getItem('mercadinho-layout-seed');
+          const savedSeed = gameStorage.getItem('mercadinho-layout-seed');
           if (savedSeed !== null && /^\d+$/.test(savedSeed) && Number(savedSeed) <= 4294967295) {
             layoutSeed = Number(savedSeed);
           } else {
             layoutSeed = Math.floor(Math.random() * 4294967296);
-            localStorage.setItem('mercadinho-layout-seed', String(layoutSeed));
+            gameStorage.setItem('mercadinho-layout-seed', String(layoutSeed));
           }
         } catch { layoutSeed = Math.floor(Math.random() * 4294967296); }
       }
       const campaign = globalThis.mercadinhoCampanha || [];
-      const campaignVersion = 4;
+      const campaignVersion = 5;
       function canLoadLevel(index) {
         if (index < levels.length || campaign.length) return true;
         message.textContent = 'Não foi possível carregar as fases. Recarregue a página para continuar.';
@@ -695,7 +700,7 @@
       let resumePending = false;
       if (!testMode) {
         try {
-          const saved = JSON.parse(localStorage.getItem(saveKey) || 'null');
+          const saved = JSON.parse(gameStorage.getItem(saveKey) || 'null');
           const sameCampaign = currentLevel < levels.length || saved?.generator === campaignVersion;
           if (saved && saved.version === 1 && saved.level === currentLevel && sameCampaign &&
             validSnapshot(saved.shelves, levelDefinition) && Array.isArray(saved.history) && saved.history.length <= 100 &&
@@ -710,8 +715,8 @@
       function saveGame(pending = false) {
         if (testMode) return;
         try {
-          if (completed) localStorage.removeItem(saveKey);
-          else localStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: campaignVersion, level: currentLevel, shelves, history: history.slice(-100), pending }));
+          if (completed) gameStorage.removeItem(saveKey);
+          else gameStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: campaignVersion, level: currentLevel, shelves, history: history.slice(-100), pending }));
         } catch {}
       }
       let currentHint = null;
@@ -725,25 +730,25 @@
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
       const motionControl = document.getElementById('motion-reduced');
       let userReducedMotion = false;
-      try { userReducedMotion = localStorage.getItem('mercadinho-reduced-motion') === 'true'; } catch {}
+      try { userReducedMotion = gameStorage.getItem('mercadinho-reduced-motion') === 'true'; } catch {}
       function updateMotion() {
         motionControl.checked = userReducedMotion;
         document.documentElement.classList.toggle('reduce-motion', userReducedMotion);
       }
       motionControl.addEventListener('change', () => {
         userReducedMotion = motionControl.checked;
-        try { localStorage.setItem('mercadinho-reduced-motion', String(userReducedMotion)); } catch {}
+        try { gameStorage.setItem('mercadinho-reduced-motion', String(userReducedMotion)); } catch {}
         updateMotion();
       });
       updateMotion();
       const gestureMargin = document.getElementById('gesture-margin');
-      try { gestureMargin.checked = localStorage.getItem('mercadinho-gesture-margin') === 'true'; } catch {}
+      try { gestureMargin.checked = gameStorage.getItem('mercadinho-gesture-margin') === 'true'; } catch {}
       gestureMargin.addEventListener('change', () => {
-        try { localStorage.setItem('mercadinho-gesture-margin', String(gestureMargin.checked)); } catch {}
+        try { gameStorage.setItem('mercadinho-gesture-margin', String(gestureMargin.checked)); } catch {}
       });
       const audioSettings = { effects: true, music: false, vibration: false, effectsVolume: 65, musicVolume: 30 };
       try {
-        const saved = JSON.parse(localStorage.getItem('mercadinho-audio') || '{}');
+        const saved = JSON.parse(gameStorage.getItem('mercadinho-audio') || '{}');
         for (const key of ['effects', 'music', 'vibration']) {
           if (typeof saved[key] === 'boolean') audioSettings[key] = saved[key];
         }
@@ -789,7 +794,7 @@
       const secondsPerBeat = .78;
 
       function saveAudioSettings() {
-        try { localStorage.setItem('mercadinho-audio', JSON.stringify(audioSettings)); } catch {}
+        try { gameStorage.setItem('mercadinho-audio', JSON.stringify(audioSettings)); } catch {}
       }
 
       function updateAudioControls() {
@@ -1043,6 +1048,7 @@
         const layout = rows ? 'campaign' : tutorialLayout(currentLevel);
         board.classList.toggle('board-campaign', Boolean(rows));
         board.classList.toggle('board-four-rows', rows?.length === 4);
+        board.classList.toggle('has-extra', shelves.some(shelf => shelf.type === 'extra'));
         board.classList.toggle('board-shaped', layout === 'cross' || layout === 'steps');
         board.classList.toggle('board-dense', layout === 'grid' && shelves.length >= 6);
         board.classList.toggle('board-cross', layout === 'cross');
@@ -1334,12 +1340,14 @@
         render();
         const result = await findSolutionHint(expanded, request);
         if (request !== hintRequest) return;
-        if (result.status !== 'solved') {
+        if (result.status !== 'solved' && result.status !== 'limit') {
           recoveryStatus = result.status;
           render();
           return;
         }
-        const path = await shortenHintPath(expanded, result.path, request);
+        const path = result.status === 'solved'
+          ? await shortenHintPath(expanded, result.path, request)
+          : [];
         if (request !== hintRequest) return;
 
         recoveryStatus = null;
@@ -1348,7 +1356,9 @@
         for (const state of history) state.push(copy(extraShelf));
         hintPlan = path;
         selected = null;
-        message.textContent = 'Prateleira extra liberada. Use Dica se quiser ver a próxima jogada.';
+        message.textContent = result.status === 'limit'
+          ? 'Prateleira extra liberada. A busca não conseguiu confirmar uma solução.'
+          : 'Prateleira extra liberada. Use Dica se quiser ver a próxima jogada.';
         saveGame();
         render();
         board.querySelector(`[data-shelf="${shelves.length - 1}"][data-slot="0"]`)?.focus();
@@ -1397,7 +1407,7 @@
         completed = isSolved(shelves);
         if (completed && !testMode) {
           unlocked = Math.max(unlocked, currentLevel + 1);
-          try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
+          try { gameStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
         }
         if (completed) playEffect('win');
         cascadeNote.hidden = trios < 2;
@@ -1531,7 +1541,7 @@
         advanceTimer = null;
         if (!testMode && completed && unlocked === currentLevel + 1) {
           unlocked = currentLevel;
-          try { localStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
+          try { gameStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
         }
         shelves = history.pop();
         playEffect('undo');
@@ -1571,7 +1581,7 @@
       resetProgress.addEventListener('click', () => {
         if (testMode || animating || !confirm('Recomeçar da fase 1? O avanço das fases será apagado neste navegador.')) return;
         try {
-          localStorage.setItem('mercadinho-unlocked', '0');
+          gameStorage.setItem('mercadinho-unlocked', '0');
         } catch {
           message.textContent = 'Não foi possível salvar o reinício do progresso neste navegador.';
           return;
@@ -1587,7 +1597,15 @@
       } else {
         render();
       }
-    })();
+    }
+    if (globalThis.mercadinhoStorageReady) {
+      globalThis.mercadinhoStorageReady.then(startGame).catch(error => {
+        console.error('Falha ao carregar o progresso:', error);
+        document.querySelector('.app').textContent = 'Não foi possível carregar o progresso. Feche e abra o aplicativo novamente.';
+      });
+    } else {
+      startGame();
+    }
   </script>
 </body>
 </html>
