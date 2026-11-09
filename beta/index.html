@@ -56,7 +56,7 @@
       pointer-events: none; filter: drop-shadow(2px 4px 3px #34401166);
     }
     header { position: relative; text-align: center; width: 100%; }
-    .sign { position: relative; width: min(74%, 344px); margin: -3px auto 3px; filter: drop-shadow(0 5px 4px #7b431c66); }
+    .sign { position: relative; width: min(40%, 160px); margin: -3px auto 3px; filter: drop-shadow(0 5px 4px #7b431c66); }
     .sign::before {
       content: ''; position: absolute; inset: -13px 24% auto; height: 42%;
       border-inline: 5px solid #7c4020; border-radius: 5px; pointer-events: none;
@@ -74,7 +74,7 @@
     }
     .pause-control svg { width: 21px; height: 21px; }
     .pause-control:disabled { opacity: .48; cursor: default; }
-    .pause-dialog { width: min(88vw, 320px); padding: 24px; border: 2px solid #c69155; border-radius: 18px; background: #fff8eb; color: #51351e; text-align: center; box-shadow: 0 12px 35px #38231366; }
+    .pause-dialog { width: min(92vw, 360px); max-height: 88dvh; overflow-y: auto; padding: 18px; border: 2px solid #c69155; border-radius: 18px; background: #fff8eb; color: #51351e; text-align: center; box-shadow: 0 12px 35px #38231366; }
     .pause-dialog::backdrop { background: #382313aa; }
     .pause-dialog h2 { margin: 0 0 8px; }
     .pause-dialog p { margin: 0 0 18px; }
@@ -262,19 +262,24 @@
       display: grid; place-items: center; align-content: center; gap: 1px; flex: 0 1 92px; min-height: 62px;
       padding: 4px 5px; border: 3px solid #fff2d1; border-radius: 23px; color: #fff8dc;
       background: linear-gradient(#7fac33, #52801a); box-shadow: inset 0 1px #c9e779, 0 3px #9b6736, 0 5px 9px #79503543;
-      font-size: .72rem; text-shadow: 0 1px #365411;
+      font-size: .81rem; text-shadow: 0 1px #365411;
     }
-    .controls #hint { background: linear-gradient(#ffa81f, #d96608); box-shadow: inset 0 1px #ffdf80, 0 3px #a65525, 0 5px 9px #79503543; text-shadow: 0 1px #9b4508; }
+    .controls #hint { color: #3e240a; background: linear-gradient(#ffc24b, #df8110); box-shadow: inset 0 1px #ffdf80, 0 3px #a65525, 0 5px 9px #79503543; text-shadow: none; }
+    .controls #restart, .controls #recover-shelf { color: #51351e; background: linear-gradient(#fff8eb, #f1ddb9); box-shadow: inset 0 1px #fff, 0 3px #a48059, 0 5px 9px #79503543; text-shadow: none; }
+    .controls #undo { background: linear-gradient(#456d1d, #32621c); }
+    .controls #undo.needs-undo { animation: undo-attention 1.8s ease-in-out infinite; }
+    .shop-stage:has(.win:not([hidden])) .controls #undo { opacity: .55; }
+    @keyframes undo-attention { 50% { box-shadow: 0 0 0 4px #ffe08a, 0 3px #9b6736; } }
     .controls svg { width: 27px; height: 27px; }
-    .message { min-height: 2.6em; text-align: center; color: #70563a; font-size: .86rem; margin: 17px 0 0; }
-    .turn-status { width: 100%; }
-    .turn-status.stalled {
-      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; padding: 9px 10px 11px;
-      border: 1px solid #b7773a; border-radius: 12px; background: #fff3da;
-    }
-    .turn-status.stalled .message { flex: 0 0 100%; min-height: 0; margin: 0; color: #694222; line-height: 1.35; }
-    .recover-undo, .recover-shelf { min-height: 44px; font-size: .85rem; }
-    .recover-undo { background: #537135; box-shadow: 0 3px #3c5326; }
+    .message { text-align: center; color: #694222; font-size: .86rem; margin: 0; line-height: 1.3; }
+    .turn-status { width: 100%; margin: 6px auto; }
+    .turn-status.stalled { padding: 5px 8px; border: 1px solid #b7773a; border-radius: 10px; background: #fff3da; }
+    .recover-undo { display: none !important; }
+    .pause-settings { text-align: left; }
+    .pause-dialog .setting-note { margin: 0; }
+    .pause-dialog .settings { margin-top: 10px; }
+    .reduce-motion .controls #undo.needs-undo { animation: none; }
+    @media (prefers-reduced-motion: reduce) { .controls #undo.needs-undo { animation: none; } }
     .board-stage {
       position: relative; isolation: isolate;
       margin-inline: calc(2px - var(--side-space));
@@ -353,6 +358,10 @@
         <button id="pause" class="pause-control" type="button" aria-label="Pausar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="4" y="3" width="6" height="18" rx="2"/><rect x="14" y="3" width="6" height="18" rx="2"/></svg></button>
         <button id="beta-toggle" class="pause-control beta-toggle" type="button" aria-haspopup="dialog">Testes</button>
         <p id="instructions" class="instructions" aria-live="polite">Arraste os produtos e junte três iguais na mesma prateleira.</p>
+        <div id="turn-status" class="turn-status" hidden>
+          <p id="message" class="message" role="status">A fileira de trás avança quando você esvazia toda a frente.</p>
+          <button id="recover-undo" class="control recover-undo" type="button" hidden tabindex="-1" aria-hidden="true">Desfazer</button>
+        </div>
       </header>
       <div class="board-stage">
         <div id="board" class="board" aria-label="Prateleiras do jogo"></div>
@@ -366,15 +375,17 @@
       <div class="controls">
         <button id="undo" class="control secondary" type="button" disabled><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m13 6-8 8 8 8M6 14h13a7 7 0 0 1 0 14h-5"/></svg>Desfazer</button>
         <button id="hint" class="control secondary" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 21c0-3-3-3-3-8a8 8 0 0 1 16 0c0 5-3 5-3 8l-1 3h-8ZM14 28h4M16 1v1M4 5l2 2M1 14h3M26 7l2-2M28 14h3"/></svg>Dica</button>
-        <button id="restart" class="control" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M25 11a11 11 0 1 0 1 12M26 4v9h-9"/></svg>Reiniciar</button>
+        <button id="recover-shelf" class="control secondary recover-shelf" type="button" hidden><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M4 25h24M16 5v15M9 13h14"/></svg>Prateleira extra</button>
+        <button id="restart" class="control secondary" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M25 11a11 11 0 1 0 1 12M26 4v9h-9"/></svg>Reiniciar</button>
       </div>
     </div>
-    <div id="turn-status" class="turn-status">
-      <p id="message" class="message" role="status">A fileira de trás avança quando você esvazia toda a frente.</p>
-      <button id="recover-undo" class="control recover-undo" type="button" hidden>Desfazer</button>
-      <button id="recover-shelf" class="control secondary recover-shelf" type="button" hidden>Prateleira extra</button>
-    </div>
     <nav id="playtest" class="playtest" aria-label="Fase de teste" hidden><p>Partida de teste separada da campanha.</p></nav>
+    <dialog id="pause-dialog" class="pause-dialog" aria-labelledby="pause-title">
+      <h2 id="pause-title">Jogo pausado</h2>
+      <p>Suas prateleiras estão esperando por você.</p>
+      <button id="resume" class="control" type="button">Continuar jogando</button>
+      <button id="exit-app" class="control secondary" type="button" hidden>Sair do jogo</button>
+      <div class="pause-settings">
     <details id="progress" class="settings">
       <summary>Progresso</summary>
       <div class="settings-content">
@@ -423,11 +434,7 @@
         </div>
       </div>
     </details>
-    <dialog id="pause-dialog" class="pause-dialog" aria-labelledby="pause-title">
-      <h2 id="pause-title">Jogo pausado</h2>
-      <p>Suas prateleiras estão esperando por você.</p>
-      <button id="resume" class="control" type="button">Continuar jogando</button>
-      <button id="exit-app" class="control secondary" type="button" hidden>Sair do jogo</button>
+      </div>
     </dialog>
 
     <dialog id="beta-dialog" class="pause-dialog beta-dialog" aria-labelledby="beta-title">
@@ -1265,6 +1272,8 @@ const betaProductImages = {"beans":"data:image/webp;base64,UklGRjQ0AABXRUJQVlA4W
           return '';
         }
         turnStatus.classList.toggle('stalled', stalled);
+        undo.classList.toggle('needs-undo', stalled && history.length > 0);
+        hintButton.hidden = stalled && !hasExtraShelf;
         recoverUndo.hidden = !stalled || !history.length;
         recoverShelf.hidden = !stalled || hasExtraShelf;
         recoverShelf.disabled = recoveryStatus !== null;
@@ -1351,6 +1360,10 @@ const betaProductImages = {"beans":"data:image/webp;base64,UklGRjQ0AABXRUJQVlA4W
         levelLabel.textContent = soldOutTest ? 'Teste · Esgotada' : `Fase ${currentLevel + 1}${testMode ? ' · Teste' : ''}`;
         const instructionText = cue?.text || levelDefinition.instructions;
         if (instructions.textContent !== instructionText) instructions.textContent = instructionText;
+        const notice = stalled || hintSearching || Boolean(currentHint) || /não foi possível|atingiu o limite|sem solução|prateleira extra liberada|última jogada desfeita|escolha uma vaga/i.test(message.textContent);
+        turnStatus.hidden = !notice;
+        instructions.hidden = notice;
+        if (!currentHint) message.setAttribute('aria-label', message.textContent);
         if (completed) {
           winTitle.textContent = soldOutTest ? 'Teste concluído!' : `Fase ${currentLevel + 1} concluída!`;
           winMessage.textContent = testMode
@@ -1550,7 +1563,8 @@ const betaProductImages = {"beans":"data:image/webp;base64,UklGRjQ0AABXRUJQVlA4W
         if (currentHint) {
           const item = shelves[currentHint.from.shelf].front[currentHint.from.slot];
           const origin = shelves[currentHint.from.shelf].type === 'dispenser' ? 'caixa de produtos' : describePosition(currentHint.from);
-          message.textContent = `Mova ${products[item].name} da ${origin} para a ${describePosition(currentHint.to)}.`;
+          message.textContent = `Mova ${products[item].name} destacado até a vaga verde.`;
+          message.setAttribute('aria-label', `Mova ${products[item].name} da ${origin} para a ${describePosition(currentHint.to)}.`);
         } else if (result.status === 'dead-end') {
           message.textContent = history.length
             ? 'Esta posição ficou sem solução. Desfaça uma jogada ou reinicie a fase.'

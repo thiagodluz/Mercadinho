@@ -146,7 +146,7 @@ async function checkExtraShelf() {
   const resumed = setup(28, 12345, storage);
   assert.equal(JSON.stringify(resumed.state().shelves), JSON.stringify(game.state().shelves));
   await resumed.element('hint').handlers.click();
-  assert.match(resumed.element('message').textContent, /prateleira extra/);
+  assert.match(resumed.element('message').textContent, /vaga verde/);
   const solution = resumed.hintPath().slice();
   assert(solution.length);
   await play(resumed, solution, 'fase 29 recuperada com a prateleira extra');
