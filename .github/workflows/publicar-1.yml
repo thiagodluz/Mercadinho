@@ -1,0 +1,25 @@
+name: Publicar Mercadinho 1.0
+on:
+  push:
+    branches: [release/publicar-1-0]
+permissions:
+  contents: write
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Conferir APK
+        run: |
+          cat release-staging/parte-{0,1,2,3,4} > Mercadinho-1.0.0.apk
+          echo "771df533e808181ef6747c716018685215ad96e7730bd323d1efcb9b0fabc9e2  Mercadinho-1.0.0.apk" | sha256sum -c -
+      - name: Publicar versão
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notas.md <<'EOF'
+          Primeira versão 1.0 do Mercadinho, com o modo Zen e um espaço reservado para futuros modos.
+
+          Este APK usa o pacote principal do Mercadinho e a mesma chave de assinatura do Prisma. A versão beta de teste, instalada com outro identificador, permanece separada.
+          EOF
+          gh release create v1.0.0 Mercadinho-1.0.0.apk --target 157c5c7bc2c9990c5202cdb6d4b57ad6016d5980 --title "Mercadinho 1.0" --latest --notes-file notas.md
