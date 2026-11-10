@@ -6,11 +6,11 @@
   <img src="assets/mockup.jpg" alt="Mockup visual do jogo Mercadinho" width="420">
 </p>
 
-**[Jogar no navegador](https://thiagodluz.github.io/Mercadinho/)** · **[Plano de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md)** · **[Auditoria da beta](docs/AUDITORIA-BETA.md)**
+**[Jogar no navegador](https://thiagodluz.github.io/Mercadinho/)** · **[Baixar APK 1.0](https://github.com/thiagodluz/Mercadinho/releases/tag/v1.0.0)** · **[Plano de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md)** · **[Auditoria da beta](docs/AUDITORIA-BETA.md)**
 
 ## Sobre o projeto
 
-Mercadinho é um jogo de combinar três produtos iguais em prateleiras. O modo Zen tem controles adaptados a celulares e computadores e está disponível na web e no Android. O jogo é **gratuita, sem anúncios e sem compras dentro do jogo**.
+Mercadinho é um jogo de combinar três produtos iguais em prateleiras. O modo Zen tem controles adaptados a celulares e computadores e está disponível na web e no Android. O jogo é **gratuito, sem anúncios e sem compras dentro do jogo**.
 
 O mockup acima apresenta a direção visual inicial. As ilustrações e alguns elementos do protótipo ainda são provisórios e serão refinados durante o desenvolvimento.
 
