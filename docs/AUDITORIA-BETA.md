@@ -1,5 +1,7 @@
 # Auditoria da beta do Mercadinho
 
+> Registro histórico da beta 0.1.7-beta.1. A versão 1.0.0 e o estado atual estão descritos no [README](../README.md) e no [plano de desenvolvimento](../PLANO-DE-DESENVOLVIMENTO.md). Os comandos e dados do APK abaixo descrevem aquela beta.
+
 A beta 0.1.7-beta.1 reúne as cinco mudanças do [PR #1][pr] e a página autônoma de teste publicada em [`/beta/`][beta]. O [guia de regras e referências](REGRAS-E-MECANICAS.md) registra a pesquisa que orientou o ciclo. As posições e os números do guia descrevem o código anterior ao rebalanceamento.
 
 ## O que mudou

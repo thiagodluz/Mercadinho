@@ -1,0 +1,20 @@
+name: Verificar Mercadinho 1.0
+on:
+  push:
+    branches: [release/mercadinho-1-0]
+jobs:
+  verificacao:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm test
+      - run: npm install --no-save --package-lock=false playwright@1.55.1
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/modos-1.cjs
+      - run: node tests/layout-impasse.cjs
+      - run: node tests/arraste-rapido.cjs
