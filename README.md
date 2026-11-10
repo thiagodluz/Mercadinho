@@ -10,13 +10,13 @@
 
 ## Sobre o projeto
 
-Mercadinho é um jogo de combinar três produtos iguais em prateleiras. A campanha está sendo desenvolvida primeiro para a web, com controles adaptados a telas de celular e computador. A versão planejada será **gratuita, sem anúncios e sem compras dentro do jogo**.
+Mercadinho é um jogo de combinar três produtos iguais em prateleiras. O modo Zen tem controles adaptados a celulares e computadores e está disponível na web e no Android. O jogo é **gratuita, sem anúncios e sem compras dentro do jogo**.
 
 O mockup acima apresenta a direção visual inicial. As ilustrações e alguns elementos do protótipo ainda são provisórios e serão refinados durante o desenvolvimento.
 
-## Protótipo atual
+## Versão 1.0.0 — modo Zen
 
-O protótipo começa com oito fases manuais. Da fase 9 à 208, há 200 tabuleiros distintos com solução verificada e 43 formatos de prateleiras. A dificuldade estimada sobe ao longo da campanha, com desafios nas fases terminadas em 0 e respiros nas terminadas em 5. A partir da fase 209, a sequência reutiliza os últimos 50 tabuleiros com produtos variados por semente.
+O modo Zen começa com oito fases manuais. Da fase 9 à 208, há 200 tabuleiros distintos com solução verificada e 43 formatos de prateleiras. A dificuldade estimada sobe ao longo da campanha, com desafios nas fases terminadas em 0 e respiros nas terminadas em 5. A partir da fase 209, a sequência reutiliza os últimos 50 tabuleiros com produtos variados por semente.
 
 - **Produtos:** catálogo de 20 mercadorias ilustradas provisórias.
 - **Trincas:** reúna três produtos iguais no mesmo compartimento para removê-los.
@@ -28,7 +28,7 @@ O protótipo começa com oito fases manuais. Da fase 9 à 208, há 200 tabuleiro
 - **Acessibilidade:** opção para reduzir animações, além da preferência do aparelho.
 - **Progresso local:** o navegador guarda a fase mais avançada, a partida em andamento e as preferências de áudio.
 
-O conteúdo ainda é um protótipo; número de fases, arte, áudio e regras podem mudar conforme os testes.
+A tela mostra o modo **Zen**, sem cronômetro, e um espaço **Em breve** reservado para outro modo. A versão web beta permanece disponível separadamente para testes.
 
 ## Como jogar
 
@@ -93,20 +93,22 @@ Se o gesto de voltar do Android atrapalhar ao arrastar, experimente **Acessibili
 
 ## Próximas etapas
 
-Reunir relatos da beta, corrigir as falhas que atrapalham jogar e ajustar os pontos de dificuldade que aparecerem no teste. O [roteiro de auditoria](docs/AUDITORIA-BETA.md#como-reproduzir) lista os cenários da beta para navegador e Android.
+Reunir relatos dos jogadores, corrigir problemas e, futuramente, desenvolver um modo separado com tempo e outras funcionalidades. A experiência Zen permanece tranquila e sem cronômetro.
 
-Veja o [plano completo de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md) para acompanhar os próximos passos.
+Veja o [plano completo de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md) e o [registro histórico da beta](docs/AUDITORIA-BETA.md).
 
-## APK de teste para Android
+## Aplicativo Android
 
-O app empacota os arquivos do jogo com Capacitor e usa uma integração Java para o feedback tátil do Android. A campanha e os recursos visuais vêm no APK, com progresso local separado do navegador.
+A versão 1.0.0 usa o pacote principal `br.com.thiagodluz.mercadinho`, código Android 10 e a mesma chave de assinatura do Prisma. A versão web e o aplicativo possuem dados locais separados. As versões beta com identificadores próprios também têm progresso separado.
 
-Para compilar, use Node.js 22 ou superior, JDK 21 e o Android SDK com a plataforma 36 e os Build Tools. Configure `JAVA_HOME` e `ANDROID_HOME` antes de executar:
+Para compilar, use Node.js 22 ou superior, JDK 21 e Android SDK com plataforma 36 e Build Tools. Configure `JAVA_HOME` e `ANDROID_HOME` e execute:
 
 ```sh
 npm ci
 npm test
-npm run android:beta
+npm run android:sync
+cd android
+./gradlew assembleRelease
 ```
 
-O APK da beta 0.1.7-beta.1 fica em `android/app/build/outputs/apk/beta/app-beta.apk`. Ele aparece como **Mercadinho Beta** e instala ao lado da 0.1.6 com progresso separado. Para empacotar a página normal na variante de depuração, use `npm run android:debug`. No aparelho, ative **Som e vibração → Vibração** e teste o encaixe de um produto e a formação de um trio. O feedback respeita os ajustes de toque do Android.
+A assinatura de distribuição requer as variáveis `PRISMA_KEYSTORE_FILE`, `PRISMA_KEYSTORE_PASSWORD`, `PRISMA_KEY_ALIAS` e `PRISMA_KEY_PASSWORD`. A chave deve permanecer privada. O aplicativo usa Preferences no Android e migra os dados existentes do mesmo aplicativo quando possível; não é possível migrar automaticamente dados entre identificadores distintos. As fases geradas em andamento anteriores à versão de campanha 5 recomeçam na mesma fase.

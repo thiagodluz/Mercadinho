@@ -281,6 +281,11 @@
     .pause-dialog .settings { margin-top: 10px; }
     .reduce-motion .controls #undo.needs-undo { animation: none; }
     @media (prefers-reduced-motion: reduce) { .controls #undo.needs-undo { animation: none; } }
+    .mode-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 112px)); justify-content: center; gap: 12px; width: 100%; margin: 18px auto 4px; }
+    .mode-choice { aspect-ratio: 1; min-width: 0; display: grid; place-content: center; gap: 4px; border: 2px solid #c6a476; border-radius: 16px; background: #fff4de; color: #674425; font-size: .92rem; font-weight: 800; text-align: center; box-shadow: 0 3px #b78d5e; }
+    .mode-choice.active { border-color: #597e2c; background: linear-gradient(#82aa43, #5a8227); color: #fff9e7; box-shadow: 0 3px #466922; }
+    .mode-choice:disabled { opacity: .75; cursor: default; }
+    .mode-choice:focus-visible { outline: 3px solid #6f4b22; outline-offset: 3px; }
     .board-stage {
       position: relative; isolation: isolate;
       margin-inline: calc(2px - var(--side-space));
@@ -367,6 +372,10 @@
         <button id="restart" class="control secondary" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M25 11a11 11 0 1 0 1 12M26 4v9h-9"/></svg>Reiniciar</button>
       </div>
     </div>
+    <section class="mode-picker" aria-label="Modos de jogo">
+      <button class="mode-choice active" type="button" aria-pressed="true">Zen</button>
+      <button class="mode-choice" type="button" disabled>Em breve</button>
+    </section>
     <nav id="playtest" class="playtest" aria-label="Fases de teste" hidden>
       <p>Partida de teste separada da campanha.</p>
       <a href="?teste=20">Fase 20</a>

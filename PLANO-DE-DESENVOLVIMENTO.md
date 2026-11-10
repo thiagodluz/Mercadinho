@@ -6,15 +6,21 @@ Mercadinho é um jogo casual de organização de produtos em prateleiras. O joga
 
 O jogo será gratuito para instalar e jogar, sem anúncios, compras internas, assinaturas, vidas limitadas ou pagamentos para continuar. A campanha funcionará offline, com progresso salvo no aparelho.
 
-## Estado atual — 8 de novembro de 2026
+## Estado atual — 10 de novembro de 2026
 
-O repositório contém um protótipo web publicado no GitHub Pages, com oito fases iniciais e 200 fases geradas e verificadas, da fase 9 à 208, e continuação sem fim a partir da fase 209. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases 7 e 8 apresentam o chá como quarto produto e combinam as mecânicas já introduzidas. O catálogo possui 20 produtos ilustrados provisórios; as fases usam controles por arraste ou seleção, desfazer, reinício e tela de vitória.
+A versão 1.0.0 apresenta o modo Zen e um segundo quadro **Em breve** reservado para outro modo. O jogo está disponível na web e foi preparado para Android, com oito fases iniciais e 200 fases geradas e verificadas, da fase 9 à 208, e continuação sem fim a partir da fase 209. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases 7 e 8 apresentam o chá como quarto produto e combinam as mecânicas já introduzidas. O catálogo possui 20 produtos ilustrados provisórios; as fases usam controles por arraste ou seleção, desfazer, reinício e tela de vitória.
 
 O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. A nova campanha usa 43 formatos de tabuleiro, até quatro linhas de prateleiras e filas de dispensador sem produtos iguais consecutivos. O selo `+1` indica uma fileira além da que aparece escurecida. A dificuldade foi medida com um jogador simulado, com desafios nas fases terminadas em 0 e respiros nas terminadas em 5. A partir da fase 209, os últimos 50 tabuleiros são reaproveitados com os produtos variados por semente. Partidas do gerador anterior recomeçam no tabuleiro atual da mesma fase. Uma fase em andamento é retomada após recarregar, a partir da última jogada concluída; até 100 jogadas ficam disponíveis no histórico salvo. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
 
 O protótipo foi verificado no navegador e por testes pontuais da lógica. O repositório inclui testes automatizados da lógica, das soluções das fases, da persistência, da pausa e da preferência de animações; a cobertura ainda precisa ser ampliada. O aplicativo Android usa Capacitor e feedback tátil nativo; a versão 0.1.6 foi integrada à versão principal e publicada como release de teste com APK assinado. Thiago aprovou no celular o visual, o funcionamento, o arraste e a vibração.
 
 Em 8 de novembro de 2026, Thiago deu o item de funcionamento no Android como aprovado, incluindo o escopo de fechamento e reabertura, bloqueio de tela, uso offline e preservação de fase, jogadas e configurações, inclusive ao atualizar o app. Esse registro representa a aprovação geral da etapa; não detalha o resultado de cada cenário ou aparelho. Permanecem relevantes testes adicionais em diferentes aparelhos e a validação offline da versão web publicada.
+
+### Estado da versão 1.0.0
+
+O modo Zen mantém a campanha tranquila, sem cronômetro e com tentativas ilimitadas. O botão **Zen** identifica o modo atual e **Em breve** é um espaço desabilitado para um futuro modo. O APK principal usa o identificador `br.com.thiagodluz.mercadinho`, versão Android 10 e a chave do Prisma. O salvamento Android usa Preferences, com migração dos dados locais da mesma instalação. A validação do APK 1.0.0 em aparelho físico continua necessária.
+
+O resgate permite a prateleira extra quando a busca atinge o limite, indicando que não confirmou uma solução. A versão da campanha é 5; uma partida antiga de fase gerada é reiniciada na mesma fase, preservando a fase desbloqueada. A beta web e os APKs beta usam dados separados.
 
 ## Público e plataformas
 
@@ -83,7 +89,7 @@ As referências servem para compreender a mecânica. O projeto precisa de nome, 
 - As fases da nova campanha têm uma solução inicial encurtada e verificada. Ao sair da sequência sugerida, a dica procura um caminho para a posição atual dentro dos limites de tempo e estados. A interface distingue um limite atingido de uma posição comprovadamente sem solução.
 - Já há controles separados de música e efeitos, vibração opcional em navegadores compatíveis e suporte à preferência de movimento reduzido do sistema. Há um menu de pausa na versão web, que interrompe a música e permite retomar a partida. Há uma opção própria para reduzir animações, respeitando também a preferência do sistema.
 
-A beta 0.1.7-beta.1 acrescenta orientação nas primeiras fases, recuperação de impasse, ajustes nas fases 20, 29 e 30, feedback de cascata e um tabuleiro separado de prateleira esgotada. A [auditoria da beta](docs/AUDITORIA-BETA.md) registra a motivação, os commits, os cenários de verificação e a compilação do APK.
+A beta histórica 0.1.7-beta.1 acrescentou orientação nas primeiras fases, recuperação de impasse, ajustes nas fases 20, 29 e 30, feedback de cascata e um tabuleiro separado de prateleira esgotada. A [auditoria da beta](docs/AUDITORIA-BETA.md) registra a motivação, os commits, os cenários de verificação e a compilação do APK.
 
 ## Próximas prioridades
 
@@ -172,7 +178,7 @@ Entrega: campanha inicial completa e jogável offline.
 - [x] Preparar a beta web para jogadores, com [instruções, atalhos e perguntas de feedback](README.md#teste-beta-no-navegador).
 - [ ] Reunir relatos de jogadores em aparelhos diferentes e registrar onde ficam confusos ou presos.
 - [ ] Priorizar as fases 20, 29 e 30 no teste humano das primeiras 30 fases. Na simulação com 200 partidas por fase, elas tiveram as menores taxas de vitória.
-- [ ] Corrigir as falhas encontradas na beta e ajustar a dificuldade conforme os relatos antes de gerar o próximo APK assinado.
+- [ ] Acompanhar relatos da versão 1.0.0 e corrigir problemas encontrados.
 
 Entrega: versão candidata com fases verificadas e desempenho aceitável nos aparelhos testados.
 

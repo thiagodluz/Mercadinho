@@ -1,6 +1,6 @@
 # Mercadinho — regras, referências e melhorias
 
-> Registro anterior à implementação. Consulte a [auditoria da beta](AUDITORIA-BETA.md) para ver o estado atual das propostas e os roteiros atualizados.
+> Registro histórico anterior à implementação. Consulte o [README](../README.md) e o [plano](../PLANO-DE-DESENVOLVIMENTO.md) para o estado da versão 1.0.0, e a [auditoria da beta](AUDITORIA-BETA.md) para o histórico das propostas.
 
 Pesquisa de 8 de novembro de 2026. O guia compara o código do Mercadinho, os dois vídeos de referência e as regras publicadas por outros jogos do gênero. **Verificado** indica código lido, comportamento observado em vídeo ou resultado reproduzido com as regras atuais. **Documentado** indica uma descrição publicada pelo autor da referência. **Proposta** indica uma escolha de design para o Mercadinho.
 
