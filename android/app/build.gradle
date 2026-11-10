@@ -7,7 +7,7 @@ android {
         applicationId "br.com.thiagodluz.mercadinho"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
+        versionCode 9
         versionName "0.1.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -32,8 +32,8 @@ android {
         }
         beta {
             initWith debug
-            applicationIdSuffix ".beta"
-            versionNameSuffix "-beta.1"
+            applicationIdSuffix ".beta2"
+            versionNameSuffix "-beta.2"
             debuggable false
             matchingFallbacks = ['debug']
         }

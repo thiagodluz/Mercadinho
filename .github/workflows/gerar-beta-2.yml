@@ -1,0 +1,58 @@
+name: Gerar Mercadinho 0.1.7 beta 2
+on:
+  push:
+    branches: [build/mercadinho-017-beta2]
+    paths: [.github/workflows/gerar-beta-2.yml]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Preparar SDK
+        run: |
+          sdk_manager=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f -print -quit)
+          test -n "$sdk_manager"
+          "$sdk_manager" --licenses < <(yes) >/dev/null
+          "$sdk_manager" 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
+      - run: npm ci
+      - run: npm test
+      - run: npm run android:beta
+      - name: Conferir APK
+        run: |
+          apk=android/app/build/outputs/apk/beta/app-beta.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$apk"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk" > dados-apk.txt
+          grep -F "name='br.com.thiagodluz.mercadinho.beta2'" dados-apk.txt
+          grep -F "versionCode='9'" dados-apk.txt
+          grep -F "versionName='0.1.7-beta.2'" dados-apk.txt
+          unzip -tq "$apk"
+          unzip -p "$apk" assets/public/index.html > pagina-extraida.html
+          grep -Fq 'pendingDrag' pagina-extraida.html
+          unzip -p "$apk" assets/public/android-bridge.js > ponte-extraida.js
+          grep -Fq 'Preferences' ponte-extraida.js
+          cp "$apk" Mercadinho-0.1.7-beta.2.apk
+          sha256sum Mercadinho-0.1.7-beta.2.apk
+      - name: Publicar APK beta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notas.md <<'NOTES'
+          Beta para testar as melhorias do modo Zen, incluindo arrastes rápidos, configurações na engrenagem, aviso de impasse, prateleira extra e salvamento pelo Preferences no Android.
+
+          Instala como Mercadinho Beta 2, ao lado da 0.1.6 e da beta.1. Possui identificador próprio e assinatura de teste, com progresso separado. Dados das instalações anteriores não são migrados entre aplicativos diferentes.
+
+          O funcionamento no aparelho, incluindo vibração, salvamento e modo avião, precisa ser testado.
+          NOTES
+          gh release create v0.1.7-beta.2 Mercadinho-0.1.7-beta.2.apk --target "$GITHUB_SHA" --prerelease --latest=false --title "Mercadinho 0.1.7 beta.2" --notes-file notas.md
