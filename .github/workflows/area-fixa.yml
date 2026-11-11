@@ -1,0 +1,20 @@
+name: Verificar área fixa
+on:
+  push:
+    branches: [teste/area-fixa]
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/area-fixa.cjs
+      - run: node tests/layout-impasse.cjs
+      - run: node tests/arraste-rapido.cjs
+      - run: node tests/modos-1.cjs

@@ -88,6 +88,7 @@
       --post: clamp(5px, 1.6vw, 8px);
       --post-art: url("assets/prateleira/montante.webp");
       --rail-art: url("assets/prateleira/travessa.webp");
+      --shelf-height: clamp(44px, calc((var(--board-height) - var(--row-count) * (var(--crown) + var(--rail)) + (var(--row-count) - 1) * 3px - var(--extra-gap, 0px)) / var(--row-count)), 120px);
       position: relative; width: calc(100% * 2 / 3); margin-inline: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
       touch-action: none; user-select: none;
     }
@@ -118,15 +119,9 @@
     }
     .sold-out-cover span { padding: 3px 6px; border: 1px solid #c89a5c; border-radius: 6px; background: #fff0cb; color: #623819; font-size: .72rem; font-weight: 900; }
     .shelf {
-      position: relative; min-width: 0; height: clamp(84px, 25vw, 120px);
+      position: relative; min-width: 0; height: var(--shelf-height);
     }
-    .shelf-row .shelf { height: clamp(84px, 25vw, 120px); }
-    @media (max-height: 740px) {
-      .board-four-rows .shelf-row .shelf { height: clamp(57px, 10.4dvh, 76px); }
-    }
-    .board-four-rows.has-extra .shelf-row .shelf {
-      height: clamp(44px, calc(20dvh - 79px), 76px);
-    }
+    .shelf-row .shelf { height: var(--shelf-height); }
     .board-four-rows.has-extra .extra-row { margin-top: 5px; }
     .shelf-row, .board:not(.board-campaign) > .shelf {
       border-radius: 6px 6px 4px 4px;
@@ -287,7 +282,9 @@
     .mode-choice:disabled { opacity: .75; cursor: default; }
     .mode-choice:focus-visible { outline: 3px solid #6f4b22; outline-offset: 3px; }
     .board-stage {
-      position: relative; isolation: isolate;
+      --board-height: clamp(280px, calc(100dvh - 310px), 430px);
+      position: relative; isolation: isolate; height: var(--board-height);
+      display: flex; align-items: center; justify-content: center;
       margin-inline: calc(2px - var(--side-space));
     }
     .android-game .board-stage {
@@ -326,7 +323,7 @@
       margin-right: calc(max(24px, env(safe-area-inset-right, 0px)) - var(--side-space));
     }
     [hidden] { display: none !important; }
-    @media (max-height: 650px) { .instructions { margin: 7px auto; } .shelf { height: clamp(83px, 24vw, 110px); } }
+    @media (max-height: 650px) { .instructions { margin: 7px auto; } }
     .reduce-motion .matching .front-row::before, .reduce-motion .slot.landed::before,
     .reduce-motion :is(.slot.landed .item, .matching .item, .revealed .item,
       .unlocking .lock-overlay, .unlocking .chain-art, .win-card, .cascade-note) { animation-duration: .01ms; }
@@ -1082,6 +1079,8 @@
         board.classList.toggle('board-dense', layout === 'grid' && shelves.length >= 6);
         board.classList.toggle('board-cross', layout === 'cross');
         board.classList.toggle('board-steps', layout === 'steps');
+        const mainRowCount = rows ? rows.length : (layout === 'cross' || layout === 'steps' ? 3 : Math.ceil(levelDefinition.shelves.length / (layout === 'grid' && levelDefinition.shelves.length >= 6 ? 3 : 2)));
+        board.setAttribute('style', `--row-count: ${mainRowCount + (hasExtraShelf ? 1 : 0)}; --extra-gap: ${hasExtraShelf ? '10px' : '0px'}`);
         const activeLock = firstActiveLock(shelves);
         const compartments = shelves.map((shelf, shelfIndex) => {
           if (shelf.type === 'dispenser') {
