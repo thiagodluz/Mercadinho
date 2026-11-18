@@ -223,7 +223,7 @@ async function main() {
   game.advance();
   assert.equal(game.state().currentLevel, 8);
   assert.equal(game.state().completed, false);
-  assert.equal(JSON.parse(storage[saveKey]).generator, 5);
+  assert.equal(JSON.parse(storage[saveKey]).generator, 6);
 
   const firstBoard = JSON.stringify(game.state().shelves);
   assert.equal(firstBoard, JSON.stringify(setup(8, 1).state().shelves));
@@ -242,14 +242,14 @@ async function main() {
   resumed.element('undo').handlers.click();
   assert.equal(JSON.stringify(resumed.state().shelves), firstBoard);
 
-  for (const generator of [undefined, 2, 3, 4]) {
+  for (const generator of [undefined, 2, 3, 4, 5]) {
     const legacy = { ...storage, [saveKey]: JSON.stringify({ ...JSON.parse(savedV4), generator }) };
     const upgraded = setup(8, 12345, legacy);
     assert.equal(upgraded.state().currentLevel, 8);
     assert.equal(JSON.stringify(upgraded.state().shelves), firstBoard);
     assert.equal(upgraded.state().history.length, 0);
     await play(upgraded, path.slice(0, 1), 'primeira jogada após a atualização');
-    assert.equal(JSON.parse(legacy[saveKey]).generator, 5);
+    assert.equal(JSON.parse(legacy[saveKey]).generator, 6);
   }
 
   const unavailable = { ...storage, [saveKey]: savedV4 };
@@ -289,7 +289,7 @@ async function main() {
   const stalledStorage = {
     'mercadinho-unlocked': '29',
     'mercadinho-layout-seed': '12345',
-    [saveKey]: JSON.stringify({ version: 1, generator: 5, level: 29, shelves: originalPhase30, history: [] })
+    [saveKey]: JSON.stringify({ version: 1, generator: 6, level: 29, shelves: originalPhase30, history: [] })
   };
   const phase30 = setup(29, 12345, stalledStorage);
   const beforeStall = JSON.stringify(phase30.state().shelves);

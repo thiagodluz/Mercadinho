@@ -27,7 +27,7 @@ const server = http.createServer((request, response) => {
       for (const shelf of shelves) {
         if (shelf.type !== 'dispenser') shelf.front = ['milk', 'coffee', 'jam'];
       }
-      const snapshot = JSON.stringify({ version: 1, generator: 5, level: level - 1, shelves, history: [shelves] });
+      const snapshot = JSON.stringify({ version: 1, generator: 6, level: level - 1, shelves, history: [shelves] });
       for (const [width, height] of [[360, 640], [390, 844]]) {
         for (const android of [false, true]) {
           const context = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true });

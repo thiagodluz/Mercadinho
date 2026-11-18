@@ -1,0 +1,19 @@
+name: Validar Mercadinho 1.1
+on:
+  push:
+    branches: [release/mercadinho-1-1]
+jobs:
+  teste:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm test
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/layout-impasse.cjs
+      - run: node tests/arraste-rapido.cjs
+      - run: node tests/modos-1.cjs

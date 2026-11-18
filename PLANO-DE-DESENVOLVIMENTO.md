@@ -6,21 +6,17 @@ Mercadinho é um jogo casual de organização de produtos em prateleiras. O joga
 
 O jogo será gratuito para instalar e jogar, sem anúncios, compras internas, assinaturas, vidas limitadas ou pagamentos para continuar. A campanha funcionará offline, com progresso salvo no aparelho.
 
-## Estado atual — 10 de novembro de 2026
+## Estado atual — versão 1.1.0
 
-A versão 1.0.0 apresenta o modo Zen e um segundo quadro **Em breve** reservado para outro modo. O jogo está disponível na web e foi preparado para Android, com oito fases iniciais e 200 fases geradas e verificadas, da fase 9 à 208, e continuação sem fim a partir da fase 209. A primeira apresenta camadas, a segunda apresenta um dispensador, a terceira apresenta correntes sequenciais, a quarta combina essas mecânicas e as duas seguintes ampliam a fila do dispensador e introduzem uma camada e corrente adicionais. As fases 7 e 8 apresentam o chá como quarto produto e combinam as mecânicas já introduzidas. O catálogo possui 20 produtos ilustrados provisórios; as fases usam controles por arraste ou seleção, desfazer, reinício e tela de vitória.
+A versão 1.1.0 reúne as melhorias aprovadas na experiência Zen: área reservada para o tabuleiro, nichos alinhados em três colunas, encaixe da prateleira extra em uma posição disponível e soltura com escolha da vaga livre mais próxima dentro do compartimento. Oito fases manuais introduzem as regras; a campanha mantém 200 tabuleiros distintos, da fase 9 à 208, com 30 formatos e soluções verificadas. Em 132 fases foram acrescentados seis produtos. A continuação após a fase 208 reutiliza os últimos 50 modelos com produtos variados por semente.
 
-O navegador guarda a fase mais avançada e as preferências de áudio. A campanha avança automaticamente em sequência depois da vitória. A nova campanha usa 43 formatos de tabuleiro, até quatro linhas de prateleiras e filas de dispensador sem produtos iguais consecutivos. O selo `+1` indica uma fileira além da que aparece escurecida. A dificuldade foi medida com um jogador simulado, com desafios nas fases terminadas em 0 e respiros nas terminadas em 5. A partir da fase 209, os últimos 50 tabuleiros são reaproveitados com os produtos variados por semente. Partidas do gerador anterior recomeçam no tabuleiro atual da mesma fase. Uma fase em andamento é retomada após recarregar, a partir da última jogada concluída; até 100 jogadas ficam disponíveis no histórico salvo. Há efeitos sonoros e uma melodia provisória gerados pelo jogo, controles separados de volume e vibração opcional quando o navegador oferece suporte.
+O catálogo mantém 20 produtos. O modo Zen permanece sem cronômetro, com tentativas ilimitadas, avanço automático, desfazer, dicas, pausa, reinício e resgate com prateleira extra. O quadro **Em breve** reserva um futuro modo. Camadas, dispensadores e correntes continuam presentes.
 
-O protótipo foi verificado no navegador e por testes pontuais da lógica. O repositório inclui testes automatizados da lógica, das soluções das fases, da persistência, da pausa e da preferência de animações; a cobertura ainda precisa ser ampliada. O aplicativo Android usa Capacitor e feedback tátil nativo; a versão 0.1.6 foi integrada à versão principal e publicada como release de teste com APK assinado. Thiago aprovou no celular o visual, o funcionamento, o arraste e a vibração.
+O aplicativo usa Capacitor, pacote `br.com.thiagodluz.mercadinho`, versão Android 11 e assinatura de distribuição compatível com a 1.0.0. O salvamento nativo usa Preferences. A campanha está na versão 6: partidas geradas de versões anteriores recomeçam na mesma fase, preservando a fase alcançada. A beta web possui dados separados.
 
-Em 8 de novembro de 2026, Thiago deu o item de funcionamento no Android como aprovado, incluindo o escopo de fechamento e reabertura, bloqueio de tela, uso offline e preservação de fase, jogadas e configurações, inclusive ao atualizar o app. Esse registro representa a aprovação geral da etapa; não detalha o resultado de cada cenário ou aparelho. Permanecem relevantes testes adicionais em diferentes aparelhos e a validação offline da versão web publicada.
+Os testes automatizados verificam as 200 soluções, persistência, retomada, interrupções, pausa, acessibilidade, arraste rápido, menus e visibilidade dos controles em telas pequenas. A validação física anterior no aparelho não substitui o teste da atualização 1.1.0. Instalar sobre a 1.0, conferir progresso, vibração e retomada permanece uma verificação do jogador.
 
-### Estado da versão 1.0.0
-
-O modo Zen mantém a campanha tranquila, sem cronômetro e com tentativas ilimitadas. O botão **Zen** identifica o modo atual e **Em breve** é um espaço desabilitado para um futuro modo. O APK principal usa o identificador `br.com.thiagodluz.mercadinho`, versão Android 10 e a chave do Prisma. O salvamento Android usa Preferences, com migração dos dados locais da mesma instalação. A validação do APK 1.0.0 em aparelho físico continua necessária.
-
-O resgate permite a prateleira extra quando a busca atinge o limite, indicando que não confirmou uma solução. A versão da campanha é 5; uma partida antiga de fase gerada é reiniciada na mesma fase, preservando a fase desbloqueada. A beta web e os APKs beta usam dados separados.
+O histórico desta entrega e o procedimento de compilação estão em [release-v1.1.0.md](docs/release-v1.1.0.md). O restante deste plano mantém o roteiro e os registros históricos de desenvolvimento; itens futuros não fazem parte desta entrega.
 
 ## Público e plataformas
 
@@ -178,7 +174,7 @@ Entrega: campanha inicial completa e jogável offline.
 - [x] Preparar a beta web para jogadores, com [instruções, atalhos e perguntas de feedback](README.md#teste-beta-no-navegador).
 - [ ] Reunir relatos de jogadores em aparelhos diferentes e registrar onde ficam confusos ou presos.
 - [ ] Priorizar as fases 20, 29 e 30 no teste humano das primeiras 30 fases. Na simulação com 200 partidas por fase, elas tiveram as menores taxas de vitória.
-- [ ] Acompanhar relatos da versão 1.0.0 e corrigir problemas encontrados.
+- [ ] Acompanhar relatos da versão 1.1.0 e corrigir problemas encontrados.
 
 Entrega: versão candidata com fases verificadas e desempenho aceitável nos aparelhos testados.
 
