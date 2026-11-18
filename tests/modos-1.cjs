@@ -21,10 +21,10 @@ const server = http.createServer((request, response) => {
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);
-      const zen = page.getByRole('button', { name: 'Zen', exact: true });
-      const soon = page.getByRole('button', { name: 'Em breve', exact: true });
+      const zen = page.getByRole('button', { name: /^Zen/ });
+      const soon = page.getByRole('button', { name: 'Corrida', exact: false });
       assert.equal(await zen.getAttribute('aria-pressed'), 'true');
-      assert.equal(await soon.isDisabled(), true);
+      assert.equal(await soon.isDisabled(), false);
       const a = await zen.boundingBox();
       const b = await soon.boundingBox();
       assert(Math.abs(a.width - a.height) < 1 && Math.abs(b.width - b.height) < 1);
