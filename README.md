@@ -6,7 +6,7 @@
   <img src="assets/mockup.jpg" alt="Mockup visual do jogo Mercadinho" width="420">
 </p>
 
-**[Jogar no navegador](https://thiagodluz.github.io/Mercadinho/)** · **[Baixar APK 1.0](https://github.com/thiagodluz/Mercadinho/releases/tag/v1.0.0)** · **[Plano de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md)** · **[Auditoria da beta](docs/AUDITORIA-BETA.md)**
+**[Jogar no navegador](https://thiagodluz.github.io/Mercadinho/)** · **[Baixar APK 1.1](https://github.com/thiagodluz/Mercadinho/releases/tag/v1.1.0)** · **[Plano de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md)** · **[Auditoria da beta](docs/AUDITORIA-BETA.md)**
 
 ## Sobre o projeto
 
@@ -113,4 +113,8 @@ cd android
 ./gradlew assembleRelease
 ```
 
-A assinatura de distribuição requer as variáveis `PRISMA_KEYSTORE_FILE`, `PRISMA_KEYSTORE_PASSWORD`, `PRISMA_KEY_ALIAS` e `PRISMA_KEY_PASSWORD`. A chave deve permanecer privada. O aplicativo usa Preferences no Android e migra os dados existentes do mesmo aplicativo quando possível; não é possível migrar automaticamente dados entre identificadores distintos. As fases geradas em andamento anteriores à versão de campanha 5 recomeçam na mesma fase.
+A assinatura de distribuição requer as variáveis `PRISMA_KEYSTORE_FILE`, `PRISMA_KEYSTORE_PASSWORD`, `PRISMA_KEY_ALIAS` e `PRISMA_KEY_PASSWORD`. A chave deve permanecer privada. O aplicativo usa Preferences no Android e migra os dados existentes do mesmo aplicativo quando possível; não é possível migrar automaticamente dados entre identificadores distintos. As fases geradas em andamento anteriores à versão de campanha 6 recomeçam na mesma fase.
+
+## Histórico da versão 1.1
+
+Veja as [mudanças, validação e atualização do APK 1.1.0](docs/release-v1.1.0.md). A prévia que originou os ajustes permanece em [experimentos/prateleiras-zen](https://thiagodluz.github.io/Mercadinho/experimentos/prateleiras-zen/).
