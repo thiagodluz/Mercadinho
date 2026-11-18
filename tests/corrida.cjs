@@ -24,11 +24,11 @@ const script=fs.readFileSync('index.html','utf8').match(/<script>([\s\S]*)<\/scr
 const marker='      updateAudioControls();\n\n      function itemMarkup';
 const instrumented=script.replace(marker,`globalThis.game={move,levelAt,openLevel,saveGame,shelfCells,updateClock,openGameDialog,state:()=>({clock,paused,timeOver,completed,animating,shelves,currentLevel}),first:()=>initialHintPath()[0]};\n${marker}`);
 function setup(storage={}, search='?modo=corrida') {
-  let now=1000,interval; const listeners={}, elements={};
+  let now=1000,interval,nextLevel; const listeners={}, elements={};
   const el=id=>elements[id]??=( {hidden:false,open:false,handlers:{},classList:{toggle(){}},focus(){},setAttribute(){},querySelector(){return null;},addEventListener(e,fn){this.handlers[e]=fn;},showModal(){this.open=true;},close(){this.open=false;this.handlers.close?.();}} );
-  const ctx=vm.createContext({document:{getElementById:el,documentElement:el('root'),hidden:false,addEventListener(e,fn){(listeners[e]??=[]).push(fn);}}, window:{matchMedia:()=>({matches:true}),addEventListener(){}}, location:{search},URLSearchParams,Date:{now:()=>now},navigator:{},confirm:()=>true,localStorage:{getItem:k=>storage[k]??null,setItem:(k,v)=>storage[k]=v,removeItem:k=>delete storage[k]},setInterval(fn){interval=fn;},setTimeout(fn,ms){if(ms===1800)return 0;return setTimeout(fn,0);},clearTimeout,console});
+  const ctx=vm.createContext({document:{getElementById:el,documentElement:el('root'),hidden:false,addEventListener(e,fn){(listeners[e]??=[]).push(fn);}}, window:{matchMedia:()=>({matches:true}),addEventListener(){}}, location:{search},URLSearchParams,Date:{now:()=>now},navigator:{},confirm:()=>true,localStorage:{getItem:k=>storage[k]??null,setItem:(k,v)=>storage[k]=v,removeItem:k=>delete storage[k]},setInterval(fn){interval=fn;},setTimeout(fn,ms){if(ms===1800){nextLevel=fn;return 0;}return setTimeout(fn,0);},clearTimeout,console});
   vm.runInContext(database,ctx);vm.runInContext(instrumented,ctx);
-  return {game:ctx.game,el,storage,advance(ms){now+=ms;interval?.();},hide(){ctx.document.hidden=true;for(const f of listeners.visibilitychange||[])f();},show(){ctx.document.hidden=false;for(const f of listeners.visibilitychange||[])f();}};
+  return {game:ctx.game,el,storage,next(){nextLevel?.();},advance(ms){now+=ms;interval?.();},hide(){ctx.document.hidden=true;for(const f of listeners.visibilitychange||[])f();},show(){ctx.document.hidden=false;for(const f of listeners.visibilitychange||[])f();}};
 }
 const delay=()=>new Promise(r=>setTimeout(r,5));
 (async()=>{
@@ -46,5 +46,12 @@ const delay=()=>new Promise(r=>setTimeout(r,5));
  reopened.el('retry-race').handlers.click();assert(!reopened.game.state().timeOver);assert(!reopened.game.state().clock.started);assert.equal(reopened.game.state().clock.remaining,initial);
  assert.equal(storage['mercadinho-unlocked'],'19');assert.equal(storage['mercadinho-partida-v1'],'ZEN-INTOCADO');
  for(let count=4;count<=11;count++)for(let variant=0;variant<2;variant++){const cells=g.game.shelfCells(count,variant);assert.equal(cells.length,count);assert.equal(new Set(cells).size,count);assert(cells.every(n=>n>=0&&n<11),'posição 11 sempre reservada');}
+ const winGame=setup();
+ for(const pair of data.mercadinhoCorrida[0].hint.match(/../g)){
+  const [a,b]=[...pair].map(d=>parseInt(d,36));
+  assert(winGame.game.move({shelf:Math.floor(a/3),slot:a%3},{shelf:Math.floor(b/3),slot:b%3}));while(winGame.game.state().animating)await delay();
+ }
+ assert(winGame.game.state().completed);assert.equal(winGame.storage['mercadinho-corrida-unlocked'],'1');
+ winGame.hide();winGame.next();winGame.show();assert(winGame.game.state().paused);assert(winGame.el('pause-dialog').open,'vitória em segundo plano retoma com pausa visível');winGame.el('pause-dialog').close();assert(!winGame.game.state().paused);
  console.log('24 fases Corrida resolvidas; relógio, pausa, suspensão, retomada, expiração, nova tentativa, isolamento do Zen e reserva fixa verificados.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

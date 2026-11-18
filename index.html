@@ -659,7 +659,7 @@
         } catch { layoutSeed = Math.floor(Math.random() * 4294967296); }
       }
       const campaign = globalThis.mercadinhoCampanha || [];
-      const campaignVersion = 6;
+      const campaignVersion = timedMode ? 1 : 6;
       const raceCampaign = globalThis.mercadinhoCorrida || [];
       function canLoadLevel(index) {
         if (timedMode ? raceCampaign.length : index < levels.length || campaign.length) return true;
@@ -763,7 +763,7 @@
       if (!testMode) {
         try {
           const saved = JSON.parse(gameStorage.getItem(saveKey) || 'null');
-          const sameCampaign = currentLevel < levels.length || saved?.generator === campaignVersion;
+          const sameCampaign = (!timedMode && currentLevel < levels.length) || saved?.generator === campaignVersion;
           if (saved && saved.version === 1 && saved.level === currentLevel && sameCampaign &&
             (!timedMode || (saved.clock && Number.isFinite(saved.clock.remaining) && saved.clock.remaining >= 0 && saved.clock.remaining <= levelDefinition.seconds * 1000 && typeof saved.clock.started === 'boolean')) &&
             validSnapshot(saved.shelves, levelDefinition) && Array.isArray(saved.history) && saved.history.length <= 100 &&
@@ -1047,10 +1047,12 @@
             if (clock.started && !paused && !completed && !timeOver) clock.remaining = Math.max(0, clock.remaining - Math.max(0, Date.now() - clockAt));
             clockAt = Date.now();
             paused = true;
+            if (pointer) finishPointer({pointerId: pointer.id}, true);
             saveGame(animating);
             if (!timeOver && !completed && !pauseDialog.open && !settingsDialog.open) pauseDialog.showModal();
           }
           clockAt = Date.now();
+          if (!document.hidden && paused && !completed && !timeOver && !pauseDialog.open && !settingsDialog.open) pauseDialog.showModal();
           paintClock();
         });
         window.addEventListener('pagehide', () => { updateClock(); saveGame(animating); });
