@@ -341,6 +341,15 @@
       :is(.slot.landed .item, .matching .item, .revealed .item,
         .unlocking .lock-overlay, .unlocking .chain-art, .win-card, .cascade-note) { animation-duration: .01ms; }
     }
+
+    .mode-choice small { display: block; font-size: .64rem; font-weight: 600; }
+    .race-clock { text-align: center; color: #654124; font-size: .72rem; margin: 4px auto; }
+    .race-clock strong { display: inline-block; min-width: 3.5em; padding: 3px 7px; border-radius: 8px; background: #fff0c9; font-size: 1rem; font-variant-numeric: tabular-nums; }
+    .race-clock.urgent strong { background: #a42f22; color: white; }
+    .board.board-campaign { height: var(--area-altura); grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); align-items: stretch; }
+    .board.board-campaign .shelf-row { width: 100%; margin: 0; min-height: 0; align-self: stretch; }
+    .board.board-campaign .shelf-row .shelf { height: 100%; min-height: 0; }
+    .win:has(#retry-race:not([hidden])) { pointer-events: auto; }
   </style>
 </head>
 <body>
@@ -356,6 +365,7 @@
         <div class="level-badge"><span aria-hidden="true">★ ★</span><div id="level" class="level">Fase 1</div><span aria-hidden="true">★ ★</span><span id="cascade-note" class="cascade-note" role="status" hidden></span></div>
         <button id="pause" class="pause-control" type="button" aria-label="Pausar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="4" y="3" width="6" height="18" rx="2"/><rect x="14" y="3" width="6" height="18" rx="2"/></svg></button>
         <button id="settings-toggle" class="pause-control settings-control" type="button" aria-label="Configurações" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42m0-14.14-1.42 1.42M6.35 17.65l-1.42 1.42"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <div id="race-clock" class="race-clock" hidden><span id="clock-label">O tempo começa na primeira jogada</span> <strong id="clock-value" role="timer" aria-label="Tempo restante"></strong></div>
         <p id="instructions" class="instructions" aria-live="polite">Arraste os produtos e junte três iguais na mesma prateleira.</p>
         <div id="turn-status" class="turn-status" hidden>
           <p id="message" class="message" role="status">A fileira de trás avança quando você esvazia toda a frente.</p>
@@ -368,6 +378,7 @@
           <div class="win-card">
             <h2 id="win-title"></h2>
             <p id="win-message"></p>
+            <button id="retry-race" class="control" type="button" hidden>Tentar novamente</button>
           </div>
         </section>
       </div>
@@ -379,8 +390,8 @@
       </div>
     </div>
     <section class="mode-picker" aria-label="Modos de jogo">
-      <button class="mode-choice active" type="button" aria-pressed="true">Zen</button>
-      <button class="mode-choice" type="button" disabled>Em breve</button>
+      <button id="mode-zen" class="mode-choice active" type="button" aria-pressed="true">Zen<small>Sem tempo</small></button>
+      <button id="mode-corrida" class="mode-choice" type="button" aria-pressed="false">Corrida<small>Tempo e mais peças</small></button>
     </section>
     <nav id="playtest" class="playtest" aria-label="Fases de teste" hidden>
       <p>Partida de teste separada da campanha.</p>
@@ -454,7 +465,14 @@
   <script src="fases.js"></script>
   <script>
     function startGame() {
-      const gameStorage = globalThis.mercadinhoStorage || localStorage;
+      const baseStorage = globalThis.mercadinhoStorage || localStorage;
+      const timedMode = /(?:\?|&)modo=corrida(?:&|$)/.test(globalThis.location?.search || '');
+      const storageKey = key => timedMode ? key.replace(/^(mercadinho-(?:beta-)?)/, '$1corrida-') : key;
+      const gameStorage = {
+        getItem: key => baseStorage.getItem(storageKey(key)),
+        setItem: (key, value) => baseStorage.setItem(storageKey(key), value),
+        removeItem: key => baseStorage.removeItem(storageKey(key))
+      };
       // A ordem dos produtos faz parte da geração das fases salvas.
       const products = {
         milk: { name: 'Leite' },
@@ -642,8 +660,9 @@
       }
       const campaign = globalThis.mercadinhoCampanha || [];
       const campaignVersion = 6;
+      const raceCampaign = globalThis.mercadinhoCorrida || [];
       function canLoadLevel(index) {
-        if (index < levels.length || campaign.length) return true;
+        if (timedMode ? raceCampaign.length : index < levels.length || campaign.length) return true;
         message.textContent = 'Não foi possível carregar as fases. Recarregue a página para continuar.';
         return false;
       }
@@ -653,6 +672,12 @@
       }
       // A campanha é fixa. Depois dela, a semente troca os produtos dos modelos finais.
       function levelAt(index) {
+        if (timedMode) {
+          const model = raceCampaign[index % raceCampaign.length];
+          return { ...model, solution: model.hint,
+            instructions: 'Junte os trios antes do tempo acabar.',
+            hint: 'Mais camadas e menos folgas. O relógio começa na primeira jogada.' };
+        }
         if (soldOutTest) return soldOutLevel;
         if (index < levels.length) return levels[index];
         let value = (layoutSeed ^ Math.imul(index + 1, 0x9e3779b1)) >>> 0;
@@ -701,6 +726,14 @@
       let currentLevel = unlocked;
       let levelDefinition = levelAt(currentLevel);
       let shelves = copy(levelDefinition.shelves);
+      let clock = { remaining: timedMode ? levelDefinition.seconds * 1000 : 0, started: false };
+      let clockAt = Date.now();
+      let timeOver = false;
+      const clockElement = document.getElementById('race-clock');
+      const clockValue = document.getElementById('clock-value');
+      const clockLabel = document.getElementById('clock-label');
+      const retryRace = document.getElementById('retry-race');
+      clockElement.hidden = !timedMode;
       let history = [];
       let selected = null;
       let pointer = null;
@@ -732,12 +765,14 @@
           const saved = JSON.parse(gameStorage.getItem(saveKey) || 'null');
           const sameCampaign = currentLevel < levels.length || saved?.generator === campaignVersion;
           if (saved && saved.version === 1 && saved.level === currentLevel && sameCampaign &&
+            (!timedMode || (saved.clock && Number.isFinite(saved.clock.remaining) && saved.clock.remaining >= 0 && saved.clock.remaining <= levelDefinition.seconds * 1000 && typeof saved.clock.started === 'boolean')) &&
             validSnapshot(saved.shelves, levelDefinition) && Array.isArray(saved.history) && saved.history.length <= 100 &&
             saved.history.every(state => validSnapshot(state, levelDefinition) && state.length === saved.shelves.length)) {
             shelves = saved.shelves;
             history = saved.history;
             restored = true;
             resumePending = saved.pending === true;
+            if (timedMode) { clock = saved.clock; timeOver = clock.remaining <= 0; }
           }
         } catch {}
       }
@@ -745,7 +780,7 @@
         if (testMode) return;
         try {
           if (completed) gameStorage.removeItem(saveKey);
-          else gameStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: campaignVersion, level: currentLevel, shelves, history: history.slice(-100), pending }));
+          else gameStorage.setItem(saveKey, JSON.stringify({ version: 1, generator: campaignVersion, level: currentLevel, shelves, history: history.slice(-100), pending, ...(timedMode ? { clock } : {}) }));
         } catch {}
       }
       let currentHint = null;
@@ -981,13 +1016,70 @@
         updateAudioControls();
         vibrate('preview');
       });
+      function paintClock() {
+        if (!timedMode) return;
+        const seconds = Math.ceil(clock.remaining / 1000);
+        clockValue.textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+        clockLabel.textContent = timeOver ? 'Fim da tentativa' : !clock.started ? 'Começa na primeira jogada' : paused ? 'Tempo pausado' : 'Tempo restante';
+        clockElement.classList.toggle('urgent', seconds <= 20);
+      }
+      function updateClock() {
+        if (!timedMode) return;
+        const now = Date.now();
+        if (clock.started && !paused && !completed && !timeOver && !document.hidden) clock.remaining = Math.max(0, clock.remaining - Math.max(0, now - clockAt));
+        clockAt = now;
+        if (clock.remaining <= 0 && !timeOver) {
+          timeOver = true;
+          pendingDrag = null;
+          selected = null;
+          if (pointer) finishPointer({pointerId: pointer.id}, true);
+          cancelHint();
+          saveGame(animating);
+          render();
+        }
+        paintClock();
+      }
+      if (timedMode) {
+        setInterval(() => { updateClock(); if (clock.started && !completed && !animating) saveGame(); }, 1000);
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            // Consome o intervalo até a suspensão, mesmo após document.hidden mudar.
+            if (clock.started && !paused && !completed && !timeOver) clock.remaining = Math.max(0, clock.remaining - Math.max(0, Date.now() - clockAt));
+            clockAt = Date.now();
+            paused = true;
+            saveGame(animating);
+            if (!timeOver && !completed && !pauseDialog.open && !settingsDialog.open) pauseDialog.showModal();
+          }
+          clockAt = Date.now();
+          paintClock();
+        });
+        window.addEventListener('pagehide', () => { updateClock(); saveGame(animating); });
+      }
+      for (const [id, mode] of [['mode-zen', 'zen'], ['mode-corrida', 'corrida']]) {
+        const button = document.getElementById(id);
+        const active = timedMode === (mode === 'corrida');
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+        button.addEventListener('click', () => {
+          if (active || animating) return;
+          updateClock(); saveGame();
+          const url = new URL(location.href);
+          url.search = mode === 'corrida' ? '?modo=corrida' : '';
+          url.hash = '';
+          location.assign(url.href);
+        });
+      }
+      retryRace.addEventListener('click', () => openLevel(currentLevel));
       function openGameDialog(dialog, focusTarget) {
-        if (paused || animating || completed) return;
+        updateClock();
+        if (paused || animating || completed || timeOver) return;
         if (hintSearching) message.textContent = levelDefinition.hint;
         cancelHint();
         render();
         dialog.showModal();
         paused = true;
+        paintClock();
+        saveGame();
         stopMusic();
         if (audioContext && audioContext.state === 'running') audioContext.suspend().catch(() => {});
         focusTarget.focus();
@@ -1005,6 +1097,8 @@
       for (const [dialog, trigger] of [[pauseDialog, pauseButton], [settingsDialog, settingsButton]]) {
         dialog.addEventListener('close', () => {
           paused = false;
+          clockAt = Date.now();
+          paintClock();
           if (audioSettings.music) startMusic();
           trigger.focus();
         });
@@ -1052,11 +1146,27 @@
         };
       }
 
+      function shelfCells(count, variant = 0) {
+        if (count > 11) throw new Error('O tabuleiro deve reservar a posição da prateleira extra.');
+        const patterns = {
+          4: [[0, 2, 6, 8], [1, 3, 5, 7]],
+          5: [[0, 2, 4, 6, 8], [0, 1, 5, 6, 7]],
+          6: [[0, 2, 3, 5, 6, 8], [0, 1, 4, 6, 7, 8]],
+          7: [[0, 1, 2, 4, 6, 7, 8], [0, 2, 3, 4, 5, 6, 8]],
+          8: [[0, 1, 2, 3, 5, 6, 8, 10], [0, 2, 3, 4, 5, 6, 7, 9]],
+          9: [[0, 1, 2, 3, 5, 6, 7, 8, 10], [0, 2, 3, 4, 5, 6, 7, 9, 10]],
+          10: [[0, 1, 2, 3, 5, 6, 7, 8, 9, 10], [0, 1, 2, 3, 4, 5, 6, 8, 9, 10]],
+          11: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]
+        };
+        const options = patterns[count];
+        return options ? options[variant % options.length] : Array.from({length: count}, (_, i) => i);
+      }
+
       function render(matching = [], revealed = [], unlocking = [], landing = null) {
         // Mudar um produto de vaga na mesma prateleira não abre caminho para um trio.
         const stalled = !animating && !completed && possibleMoves(shelves).length === 0;
         const hasExtraShelf = shelves.length > levelDefinition.shelves.length;
-        const cue = !animating && !completed && !stalled && !hintSearching && !currentHint ? tutorialCue() : null;
+        const cue = !timedMode && !animating && !completed && !stalled && !hintSearching && !currentHint ? tutorialCue() : null;
         const highlight = currentHint || (cue?.from ? cue : null);
         function highlightClass(shelf, slot) {
           if (highlight?.from.shelf === shelf && highlight.from.slot === slot) return 'hint-origin';
@@ -1067,7 +1177,7 @@
         undo.classList.toggle('needs-undo', stalled && history.length > 0);
         hintButton.hidden = stalled && !hasExtraShelf;
         recoverUndo.hidden = !stalled || !history.length;
-        recoverShelf.hidden = !stalled || hasExtraShelf;
+        recoverShelf.hidden = timeOver || !stalled || hasExtraShelf;
         recoverShelf.disabled = recoveryStatus !== null;
         if (stalled) {
           const recoveryAdvice = history.length ? 'Desfaça a última jogada ou reinicie a fase.' : 'Reinicie a fase.';
@@ -1079,15 +1189,8 @@
           const warning = warnings[recoveryStatus] || `Sem movimentos disponíveis. ${recoveryAdvice}`;
           if (message.textContent !== warning) message.textContent = warning;
         }
-        const rows = levelDefinition.layout || Array.from({length: Math.ceil(levelDefinition.shelves.length / 3)}, (_, i) => Math.min(3, levelDefinition.shelves.length - i * 3));
-        const layout = 'campaign';
-        board.classList.toggle('board-campaign', Boolean(rows));
-        board.classList.toggle('board-four-rows', rows?.length === 4);
-        board.classList.toggle('has-extra', shelves.some(shelf => shelf.type === 'extra'));
-        board.classList.toggle('board-shaped', layout === 'cross' || layout === 'steps');
-        board.classList.toggle('board-dense', layout === 'grid' && shelves.length >= 6);
-        board.classList.toggle('board-cross', layout === 'cross');
-        board.classList.toggle('board-steps', layout === 'steps');
+        board.classList.toggle('board-campaign', true);
+        board.classList.toggle('has-extra', hasExtraShelf);
         const activeLock = firstActiveLock(shelves);
         const compartments = shelves.map((shelf, shelfIndex) => {
           if (shelf.type === 'dispenser') {
@@ -1134,30 +1237,29 @@
             ${locked ? `<span class="lock-caption">${lockStatus}</span>` : ''}</div>` : '';
           return `<div class="shelf ${effect}"><div class="shelf-interior"><div class="back-row" aria-hidden="true">${backRow}</div><div class="front-row">${frontRow}</div>${lock}${layers}${extraLabel}${closingLabel}</div></div>`;
         });
-        const extraCompartment = hasExtraShelf ? compartments.pop() : '';
-        const extraRowIndex = rows.findIndex(count => count < 3);
-        let rowStart = 0;
-        const mainRows = rows.map((count, rowIndex) => {
-          const row = compartments.slice(rowStart, rowStart + count);
-          rowStart += count;
-          let start = count < 3 ? (rowIndex % (4 - count)) : 0;
-          if (rowIndex === extraRowIndex && extraCompartment) {
-            if (start) { row.unshift(extraCompartment); start--; }
-            else row.push(extraCompartment);
+        const cells = shelfCells(levelDefinition.shelves.length, currentLevel);
+        const positioned = new Map(cells.map((cell, index) => [cell, compartments[index]]));
+        if (hasExtraShelf) positioned.set(11, compartments.at(-1));
+        const segments = [];
+        for (let row = 0; row < 4; row++) {
+          let column = 0;
+          while (column < 3) {
+            if (!positioned.has(row * 3 + column)) { column++; continue; }
+            const start = column;
+            const items = [];
+            while (column < 3 && positioned.has(row * 3 + column)) items.push(positioned.get(row * 3 + column++));
+            segments.push(`<div class="shelf-row" style="--shelf-count:${items.length}; grid-row:${row + 1}; grid-column:${start + 1} / span ${items.length}">${items.join('')}</div>`);
           }
-          return `<div class="shelf-row" style="--shelf-count:${row.length}; --shelf-start:${start}">${row.join('')}</div>`;
-        }).join('');
-        const extraRow = extraCompartment && extraRowIndex < 0
-          ? `<div class="shelf-row extra-row" style="--shelf-count:1">${extraCompartment}</div>` : '';
-        board.innerHTML = mainRows + extraRow;
-        hintButton.disabled = animating || completed || hintSearching || stalled;
-        pauseButton.disabled = animating || completed;
-        settingsButton.disabled = animating || completed;
-        undo.disabled = animating || history.length === 0;
+        }
+        board.innerHTML = segments.join('');
+        hintButton.disabled = animating || completed || timeOver || hintSearching || stalled;
+        pauseButton.disabled = animating || completed || timeOver;
+        settingsButton.disabled = animating || completed || timeOver;
+        undo.disabled = animating || timeOver || history.length === 0;
         restart.disabled = animating;
         resetProgress.disabled = animating;
         board.setAttribute('aria-busy', String(animating));
-        levelLabel.textContent = soldOutTest ? 'Teste · Esgotada' : `Fase ${currentLevel + 1}${testMode ? ' · Teste' : ''}`;
+        levelLabel.textContent = timedMode ? `Corrida · ${currentLevel + 1}` : soldOutTest ? 'Teste · Esgotada' : `Fase ${currentLevel + 1}${testMode ? ' · Teste' : ''}`;
         const instructionText = cue?.text || levelDefinition.instructions;
         if (instructions.textContent !== instructionText) instructions.textContent = instructionText;
         const notice = stalled || hintSearching || Boolean(currentHint) || /não foi possível|atingiu o limite|sem solução|prateleira extra liberada|última jogada desfeita|escolha uma vaga/i.test(message.textContent);
@@ -1170,7 +1272,12 @@
             ? 'Use Reiniciar para jogar de novo ou escolha outra fase de teste.'
             : `A fase ${currentLevel + 2} começa em instantes.`;
         }
-        win.hidden = !completed;
+        if (timeOver) {
+          winTitle.textContent = 'Tempo esgotado!';
+          winMessage.textContent = 'Tente novamente ou volte ao Zen para jogar sem pressa.';
+        }
+        retryRace.hidden = !timeOver;
+        win.hidden = !completed && !timeOver;
       }
 
       function placeProduct(state, from, to) {
@@ -1452,7 +1559,8 @@
           }
           if (!matching.length && !revealed.length) break;
         }
-        completed = isSolved(shelves);
+        updateClock();
+        completed = !timeOver && isSolved(shelves);
         if (completed && !testMode) {
           unlocked = Math.max(unlocked, currentLevel + 1);
           try { gameStorage.setItem('mercadinho-unlocked', String(unlocked)); } catch {}
@@ -1481,7 +1589,8 @@
       }
 
       function move(from, to) {
-        if (!from || !to || completed || animating) return false;
+        updateClock();
+        if (!from || !to || completed || timeOver || animating || paused) return false;
         const sourceShelf = shelves[from.shelf];
         const targetShelf = shelves[to.shelf];
         const source = sourceShelf.front;
@@ -1491,6 +1600,7 @@
           if (expected.from.shelf === from.shelf && expected.from.slot === from.slot && expected.to.shelf === to.shelf && expected.to.slot === to.slot) hintPlan.shift();
           else hintPlan = [];
         }
+        if (timedMode && !clock.started) { clock.started = true; clockAt = Date.now(); paintClock(); }
         cancelHint();
         cascadeNote.hidden = true;
         history.push(copy(shelves));
@@ -1553,7 +1663,7 @@
       }
 
       board.addEventListener('pointerdown', event => {
-        if (event.button !== 0 || pointer || pendingDrag || completed || paused) return;
+        if (event.button !== 0 || pointer || pendingDrag || completed || timeOver || paused) return;
         const origin = position(event.target);
         if (!origin) return;
         const originalItem = shelves[origin.shelf]?.front[origin.slot] || null;
@@ -1604,7 +1714,7 @@
         if (current.target) current.target.classList.remove('drop-target');
         const origin = board.querySelector(`[data-shelf="${current.origin.shelf}"][data-slot="${current.origin.slot}"]`);
         if (origin) origin.classList.remove('drag-origin');
-        if (cancelled) return;
+        if (cancelled || timeOver || paused) return;
         const dragged = current.dragging || Math.hypot(event.clientX - current.x, event.clientY - current.y) > 8;
         const destination = dragged ? dropPosition(event.clientX, event.clientY) : position(document.elementFromPoint(event.clientX, event.clientY));
         if (dragged) {
@@ -1627,7 +1737,7 @@
       board.addEventListener('pointercancel', event => finishPointer(event, true));
       board.addEventListener('lostpointercapture', event => finishPointer(event, true));
       board.addEventListener('click', event => {
-        if (event.detail !== 0 || animating || completed) return;
+        if (event.detail !== 0 || animating || completed || timeOver || paused) return;
         const destination = position(event.target);
         if (!destination) return;
         if (selected && move(selected, destination)) return;
@@ -1635,7 +1745,8 @@
         render();
       });
       function undoMove() {
-        if (!history.length || animating || paused) return;
+        updateClock();
+        if (!history.length || animating || paused || timeOver) return;
         hintPlan = [];
         cancelHint();
         cascadeNote.hidden = true;
@@ -1668,6 +1779,10 @@
         advanceTimer = null;
         currentLevel = index;
         levelDefinition = levelAt(index);
+        clock = { remaining: timedMode ? levelDefinition.seconds * 1000 : 0, started: false };
+        timeOver = false;
+        clockAt = Date.now();
+        paintClock();
         shelves = copy(levelDefinition.shelves);
         history = [];
         selected = null;
@@ -1677,7 +1792,7 @@
         render();
       }
       restart.addEventListener('click', () => {
-        if (history.length && !confirm('Recomeçar esta fase?')) return;
+        if (!timeOver && history.length && !confirm('Recomeçar esta fase?')) return;
         openLevel(currentLevel);
       });
       resetProgress.addEventListener('click', () => {
@@ -1691,6 +1806,12 @@
         unlocked = 0;
         openLevel(0);
       });
+      paintClock();
+      if (timedMode && restored && clock.started && !timeOver) {
+        paused = true;
+        pauseDialog.showModal();
+        paintClock();
+      }
       message.textContent = completed ? 'Muito bem! Você encontrou todas as combinações.' : restored ? 'Sua partida foi retomada.' : levelDefinition.hint;
       if (resumePending) {
         animating = true;

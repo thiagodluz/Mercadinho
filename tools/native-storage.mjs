@@ -1,6 +1,6 @@
 const snapshotKey = 'mercadinho-native-storage-v1';
 const suffixes = ['unlocked', 'layout-seed', 'partida-v1', 'reduced-motion', 'gesture-margin', 'audio'];
-const keys = suffixes.flatMap(suffix => [`mercadinho-${suffix}`, `mercadinho-beta-${suffix}`]);
+const keys = suffixes.flatMap(suffix => ['', 'beta-', 'corrida-', 'beta-corrida-'].map(prefix => `mercadinho-${prefix}${suffix}`));
 
 function parseSnapshot(raw) {
   try {
