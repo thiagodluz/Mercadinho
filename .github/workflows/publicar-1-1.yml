@@ -1,0 +1,22 @@
+name: Publicar Mercadinho 1.1.0
+on:
+  push:
+    branches: [release/publicar-1-1-0]
+permissions:
+  contents: write
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Conferir APK assinado
+        run: |
+          cat release-staging/parte-{0,1,2,3,4} > Mercadinho-1.1.0.apk
+          echo "8ad937b78c659bda09e918a3241c7aff07c1aafb4171073084d55ba366b53884  Mercadinho-1.1.0.apk" > SHA256SUMS
+          sha256sum -c SHA256SUMS
+          unzip -t Mercadinho-1.1.0.apk > /dev/null
+      - name: Publicar APK e checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v1.1.0 Mercadinho-1.1.0.apk SHA256SUMS --target ae579b8695472e2e9fa320c9e8df99c83dad8840 --title "Mercadinho 1.1.0" --latest --notes-file docs/release-v1.1.0.md
