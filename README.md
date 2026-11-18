@@ -118,3 +118,7 @@ A assinatura de distribuição requer as variáveis `PRISMA_KEYSTORE_FILE`, `PRI
 ## Histórico da versão 1.1
 
 Veja as [mudanças, validação e atualização do APK 1.1.0](docs/release-v1.1.0.md). A prévia que originou os ajustes permanece em [experimentos/prateleiras-zen](https://thiagodluz.github.io/Mercadinho/experimentos/prateleiras-zen/).
+
+## Prévia: formatos livres e Corrida
+
+[Experimente o modo Corrida](https://thiagodluz.github.io/Mercadinho/experimentos/corrida/?modo=corrida), com 24 fases próprias e cronômetro. A mesma prévia permite alternar para o Zen e testar os novos formatos e a posição fixa da prateleira extra. Seu progresso é separado da versão estável e da beta. Consulte [o escopo e a validação](docs/FORMATOS-E-CORRIDA.md).
