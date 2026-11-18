@@ -35,5 +35,15 @@ const server=http.createServer((req,res)=>{const file=path.join(process.cwd(),de
   await page.getByRole('button',{name:/^Zen/}).click();await page.waitForURL(u=>!u.searchParams.has('modo'));assert(!(await page.locator('#race-clock').isVisible()));
   assert.deepEqual(errors,[]);await context.close();console.log(`Corrida, pausa, expiração, reinício e reserva fixa: ${width}x${height} OK`);
  }
+ const preview=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+ await preview.addInitScript(()=>{localStorage.setItem('mercadinho-unlocked','17');localStorage.setItem('mercadinho-beta-unlocked','9');});
+ await preview.goto(`http://127.0.0.1:${server.address().port}/experimentos/corrida/index.html?modo=corrida`);
+ assert(await preview.locator('#race-clock').isVisible());assert(!(await preview.locator('#beta-dialog').isVisible()));
+ const [a,b]=[...data.mercadinhoCorrida[0].hint.slice(0,2)].map(d=>parseInt(d,36));
+ for(const i of [a,b])await preview.locator(`[data-shelf="${Math.floor(i/3)}"][data-slot="${i%3}"]`).click();
+ await preview.waitForFunction(()=>document.querySelector('#board').getAttribute('aria-busy')==='false');
+ const saved=await preview.evaluate(()=>({zen:localStorage.getItem('mercadinho-unlocked'),beta:localStorage.getItem('mercadinho-beta-unlocked'),race:localStorage.getItem('mercadinho-beta-corrida-experimento-partida-v1')}));
+ assert.equal(saved.zen,'17');assert.equal(saved.beta,'9');assert(saved.race);
+ await preview.close();console.log('Prévia autônoma: Corrida jogável e dados isolados da versão estável e da beta.');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;server.close();});

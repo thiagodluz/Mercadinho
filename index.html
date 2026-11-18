@@ -1041,7 +1041,7 @@
         paintClock();
       }
       if (timedMode) {
-        setInterval(() => { updateClock(); if (clock.started && !completed && !animating) saveGame(); }, 1000);
+        setInterval(() => { updateClock(); if (clock.started && !completed && !animating && !paused && !timeOver) saveGame(); }, 1000);
         document.addEventListener('visibilitychange', () => {
           if (document.hidden) {
             // Consome o intervalo até a suspensão, mesmo após document.hidden mudar.
