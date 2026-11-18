@@ -11,5 +11,6 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
       - run: node experimentos/prateleiras-zen/teste-controles.cjs
