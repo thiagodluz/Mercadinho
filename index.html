@@ -347,7 +347,8 @@
     .race-clock strong { display: inline-block; min-width: 3.5em; padding: 3px 7px; border-radius: 8px; background: #fff0c9; font-size: 1rem; font-variant-numeric: tabular-nums; }
     .race-clock.urgent strong { background: #a42f22; color: white; }
     .board.board-campaign { height: var(--area-altura); grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); align-items: stretch; }
-    .board.board-campaign .shelf-row { width: 100%; margin: 0; min-height: 0; align-self: stretch; }
+    .board.board-campaign .shelf-row { width: 100%; margin: 0; min-height: 0; align-self: stretch; padding-inline: 0; }
+    .board.board-campaign .shelf-row .shelf-interior { inset-inline: var(--post); }
     .board.board-campaign .shelf-row .shelf { height: 100%; min-height: 0; }
     .win:has(#retry-race:not([hidden])) { pointer-events: auto; }
   </style>

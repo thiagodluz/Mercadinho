@@ -14,7 +14,7 @@ const server=http.createServer((req,res)=>{const file=path.join(process.cwd(),de
   await page.goto(url);const before=await page.locator('#board').boundingBox();const slots=await page.locator('.slot[data-slot="0"]').evaluateAll(els=>els.map(e=>({id:e.dataset.shelf,x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y})));
   await page.evaluate(()=>sessionStorage.setItem('extra','1'));await page.reload();const after=await page.locator('#board').boundingBox();assert.deepEqual(after,before);
   const slotsAfter=await page.locator('.slot[data-slot="0"]').evaluateAll(els=>els.map(e=>({id:e.dataset.shelf,x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y})));
-  for(const s of slots)assert.deepEqual(slotsAfter.find(t=>t.id===s.id),s,'resgate não desloca nichos');
+  for(const s of slots){const t=slotsAfter.find(t=>t.id===s.id);assert(Math.abs(t.x-s.x)<0.1&&Math.abs(t.y-s.y)<0.1,'resgate não desloca nichos além do arredondamento subpixel');}
   const extra=await page.locator('[data-shelf="11"][data-slot="0"]').boundingBox();assert(extra.y+extra.height<=after.y+after.height+1);
   await page.screenshot({path:`qa/zen-extra-${width}.png`,fullPage:true});
   await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});
