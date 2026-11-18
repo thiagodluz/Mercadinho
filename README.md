@@ -14,9 +14,9 @@ Mercadinho é um jogo de combinar três produtos iguais em prateleiras. O modo Z
 
 O mockup acima apresenta a direção visual inicial. As ilustrações e alguns elementos do protótipo ainda são provisórios e serão refinados durante o desenvolvimento.
 
-## Versão 1.0.0 — modo Zen
+## Versão 1.1.0 — modo Zen
 
-O modo Zen começa com oito fases manuais. Da fase 9 à 208, há 200 tabuleiros distintos com solução verificada e 43 formatos de prateleiras. A dificuldade estimada sobe ao longo da campanha, com desafios nas fases terminadas em 0 e respiros nas terminadas em 5. A partir da fase 209, a sequência reutiliza os últimos 50 tabuleiros com produtos variados por semente.
+O modo Zen começa com oito fases manuais. Da fase 9 à 208, há 200 tabuleiros distintos com solução verificada e 30 formatos de prateleiras. A dificuldade estimada sobe ao longo da campanha, com desafios nas fases terminadas em 0 e respiros nas terminadas em 5. A partir da fase 209, a sequência reutiliza os últimos 50 tabuleiros com produtos variados por semente.
 
 - **Produtos:** catálogo de 20 mercadorias ilustradas provisórias.
 - **Trincas:** reúna três produtos iguais no mesmo compartimento para removê-los.
@@ -29,6 +29,8 @@ O modo Zen começa com oito fases manuais. Da fase 9 à 208, há 200 tabuleiros 
 - **Progresso local:** o navegador guarda a fase mais avançada, a partida em andamento e as preferências de áudio.
 
 A tela mostra o modo **Zen**, sem cronômetro, e um espaço **Em breve** reservado para outro modo. A versão web beta permanece disponível separadamente para testes.
+
+A versão 1.1 amplia 132 fases com seis produtos adicionais e mantém os nichos alinhados. Ao arrastar sobre um compartimento, a vaga livre mais próxima é escolhida. Ao atualizar uma partida em andamento de uma fase gerada, a fase é reiniciada; a fase alcançada permanece salva.
 
 ## Como jogar
 
@@ -99,7 +101,7 @@ Veja o [plano completo de desenvolvimento](PLANO-DE-DESENVOLVIMENTO.md) e o [reg
 
 ## Aplicativo Android
 
-A versão 1.0.0 usa o pacote principal `br.com.thiagodluz.mercadinho`, código Android 10 e a mesma chave de assinatura do Prisma. A versão web e o aplicativo possuem dados locais separados. As versões beta com identificadores próprios também têm progresso separado.
+A versão 1.1.0 usa o pacote principal `br.com.thiagodluz.mercadinho`, código Android 11 e a mesma chave de assinatura do Prisma. A versão web e o aplicativo possuem dados locais separados. As versões beta com identificadores próprios também têm progresso separado.
 
 Para compilar, use Node.js 22 ou superior, JDK 21 e Android SDK com plataforma 36 e Build Tools. Configure `JAVA_HOME` e `ANDROID_HOME` e execute:
 
